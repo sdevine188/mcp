@@ -1,0 +1,9450 @@
+extrafont::loadfonts(device="win") 
+library(tidyverse)
+library(readxl)
+library(skimr)
+library(rlang)
+library(haven)
+library(fs)
+library(officer)
+library(devEMF)
+library(ggrepel)
+library(rvest)
+library(scales)
+
+
+
+
+# setwd
+setwd("C:/Users/Stephen/Desktop/usaid/mcp/tso_portfolio_reviews/energy_and_infrastructure")
+
+options(scipen=999)
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create blue_grey custom palette ####
+color_palette <- tibble(hex = c("#08306B", "#08519C", "#4292C6", "#9ECAE1", "#BDBDBD", "#737373", "#484848"))
+color_palette
+show_col(color_palette %>% pull(hex))
+
+# blue_grey palette supports 7 colors, plus possible extensions via fill/line type
+show_col(color_palette %>% slice(1, 3) %>% pull(hex)) # 2 colors
+show_col(color_palette %>% slice(1, 2, 3) %>% pull(hex)) # 3 colors
+show_col(color_palette %>% slice(1, 2, 3, 4) %>% pull(hex)) # 4 colors
+show_col(color_palette %>% slice(1, 2, 3, 6, 7) %>% pull(hex)) # 5 colors
+show_col(color_palette %>% slice(1, 2, 3, 5, 6, 7) %>% pull(hex)) # 6 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6, 7) %>% pull(hex)) # 7 colors
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# setwd
+setwd("C:/Users/Stephen/Desktop/usaid/mcp/tso_portfolio_reviews/energy_and_infrastructure")
+
+# load ee_country_crosswalk ####
+current_directory <- getwd()
+setwd("C:/Users/Stephen/Desktop/usaid/mcp/useful_info")
+ee_country_crosswalk <- read_excel(path = "ee_country_crosswalk.xlsx", sheet = "ee_country_crosswalk", na = "NA")
+setwd(current_directory)
+
+ee_country_crosswalk %>% print(n = nrow(.))
+ee_country_crosswalk %>% skim()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# world bank, doing business, electricity charts ####
+# slides 37-42
+
+# get data
+# https://www.doingbusiness.org/en/custom-query
+# https://www.doingbusiness.org/content/dam/doingBusiness/excel/db2020/Historical-data---COMPLETE-dataset-with-scores.xlsx
+# https://www.sciencedirect.com/science/article/pii/S0140988318303682
+# https://www.doingbusiness.org/en/data/exploretopics/getting-electricity
+# https://www.doingbusiness.org/en/methodology/getting-electricity
+# note DB 2020 report has latest data from may 2018 to may 2019; so the DB Year variable = 2020 is really may 2018 to may 2019
+# https://www.worldbank.org/en/news/feature/2019/10/24/doing-business-2020-sustaining-the-pace-of-reforms
+# https://www.doingbusiness.org/#:~:text=Doing%20Business%20captures%20294%20regulatory,it%20easier%20to%20do%20business.
+# http://documents1.worldbank.org/curated/en/688761571934946384/pdf/Doing-Business-2020-Comparing-Business-Regulation-in-190-Economies.pdf
+# DB 2020 report linked above has footnote on page 4: "Note: The rankings are benchmarked to May 1, 2019"
+
+# the rank is only provided for latest years in dataset, but the overall "getting electricity score" score is better anyway
+# the rank just sorts the overall score
+# note the overall "getting electricity score" is the simple average of 4 sub-scores
+# 1) number of distinct procedures required to get electricity
+# 2) time in days to get electricity
+# 3) cost as % of income per capita
+# 4) reliability of supply and transparency of tariffs
+
+# note the original excel sheet has nested column headers, with some variables names being repeated multipel times
+# eg "Procedures (number)" or "Time (days)"
+# read_excel() appends a numeric suffix to distinguish these, which is fine since this analysis only is looking 
+# at a select few variables about electricity
+db_raw <- read_excel(path = "data/world_bank_doing_business/Historical-data---COMPLETE-dataset-with-scores.xlsx", sheet = "All data", skip = 3)
+db_raw          
+db_raw %>% glimpse()
+db_raw %>% nrow() # 3606
+db_raw %>% distinct(Economy) %>% nrow() # 213
+
+# get db focused on just electricity
+data <- db_raw %>% select(Economy, `DB Year`, `Ease of doing business score (DB17-20 methodology)`,
+                          `Score-Getting electricity (DB16-20 methodology)`,
+                          `Score-Procedures (number)...47`, `Score-Time (days)...49`, `Score-Cost (% of income per capita)`,
+                          `Score-Reliability of supply and transparency of tariff index (0-8) (DB16-20 methodology)`) %>%
+        rename(country = Economy, year = "DB Year",
+               ease_of_doing_biz_score = "Ease of doing business score (DB17-20 methodology)",
+               getting_electricity_score = "Score-Getting electricity (DB16-20 methodology)",
+               electricity_procedures_score = "Score-Procedures (number)...47",
+               electricity_time_score = "Score-Time (days)...49",
+               electricity_cost_score = "Score-Cost (% of income per capita)",
+               electricity_reliability_score = "Score-Reliability of supply and transparency of tariff index (0-8) (DB16-20 methodology)") %>%
+        mutate(electricity_procedures_score = as.numeric(electricity_procedures_score),
+               electricity_time_score = as.numeric(electricity_time_score),
+               electricity_cost_score = as.numeric(electricity_cost_score),
+               electricity_reliability_score = as.numeric(electricity_reliability_score)) 
+
+
+#//////////////////////////
+
+
+# inspect
+data
+data %>% glimpse()
+data %>% nrow() # 3606
+data %>% distinct(country) %>% nrow() # 213
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# join ee_country_crosswalk ####
+
+# check countries
+# results: missing 1 presence countries (greenland), 1 CAR (turkmenistan)
+# changes to db: czech republic to czechia, kyrgyz republic to kyrgzstan, russian federation to russia,
+# changes to db (contd): slovak republic to slovakia, 
+ee_country_crosswalk %>% filter(!is.na(mcp_grouping)) %>% 
+        anti_join(., data %>% distinct(country), by = "country")
+
+data %>% distinct(country) %>% print(n = nrow(.))
+data %>% filter(str_detect(string = country, pattern = regex("czech", ignore_case = TRUE))) %>% distinct(country)
+data %>% filter(str_detect(string = country, pattern = regex("greenland", ignore_case = TRUE))) %>% distinct(country)
+data %>% filter(str_detect(string = country, pattern = regex("kyrg", ignore_case = TRUE))) %>% distinct(country)
+data %>% filter(str_detect(string = country, pattern = regex("russia", ignore_case = TRUE))) %>% distinct(country)
+data %>% filter(str_detect(string = country, pattern = regex("slovak", ignore_case = TRUE))) %>% distinct(country)
+data %>% filter(str_detect(string = country, pattern = regex("turk", ignore_case = TRUE))) %>% distinct(country)
+
+data %>% mutate(country = case_when(country == "Czech Republic" ~ "Czechia", 
+                                    country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                    country == "Russian Federation" ~ "Russia",
+                                    country == "Slovak Republic" ~ "Slovakia",
+                                    TRUE ~ country)) %>%
+        distinct(country) %>% 
+        anti_join(ee_country_crosswalk %>% filter(!is.na(mcp_grouping)), ., by = c("country" = "country"))
+
+
+#///////////////////////
+
+
+# join ee_country_crosswalk, 
+# filtering to mcp_groupings, 
+# truncated to DB year >= 2015 because prior years are a separate variable w/ different methodology
+# also converting "DB Year" to normal year, by subtracting 1; eg. DB 2020 is may 2018 to may 2019, so will now be listed as 2019
+# https://www.worldbank.org/en/news/feature/2019/10/24/doing-business-2020-sustaining-the-pace-of-reforms
+# https://www.doingbusiness.org/#:~:text=Doing%20Business%20captures%20294%20regulatory,it%20easier%20to%20do%20business.
+data <- data %>% 
+        mutate(country = case_when(country == "Czech Republic" ~ "Czechia", 
+                                   country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                   country == "Russian Federation" ~ "Russia",
+                                   country == "Slovak Republic" ~ "Slovakia",
+                                   TRUE ~ country)) %>%
+        left_join(., ee_country_crosswalk, by = "country") %>%
+        filter(!is.na(mcp_grouping), year >= 2015) %>%
+        mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH", 
+                                   country == "North Macedonia" ~ "N. Macedonia",
+                                   country == "United States" ~ "U.S.",
+                                   TRUE ~ country),
+               mcp_grouping = case_when(mcp_grouping == "Central Asian Republics" ~ "CARs", TRUE ~ mcp_grouping),
+               year = year - 1)
+
+
+#///////////////////////
+
+
+# inspect
+data 
+data %>% glimpse()
+data %>% nrow() # 264
+data %>% distinct(country) %>% nrow() # 44
+data %>% count(year)
+data %>% skim()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get mcp_grouping_aggregate_records ####
+# note it will have NA for measurement vars not being used in analysis
+
+# get grouping_vars 
+grouping_vars <- data %>% select(mcp_grouping, year) %>% names()
+grouping_vars
+
+# get measurement_vars
+measurement_vars <- data %>% select(c(ease_of_doing_biz_score, getting_electricity_score, electricity_procedures_score, 
+                                      electricity_time_score, electricity_cost_score, electricity_reliability_score)) %>%
+        names()
+measurement_vars
+
+# get non_measurement_vars
+non_measurement_vars <- data %>% select(-c(!!!syms(measurement_vars), !!!syms(grouping_vars))) %>% names()
+non_measurement_vars
+
+# create get_non_measurement_vars_tbl()
+get_non_measurement_vars_tbl <- function(non_measurement_vars) {
+        
+        map(.x = non_measurement_vars, .f = ~ tibble(!!.x := NA)) %>% bind_cols()
+}
+# map(.x = 1:2, .f = ~ get_non_measurement_vars_tbl(non_measurement_vars)) %>% bind_rows()
+
+# get mcp_grouping_aggregate_records
+mcp_grouping_aggregate_records <- data %>% 
+        group_by(mcp_grouping, year) %>%
+        summarize(across(.cols = all_of(measurement_vars), ~ mean(.x, na.rm = TRUE))) %>%
+        ungroup() %>%
+        bind_cols(., map(.x = 1:nrow(data %>% distinct(!!!syms(grouping_vars))), 
+                         .f = ~ get_non_measurement_vars_tbl(non_measurement_vars)) %>% bind_rows()) %>%
+        select(c(!!!syms(data %>% names()))) %>% 
+        filter(!(mcp_grouping %in% c("Russia", "U.S."))) %>%
+        mutate(country = mcp_grouping,
+               iso_3_alpha = mcp_grouping,
+               mcp_grouping_aggregate_flag = 1)
+
+
+#/////////////////////
+
+
+# inspect
+mcp_grouping_aggregate_records
+mcp_grouping_aggregate_records %>% glimpse()
+mcp_grouping_aggregate_records %>% nrow() # 30
+data %>% filter(!(country %in% c("Russia", "United States"))) %>% distinct(mcp_grouping, year) %>% nrow() # 30
+mcp_grouping_aggregate_records %>% ncol() # 17
+data %>% nrow() # 264
+data %>% ncol() # 16
+data %>% filter(mcp_grouping == "EU-15") %>% nrow() # 90
+data %>% filter(mcp_grouping != "EU-15") %>% nrow() # 174
+174 + 90 == 264
+# check that nrow(data) - eu-15 countries + nrow(aggregates) == nrow(final data once aggregates are joined - see below)
+264 - 90 + 30 == 204
+
+# check means
+identical(mcp_grouping_aggregate_records %>% filter(mcp_grouping == "EU-15") %>% 
+                  select(!!!syms(grouping_vars), !!!syms(measurement_vars)) %>% filter(year > 2015) %>%
+                  select(mcp_grouping, year, ease_of_doing_biz_score, getting_electricity_score),
+          
+          data %>% filter(mcp_grouping == "EU-15") %>% 
+                  group_by(!!!syms(grouping_vars)) %>%
+                  summarize(ease_of_doing_biz_score = mean(ease_of_doing_biz_score, na.rm = TRUE),
+                            getting_electricity_score = mean(getting_electricity_score, na.rm = TRUE)) %>%
+                  ungroup() %>%
+                  filter(year > 2015))
+
+
+#/////////////////////
+
+
+# drop the individual eu-15 country records, since the analysis will only use the aggregate eu_15_record
+data <- data %>% filter(mcp_grouping != "EU-15") %>% 
+        mutate(mcp_grouping_aggregate_flag = 0) %>%
+        bind_rows(., mcp_grouping_aggregate_records)
+
+
+#/////////////////////
+
+
+# inspect
+data 
+data %>% glimpse()
+data %>% nrow() # 204
+data %>% distinct(country) %>% nrow() # 34
+data %>% count(mcp_grouping, country, iso_3_alpha) %>% print(n = nrow(.))
+data %>% count(mcp_grouping_aggregate_flag)
+data %>% filter(mcp_grouping_aggregate_flag == 1) %>% count(mcp_grouping, country, iso_3_alpha) %>% print(n = nrow(.))
+
+ee_country_crosswalk %>% filter(!is.na(mcp_grouping), mcp_grouping != "EU-15") %>% nrow() # 31
+# note there are 34 distinct "countries" in data
+# this matches the 31 non-eu-15 mcp_grouping countries in ee_country_crosswalk + the aggregate records for 
+# 1) EU-15, 2) E&E Balkans, 3) E&E Eurasia, 4) E&E graduates, and 5) CAR
+# 31 mcp_grouping countries + 5 aggregates - 2 countries not found in data (greenland and turkmenistan) = 34 "countries" in data
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_by_mcp_grouping_line_chart ####
+
+# check filter
+data %>% 
+        # filter(mcp_grouping_aggregate_flag == 1 | country %in% c("Russia", "U.S.")) %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>%
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- data %>% 
+        # filter(mcp_grouping_aggregate_flag == 1 | country %in% c("Russia", "U.S.")) %>%
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)
+                                 # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex)
+                                 # color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 # color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex))
+               ))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_by_mcp_grouping_line_chart <- chart_data %>%
+        ggplot(data = ., mapping = aes(x = year, 
+                             y = getting_electricity_score, 
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                  "CARs", "Russia")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Balkans"), 
+                mapping = aes(x = year + 0.15, y = getting_electricity_score - 1, label = color_bin), 
+                fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Eurasia"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score + 2, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E graduates"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
+                  fontface = "bold", hjust = 0) +  
+        geom_text(data = chart_data %>% filter(year == max(year), country == "CARs"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score - 1.5, label = color_bin), 
+                  fontface = "bold", hjust = 0) +  
+        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        scale_x_continuous(breaks = seq(from = 2014, to = 2019, by = 1)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(0, 105), expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 50, to = 100, by = 10), limits = c(50, 105), expand = c(0, 0)) +
+        # expand_limits(x = c(2019.5)) +
+        labs(x = NULL, y = "Getting Electricity Index\n(higher = easier access)", 
+             title = NULL,
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1 / 40, clip = "off") +
+        coord_fixed(ratio = 1 / 15, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        )
+        # guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+electricity_by_mcp_grouping_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_by_mcp_grouping_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_by_mcp_grouping_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_balkans_countries_line_chart ####
+
+# check filter
+data %>% 
+        filter(mcp_grouping_aggregate_flag == 0, mcp_grouping %in% c("E&E Balkans")) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- data %>% 
+        # filter((mcp_grouping == "E&E Balkans" & mcp_grouping_aggregate_flag == 0) | 
+        #                (mcp_grouping %in% c("E&E graduates", "CARs") & mcp_grouping_aggregate_flag == 1) | 
+        #                country == "Russia") %>% 
+        filter(mcp_grouping_aggregate_flag == 0, mcp_grouping %in% c("E&E Balkans")) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(1) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(linetype_bin == "Serbia" ~ "dotted", 
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_balkans_countries_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = getting_electricity_score, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score - 2.5, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score - .5, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score + 1.5, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score + 1.5, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score - .5, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo", 
+                                      "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo", 
+                                         "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
+        scale_y_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(40, 105), expand = c(0, 0)) +
+        labs(x = NULL, y = "Getting Electricity Index\n(higher = easier access)", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 1 / 40, clip = "off") +
+        coord_fixed(ratio = 1 / 18, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+        # guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+        #        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+electricity_balkans_countries_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_balkans_countries_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_balkans_countries_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_eurasia_countries_line_chart ####
+
+# check filter
+data %>% 
+        # filter((mcp_grouping == "E&E Eurasia" & mcp_grouping_aggregate_flag == 0) | 
+        #                (mcp_grouping %in% c("E&E graduates", "CARs") & mcp_grouping_aggregate_flag == 1) | 
+        #                country == "Russia") %>% 
+        filter(mcp_grouping_aggregate_flag == 0, mcp_grouping %in% c("E&E Eurasia") | country == "Russia") %>%
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(mcp_grouping_aggregate_flag == 0, mcp_grouping %in% c("E&E Eurasia") | country == "Russia") %>% 
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(linetype_bin %in% c("Moldova", "Ukraine") ~ "dotted", 
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_eurasia_countries_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = getting_electricity_score, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine", "Russia")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine", "Russia")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score + 1, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score - 1, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Russia"), 
+                  mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine", "Russia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine", "Russia")) +
+        scale_y_continuous(breaks = seq(from = 50, to = 100, by = 10), limits = c(50, 105), expand = c(0, 0)) +
+        labs(x = NULL, y = "Getting Electricity Index\n(higher = easier access)", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 1 / 40, clip = "off") +
+        coord_fixed(ratio = 1 / 15, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 15, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+        # guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+        #        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+electricity_eurasia_countries_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_eurasia_countries_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_eurasia_countries_line_chart.docx")
+
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect trends for sub-indicators ####
+
+# procedures
+data %>% filter(mcp_grouping %in% c("E&E Balkans"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_procedures_score, color = country)) +
+        geom_line()
+data %>% filter(mcp_grouping %in% c("E&E Eurasia"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_procedures_score, color = country)) +
+        geom_line()
+data %>% filter(country == "Belarus")
+data %>% filter(country == "Armenia")
+
+# time
+data %>% filter(mcp_grouping %in% c("E&E Balkans"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_time_score, color = country)) +
+        geom_line()
+data %>% filter(mcp_grouping %in% c("E&E Eurasia"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_time_score, color = country)) +
+        geom_line()
+
+# cost
+data %>% filter(mcp_grouping %in% c("E&E Balkans"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_cost_score, color = country)) +
+        geom_line()
+data %>% filter(mcp_grouping %in% c("E&E Eurasia"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_cost_score, color = country)) +
+        geom_line()
+
+# cost
+data %>% filter(mcp_grouping %in% c("E&E Balkans"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_reliability_score, color = country)) +
+        geom_line()
+data %>% filter(mcp_grouping %in% c("E&E Eurasia"), mcp_grouping_aggregate_flag == 0) %>%
+        ggplot(data = ., mapping = aes(x = year, y = electricity_reliability_score, color = country)) +
+        geom_line()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_by_country_bar_chart ####
+
+# check filter
+data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2020) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus"), `DB Year` == 2020) %>%
+        select(Economy, `Score-Getting electricity (DB16-20 methodology)`)
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2020) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_by_country_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = getting_electricity_score), 
+                             y = getting_electricity_score, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(0, 105), expand = c(0, 0)) +
+        labs(x = NULL, y = "Getting Electricity Index\n(higher = easier access)", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 1/8, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+electricity_by_country_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_by_country_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_by_country_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_by_group_scatterplot ####
+
+# check filter
+data %>% 
+        filter(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia", "EU-15",  "U.S."), 
+               year == 2020) %>% 
+        count(mcp_grouping, country, iso_3_alpha) %>% print(n = nrow(.))
+
+# check raw data
+db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus"), `DB Year` == 2020) %>%
+        select(Economy, `Score-Getting electricity (DB16-20 methodology)`, 
+               `Ease of doing business score (DB17-20 methodology)`)
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia", "EU-15",  "U.S."), 
+               year == 2019) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_by_group_scatterplot <- chart_data %>% 
+        ggplot(data = ., aes(x = getting_electricity_score, y = ease_of_doing_biz_score, label = iso_3_alpha,
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                  "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
+        geom_point(size = 6) + 
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25) +
+        scale_color_manual(values = chart_data_color_list) +
+        # scale_x_discrete(expand = c(0, 0)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        scale_y_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(30, 110), expand = c(-.05, 0)) +
+        scale_x_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(30, 110), expand = c(-.05, 0)) +
+        labs(x = "Getting Electricity Index\n(higher = easier access)", 
+             y = "Ease of Doing Business Index\n(higher = easier doing business)", 
+             title = NULL,
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1/2, clip = "off") +
+        coord_fixed(ratio = 1/2.1, clip = "off") +
+        # coord_flip() + 
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_blank(),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                # axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0)),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_line(color = "#333333"),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = -5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+# inspect
+electricity_by_group_scatterplot
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_by_group_scatterplot)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_by_group_scatterplot.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_by_country_scatterplot ####
+
+# check filter
+data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), 
+               year == 2020) %>% 
+        count(mcp_grouping, country, iso_3_alpha) %>% print(n = nrow(.))
+
+# check raw data
+db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus"), `DB Year` == 2020) %>%
+        select(Economy, `Score-Getting electricity (DB16-20 methodology)`, 
+               `Ease of doing business score (DB17-20 methodology)`)
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), 
+               year == 2020)%>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_by_country_scatterplot <- chart_data %>% 
+        ggplot(data = ., aes(x = getting_electricity_score, y = ease_of_doing_biz_score, label = iso_3_alpha,
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                  "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
+        geom_point(size = 6) + 
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25) +
+        scale_color_manual(values = chart_data_color_list) +
+        # scale_x_discrete(expand = c(0, 0)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        scale_y_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(30, 110), expand = c(-.05, 0)) +
+        scale_x_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(30, 110), expand = c(-.05, 0)) +
+        labs(x = "Getting Electricity Index\n(higher = easier access)", 
+             y = "Ease of Doing Business Index\n(higher = easier doing business)", 
+             title = NULL,
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1/2, clip = "off") +
+        coord_fixed(ratio = 1/2.1, clip = "off") +
+        # coord_flip() + 
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_blank(),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                # axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0)),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_line(color = "#333333"),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = -5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+# inspect
+electricity_by_country_scatterplot
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_by_country_scatterplot)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_by_country_scatterplot.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_sub_indicator_by_group_bar_chart ####
+
+# check filter
+data %>% 
+        filter(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia", "EU-15", "U.S."), 
+               year == 2020) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus"), `DB Year` == 2020) %>%
+        select(Economy, 
+               `Score-Procedures (number)...47`, `Score-Time (days)...49`,
+               `Score-Reliability of supply and transparency of tariff index (0-8) (DB16-20 methodology)`)
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia", "EU-15", "U.S."), 
+               year == 2019) %>%
+        select(country, mcp_grouping, electricity_procedures_score, electricity_time_score,
+               electricity_cost_score, electricity_reliability_score) %>%
+        pivot_longer(cols = -c(country, mcp_grouping), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "electricity_procedures_score" ~ "Number of procedures\nto access\nelectricity",
+                               var == "electricity_time_score" ~ "Number of days\nto access\nelectricity",
+                               var == "electricity_cost_score" ~ "Cost of\naccess to\nelectricity",
+                               var == "electricity_reliability_score" ~ "Reliability of supply\nand transparencey\nof tariffs")) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_sub_indicator_by_group_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = var, 
+                             y = value, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_bar(stat = "identity", position = position_dodge(width = .7), width = .7) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(0, 105), expand = c(0, 0)) +
+        labs(x = NULL, y = "Sub-indicators of\nGetting Electricity Index\n(higher = easier access)", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = .15/10, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+electricity_sub_indicator_by_group_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_sub_indicator_by_group_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_sub_indicator_by_group_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_sub_indicator_by_country_jitter_plot ####
+
+# check filter
+data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), 
+               year == 2020) %>% 
+        count(mcp_grouping, country, iso_3_alpha) %>% print(n = nrow(.))
+
+# check raw data
+db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus", "Ukraine"), `DB Year` == 2020) %>%
+        select(Economy, 
+               `Score-Procedures (number)...47`, `Score-Time (days)...49`,
+               `Score-Reliability of supply and transparency of tariff index (0-8) (DB16-20 methodology)`)
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), 
+               year == 2019) %>%
+        mutate(iso_3_alpha = case_when(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") ~ iso_3_alpha,
+                                       TRUE ~ NA_character_)) %>%
+        select(country, mcp_grouping, iso_3_alpha, electricity_procedures_score, electricity_time_score,
+               electricity_cost_score, electricity_reliability_score) %>%
+        pivot_longer(cols = -c(country, mcp_grouping, iso_3_alpha), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "electricity_procedures_score" ~ "Number of procedures\nto access\nelectricity",
+                               var == "electricity_time_score" ~ "Number of days\nto access\nelectricity",
+                               var == "electricity_cost_score" ~ "Cost of\naccess to\nelectricity",
+                               var == "electricity_reliability_score" ~ "Reliability of supply\nand transparency\nof tariffs")) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+jitter_positions <- position_jitter(width = 0.2, height = 0, seed = 2)
+
+electricity_sub_indicator_by_country_jitter_plot <- chart_data %>% 
+        ggplot(data = ., aes(x = var, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                  "CARs", "Russia", "EU-15", "U.S.")),
+                             label = iso_3_alpha)) + 
+        # geom_sina(maxwidth = .5, size = 4) +
+        geom_jitter(size = 4, position = jitter_positions) +
+        geom_text_repel(position = jitter_positions, point.padding = .1, size = 3, fontface = "bold") +
+        scale_size(guide = "none") +
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(-1.7, 1.7)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-5, 105), expand = c(0, 0)) +
+        labs(x = NULL, y = "Sub-indicators of\nGetting Electricity Index\n(higher = easier access)", 
+             title = NULL,
+             caption = NULL, color = "") +
+        coord_fixed(ratio = .15/10, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+electricity_sub_indicator_by_country_jitter_plot
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_sub_indicator_by_country_jitter_plot)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_sub_indicator_by_country_jitter_plot.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create electricity_reliability_and_tariff_transparency_bar_chart ####
+
+# check filter
+data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2019) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus"), `DB Year` == 2020) %>%
+        select(Economy, `Score-Getting electricity (DB16-20 methodology)`)
+
+# add color_bin and color
+chart_data <- data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2019) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_reliability_and_tariff_transparency_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = electricity_reliability_score), 
+                             y = electricity_reliability_score, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(0, 105), expand = c(0, 0)) +
+        labs(x = NULL, y = "Reliability of supply and\ntransparency of tariffs\n(higher = more reliable/transparent)", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 1/8, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+electricity_reliability_and_tariff_transparency_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_reliability_and_tariff_transparency_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_reliability_and_tariff_transparency_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# bilateral energy trading, comtrade / atlas of economic complexity ####
+# slides 15 - 17
+
+# harmonized system codes 
+# https://unstats.un.org/unsd/tradekb/Knowledgebase/50018/Harmonized-Commodity-Description-and-Coding-Systems-HS
+# full hs crosswalk between versions: https://unstats.un.org/unsd/trade/classifications/correspondence-tables.asp
+# note on the UN HS crosswalk, there are no changes to crude oil, gas, or coal codes
+# note atlas of economic complexity uses HS 92
+# crude oil is HS 2709; 
+# https://www.flexport.com/data/hs-code/270900-crude-oil-from-petroleum-and-bituminous-minerals
+# petroleum oil refined in HS 2710
+# https://www.flexport.com/data/hs-code/2710-oil-not-crude-from-petrol-bitum-mineral-etc
+# "petroleum gas" etc is 2711, but specific mentions of "natural gas" are 271111 (liquefied) and 271121 (gaseous); 
+# https://www.flexport.com/data/hs-code/271111-natural-gas-liquefied
+# coal is HS 2701
+# https://www.flexport.com/data/hs-code/2701-coal
+# electricity is 2716
+# https://www.flexport.com/data/hs-code/2716-electrical-energy
+
+
+# note that eu stats calculating energy imports etc, with focus on russia, used specific 8 digit HS codes
+# also confirms the partner country is the country of origin for imports 
+# https://ec.europa.eu/eurostat/statistics-explained/index.php/Archive:Trade_in_energy_products
+# 27090010: Petroleum oils from natural gas condensates
+# 27090090: Petroleum oils and oils obtained from bituminous minerals, crude
+# 27111100: Natural gas, liquefied
+# 27112100: Natural gas in gaseous state
+# 2701: Coal
+# 2702: Lignite
+# 2703: Peat
+# 2704: Coke
+
+
+# comtrade
+# data limits: https://comtrade.un.org/db/help/uReadMeFirst.aspx
+# note almost all countries report partner as country of origin for imports
+# note some trade is not disclosed for confidentiality at given HS digit level, but is included at higher levels
+# eg potential tradeoff between specificity and accuracy wrt 4 vs 6 digit HS codes
+# also some countries use ANS parnter_code for undeclared countries 
+# eg see germany natural gas imports are mostly coded ANS...
+# note merchandise imports are imports - reexports: https://stats.oecd.org/glossary/detail.asp?ID=6174
+# https://www.abs.gov.au/AUSSTATS/abs@.nsf/DSSbyCollectionid/AF6FEE680BE85CB9CA257286007EDEAD?opendocument#:~:text=Merchandise%20imports%20are%20defined%20as,into%20Customs%20(bonded)%20warehouses.
+# https://comtrade.un.org/Data/
+# api: https://comtrade.un.org/data/doc/api/#DataAvailabilityRequests
+
+
+# world bank series, but cutoff at 2015
+# world bank fuel imports as share of merchandise imports
+# https://data.worldbank.org/indicator/TM.VAL.FUEL.ZS.UN
+# world bank energy use per capita
+# https://data.worldbank.org/indicator/EG.USE.PCAP.KG.OE
+# energy use as share of gdp
+# https://data.worldbank.org/indicator/EG.USE.COMM.GD.PP.KD
+
+
+# BP statistical review has consumption/production figures by fuel type by country by year, but nothing bilateral - like IEA
+# https://www.bp.com/en/global/corporate/energy-economics/statistical-review-of-world-energy.html
+
+
+# iea defines primary energy as oil, gas, coal, hydro, nuclear, biofuels, other renewables
+# https://www.iea.org/data-and-statistics/charts/total-primary-energy-supply-by-fuel-1971-and-2018
+# i will define subset of "fossil fuels" as 4 main types: crude oil, refined oil, natural gas, coal
+# energy.gov provides about the same, if vague, definition here: https://www.energy.gov/science-innovation/energy-sources/fossil
+# note the russia did not export any nuclear, hydro, wind/solar in 2018, and very small amounts of biofuel and electricity
+# from the cmki perspective, the big 4 types of fossil fuel are the main story
+# https://www.iea.org/data-and-statistics/data-tables?country=RUSSIA&energy=Balances&year=2018
+# iea table showing russian fuel exports in 2016
+# https://comtrade.un.org/Data/
+# https://www.eia.gov/todayinenergy/detail.php?id=33732
+
+
+# explainer on distinction/definition of LPG vs NGL vs natural gas
+# https://www.elgas.com.au/blog/486-comparison-lpg-natural-gas-propane-butane-methane-lng-cng
+# http://blog.opisnet.com/ngl-or-lpg-or-lng
+
+
+# note that iea uses the Standard International Energy Classifcation system (SIEC)
+# which classifieds liquid natural gas under unrefined oil  
+# see table on page 24: https://unstats.un.org/unsd/energystats/methodology/documents/IRES-web.pdf 
+# see also IEA World Energy Balances Highlights spreadhseet definitions tab
+# iea highlights data: https://www.iea.org/reports/world-energy-balances-overview
+
+
+# atlas is better data source than comtrade, because they clean/document the data very well
+# eg compare comtrade vs atlas data on russian 271121 natural gas exports to belarus in 2017, 
+# comtrade has extremely under-reported data by russia
+# comtrade: russia reports ~ 181 mil for all 2711 (don't even breakout 271121), belarus reports ~ 2.7 bil; 
+# atlas reports 2.4 bil, and it's set to be the exact same if russia/belarus is reporting as import/export
+# note atlas "about data" section states that country reporting at 6 digit HS level is less accurate than 4 digit level
+# on the atlas tree map explorer, they report at 4 digit level
+# https://atlas.cid.harvard.edu/about-data
+# https://atlas.cid.harvard.edu/data-downloads
+# https://atlas.cid.harvard.edu/explore?country=186&product=undefined&year=2017&productClass=HS&target=Product&partner=undefined&startYear=undefined
+# https://dataverse.harvard.edu/dataverse/atlas
+# https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/3BAL1O
+# https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/T4CHWJ
+
+
+# atlas data can provide:
+# 1) fossil fuel imports from russia as a % of total goods imports (economic significance of imports from russia)
+# 2) fossil fuel imports from russia as a % of total fuel imports (energy significance of imports from russia)
+# note 2) is not quite energy dependence on russia, because country could use other energy types or produce more itself
+
+# iea can provide: 
+# 3) net energy imports as share of primary energy supply (used by world bank etc)
+# note that primary energy supply spans all iea energy types, and is not limited to just fossil fuels
+# also could calculate net energy imports as share of total final consumption, as CRS does and EIA.gov does
+# https://fas.org/sgp/crs/row/R44775.pdf
+# https://www.eia.gov/international/analysis/country/DEU "Natural gas rep. 25% of Germany’s total primary energy consumption"
+
+
+# also seems reasonable to calculate 4) net fossil fuel imports FROM RUSSIA as share of primary energy supply (or consumption?) 
+# (or by specific fossil fuel type instead of all fossil fuels)
+# (best to also split out by fossil fuel type, since russia has more market power for regional natural gas vs global oil market)
+# https://fas.org/sgp/crs/row/R44775.pdf
+# by multiplying 2) fossil fuel imports from russia as a % of total fossil fuel imports and
+# 3) net fossil fuel imports as share of primary energy supply
+# e.g. if 50% of fossil fuel imports are from russia, then 50% of 3) net fossil fuel imports as share of primary energy supply is
+# from russia
+# note this assumes that fossil fuel import prices paid to different exporters is the same or comparable,
+# since the atlas data gives 2) in dollar terms, but iea gives 3) in ktoe terms
+# eg if imports from china were half the price of imports from russia for the same ktoe, then
+# the share of fossil fuel imports from russia in $ could not be directly applied to
+# fossil fuel imports as share of fossil fuel supply in ktoe
+# but fossil fuels are commodities, and though there are probably contract variances, it seems a reasonable approximation
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read atlas hs codes w/ descriptions ####
+hs <- read_stata("data/atlas_un_comtrade_trade_flows/hs_product.dta")
+hs
+
+# read atlas location codes
+location <- read_stata("data/atlas_un_comtrade_trade_flows/location.dta")
+location %>% filter(location_code == "ANS")
+location
+
+# inspect hs
+hs %>% count(hs_product_code)
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2711", ignore_case = TRUE)))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2701", ignore_case = TRUE)))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2709", ignore_case = TRUE)))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2710", ignore_case = TRUE))) %>% print(n = nrow(.))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2716", ignore_case = TRUE)))
+
+# note that iea uses the Standard International Energy Classifcation system (SIEC) 2018 edition
+# based on SIEC to HS crosswalk:
+# 2712 and 2713 needs to be added to oil products
+# 271112, 271113, 271114, 271119, and 271129 go to crude oil
+# 2715 is not in SIEC crosswalk table, so will drop it
+# 2702, 2703, 2704, 2705, 2706, 2707, 2708, 2714 go to coal 
+# see also IEA World Energy Balances Highlights 2020 spreadhseet definitions tab
+# iea highlights data: https://www.iea.org/reports/world-energy-balances-overview
+# see table on page 24 for SIEC to HS 2007 crosswalk: https://unstats.un.org/unsd/energystats/methodology/documents/IRES-web.pdf 
+# https://unstats.un.org/unsd/classifications/Family/Detail/2007
+# note there are no differences at 6 digit level to fossil energy HS 92 vs HS 2007 codes (2701, 2709, 2710, 2711)
+# to confirm no HS 2007 to HS 92 changes, see UN HS crosswalk tables: 
+# https://unstats.un.org/unsd/trade/classifications/correspondence-tables.asp
+
+
+# SIEC defition of fossil fuels on page 35:
+# this allows for plotting the IEA categories of coal, crude oil, refined oil, and natural gas
+# "For the purposes of the discussion on the scope of SIEC, fossil
+# fuels refer to coal, peat, oil and
+# natural gas, even though the
+# inclusion of peat in fossil fuels is
+# not universally accepted."
+
+
+#//////////////////////////////////////////////////////////////////////////////////////
+
+
+# read atlas 4 digit ####
+
+# note atlas has no data on kosovo
+
+
+#////////////////////////
+
+
+# atlas_2009_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2009.dta")
+# atlas_2009_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                               "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2009.csv")
+rm(atlas_2009_4digit)
+atlas_2009_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2009.csv")
+atlas_2009_4digit
+atlas_2009_4digit %>% glimpse()
+atlas_2009_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+atlas_2009_4digit %>% count(location_code) %>% 
+        anti_join(ee_country_crosswalk %>% 
+                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
+                  by = c("iso_3_alpha" = "location_code"))
+
+
+#///////////////////////
+
+
+# atlas_2010_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2010.dta")
+# atlas_2010_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2010.csv")
+rm(atlas_2010_4digit)
+atlas_2010_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2010.csv")
+atlas_2010_4digit
+atlas_2010_4digit %>% glimpse()
+atlas_2010_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#////////////////////////
+
+
+# atlas_2011_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2011.dta")
+# atlas_2011_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2011.csv")
+rm(atlas_2011_4digit)
+atlas_2011_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2011.csv")
+atlas_2011_4digit
+atlas_2011_4digit %>% glimpse()
+atlas_2011_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#///////////////////////
+
+
+# atlas_2012_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2012.dta")
+# atlas_2012_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2012.csv")
+rm(atlas_2012_4digit)
+atlas_2012_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2012.csv")
+atlas_2012_4digit
+atlas_2012_4digit %>% glimpse()
+atlas_2012_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#/////////////////////////
+
+
+# atlas_2013_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2013.dta")
+# atlas_2013_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2013.csv")
+rm(atlas_2013_4digit)
+atlas_2013_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2013.csv")
+atlas_2013_4digit
+atlas_2013_4digit %>% glimpse()
+atlas_2013_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+
+#////////////////////////
+
+
+# atlas_2014_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2014.dta")
+# atlas_2014_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2014.csv")
+rm(atlas_2014_4digit)
+atlas_2014_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2014.csv")
+atlas_2014_4digit
+atlas_2014_4digit %>% glimpse()
+atlas_2014_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#////////////////////////
+
+
+# atlas_2015_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2015.dta")
+# atlas_2015_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2015.csv")
+rm(atlas_2015_4digit)
+atlas_2015_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2015.csv")
+atlas_2015_4digit
+atlas_2015_4digit %>% glimpse()
+atlas_2015_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#//////////////////////
+
+
+# atlas_2016_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2016.dta")
+# atlas_2016_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2016.csv")
+rm(atlas_2016_4digit)
+atlas_2016_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2016.csv")
+atlas_2016_4digit
+atlas_2016_4digit %>% glimpse()
+atlas_2016_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#////////////////////
+
+
+# atlas_2017_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2017.dta")
+# atlas_2017_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2017.csv")
+rm(atlas_2017_4digit)
+atlas_2017_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2017.csv")
+atlas_2017_4digit
+atlas_2017_4digit %>% glimpse()
+atlas_2017_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#//////////////////////
+
+
+# atlas_2018_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2018.dta")
+# atlas_2018_4digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         group_by(location_code) %>% mutate(global_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
+#                                       "2710", "2711", "2712", "2713", "2714", "2715"), import_value > 0) %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2018.csv")
+rm(atlas_2018_4digit)
+atlas_2018_4digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_4digit_2018.csv")
+atlas_2018_4digit
+atlas_2018_4digit %>% glimpse()
+atlas_2018_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read atlas 6 digit ####
+
+# note: ignore mutate(global_lng_import_value_sum = sum(import_value)) in the 6_digit read code
+# it was legacy and i forgot to drop it, but it just adds a variable i drop later when combining the 6_digit year files
+
+
+# atlas_2009_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2009.dta")
+# atlas_2009_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2009.csv")
+rm(atlas_2009_6digit)
+atlas_2009_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2009.csv")
+atlas_2009_6digit
+atlas_2009_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2010_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2010.dta")
+# atlas_2010_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2010.csv")
+rm(atlas_2010_6digit)
+atlas_2010_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2010.csv")
+atlas_2010_6digit
+atlas_2010_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2011_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2011.dta")
+# atlas_2011_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2011.csv")
+rm(atlas_2011_6digit)
+atlas_2011_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2011.csv")
+atlas_2011_6digit
+atlas_2011_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2012_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2012.dta")
+# atlas_2012_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2012.csv")
+rm(atlas_2012_6digit)
+atlas_2012_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2012.csv")
+atlas_2012_6digit
+atlas_2012_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2013_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2013.dta")
+# atlas_2013_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2013.csv")
+rm(atlas_2013_6digit)
+atlas_2013_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2013.csv")
+atlas_2013_6digit
+atlas_2013_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2014_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2014.dta")
+# atlas_2014_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2014.csv")
+rm(atlas_2014_6digit)
+atlas_2014_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2014.csv")
+atlas_2014_6digit
+atlas_2014_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2015_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2015.dta")
+# atlas_2015_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2015.csv")
+rm(atlas_2015_6digit)
+atlas_2015_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2015.csv")
+atlas_2015_6digit
+atlas_2015_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2016_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2016.dta")
+# atlas_2016_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2016.csv")
+rm(atlas_2016_6digit)
+atlas_2016_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2016.csv")
+atlas_2016_6digit
+atlas_2016_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2017_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2017.dta")
+# atlas_2017_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2017.csv")
+rm(atlas_2017_6digit)
+atlas_2017_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2017.csv")
+atlas_2017_6digit
+atlas_2017_6digit %>% glimpse()
+
+
+#//////////////
+
+
+# atlas_2018_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2018.dta")
+# atlas_2018_6digit %>%
+#         filter(location_code %in%
+#                        (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+#                                                                             "E&E graduates", "CARs")) %>%
+#                                 pull(iso_3_alpha))) %>%
+#         filter(str_detect(string = hs_product_code, pattern = regex("^27", ignore_case = TRUE)), import_value > 0) %>%
+#         group_by(location_code, hs_product_code) %>%
+#         mutate(global_lng_import_value_sum = sum(import_value)) %>%
+#         ungroup() %>%
+#         select(location_code, partner_code, year, hs_product_code, import_value, global_lng_import_value_sum) %>%
+#         write_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2018.csv")
+rm(atlas_2018_6digit)
+atlas_2018_6digit <- read_csv("data/atlas_un_comtrade_trade_flows/atlas_6digit_2018.csv")
+atlas_2018_6digit
+atlas_2018_6digit %>% glimpse()
+atlas_2018_6digit %>% count(hs_product_code) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect atlas raw data ####
+
+# check 2711
+# result: note that the 2711 6 digit subcategories removed by SIEC from rolling up to "Natural gas"
+# are often a very significant proportion of the 2711 aggregate imports for e&e countries, so can't just take 2711 aggregate
+# atlas_2018_6digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct6digit_year_2018.dta")
+atlas_2018_6digit %>% filter(location_code %in%
+                                     (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+                                                                                          "E&E graduates", "CARs")) %>%
+                                              pull(iso_3_alpha)),
+                             str_detect(string = hs_product_code, 
+                                        pattern = regex("^2711", ignore_case = TRUE))) %>%
+        group_by(location_code) %>%
+        summarize(total_2711_imports = sum(import_value),
+                  imports_2711_exclusions = sum(import_value[hs_product_code %in% 
+                                                                     c("271112", "271113", "271114", "271119", "271129")]),
+                  exclusions_as_share_of_2711 = imports_2711_exclusions / total_2711_imports) %>% 
+        arrange(desc(exclusions_as_share_of_2711)) %>% print(n = nrow(.))
+
+
+#/////////////////////////////
+
+
+# compare 2711 6_digit to 4_digit
+# results: it matches exactly, so even if some 6digit categories are confidential/omitted, it's not problem for 2711
+# atlas_2018_4digit <- read_stata("data/atlas_un_comtrade_trade_flows/country_partner_hsproduct4digit_year_2018.dta")
+atlas_2018_4digit %>% filter(location_code %in%
+                                     (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+                                                                                          "E&E graduates", "CARs")) %>%
+                                              pull(iso_3_alpha)),
+                             str_detect(string = hs_product_code, 
+                                        pattern = regex("^2711", ignore_case = TRUE))) %>%
+        summarize(total_imports = sum(import_value) / 1000000)
+
+atlas_2018_6digit %>% filter(location_code %in%
+                                     (ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia",
+                                                                                          "E&E graduates", "CARs")) %>%
+                                              pull(iso_3_alpha)),
+                             str_detect(string = hs_product_code, 
+                                        pattern = regex("^2711", ignore_case = TRUE))) %>%
+        summarize(total_imports = sum(import_value) / 1000000)
+
+
+#/////////////////////////////////
+
+
+# find biggest 6digit categories
+# 2712 and 2713 needs to be added to oil products
+# 271112, 271113, 271114, 271119, and 271129 go to crude oil
+# 2715 is not in SIEC crosswalk table, so will drop it
+# 2702, 2703, 2704, 2705, 2706, 2707, 2708, 2714 go to coal 
+
+# note this manual crosswalk of HS codes to SIEC gets a bit vague at the 6digit level
+# the SIEC crosswalk table has several HS codes (4 and 6 digit) with asterixes, appearing in different SIEC classifications
+# it's reasonable to assign the ambiguous ones to their largest component, if possible, 
+# and at least they'll all be rolled up in the aggregate fossil fuel calculations
+
+atlas_2018_6digit %>% group_by(hs_product_code) %>% 
+        summarize(sum = sum(import_value)) %>%
+        arrange(desc(sum)) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine 4_digit atlas data ####
+# also add fuel_type consolidated category to crosswalk HS codes to IEA/SIEC categories 
+
+# based on SIEC to HS crosswalk documented above:
+# 2712 and 2713 needs to be added to oil products
+# 271112, 271113, 271114, 271119, and 271129 go to crude oil (will add/substract this at 6digit level below)
+# 2702, 2703, 2704, 2705, 2706, 2707, 2708, 2714 go to coal 
+# 2715 bitumous mixtures based on asphalt, natural bitumen, petroleum bitumen, mineral tar, or mineral tar pitch 
+# 2715 is not in SIEC crosswalk table, so will drop it; it ranks 10 of 15 in aggregate import value, ~ 965 mil
+atlas_4digit <- dir_ls("data/atlas_un_comtrade_trade_flows") %>% tibble(path = as.character(.)) %>%
+        select(path) %>% filter(str_detect(string = path, pattern = regex("4digit", ignore_case = TRUE))) %>%
+        pull(path) %>%
+        map(.x = ., .f = ~ read_csv(.x)) %>% bind_rows() %>%
+        mutate(fuel_type = case_when(hs_product_code == "2701" ~ "Coal",
+                                     hs_product_code == "2702" ~ "Coal",
+                                     hs_product_code == "2703" ~ "Coal",
+                                     hs_product_code == "2704" ~ "Coal",
+                                     hs_product_code == "2705" ~ "Coal",
+                                     hs_product_code == "2706" ~ "Coal",
+                                     hs_product_code == "2707" ~ "Coal",
+                                     hs_product_code == "2708" ~ "Coal",
+                                     hs_product_code == "2709" ~ "Crude oil",
+                                     hs_product_code == "2710" ~ "Oil products",
+                                     hs_product_code == "2711" ~ "Natural gas",
+                                     hs_product_code == "2712" ~ "Oil products",
+                                     hs_product_code == "2713" ~ "Oil products",
+                                     hs_product_code == "2714" ~ "Coal")) %>%
+        filter(hs_product_code != "2715")
+
+# inspect
+atlas_4digit
+atlas_4digit %>% glimpse()
+atlas_4digit %>% nrow() # 36804
+atlas_4digit %>% distinct(location_code) %>% nrow() # 27
+atlas_4digit %>% count(year) 
+atlas_4digit %>% count(hs_product_code)
+atlas_4digit %>% count(hs_product_code, fuel_type)
+atlas_4digit %>% group_by(hs_product_code) %>% summarize(import_sum = sum(import_value)) %>% arrange(desc(import_sum))
+atlas_4digit %>% count(location_code) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine 6_digit atlas data ####
+atlas_6digit_raw <- dir_ls("data/atlas_un_comtrade_trade_flows") %>% tibble(path = as.character(.)) %>%
+        select(path) %>% filter(str_detect(string = path, pattern = regex("6digit", ignore_case = TRUE))) %>%
+        pull(path) %>%
+        map(.x = ., .f = ~ read_csv(.x)) %>% bind_rows() 
+
+atlas_6digit <- atlas_6digit_raw %>%
+        filter(str_detect(string = hs_product_code, pattern = regex("^2711", ignore_case = TRUE))) %>%
+        mutate(fuel_type = case_when(hs_product_code %in% c("271111", "271121") ~ "Natural gas",
+                                     hs_product_code == "271114" ~ "Crude oil",
+                                     TRUE ~ "Oil products")) %>%
+        select(-global_lng_import_value_sum)
+
+# inspect
+atlas_6digit
+atlas_6digit %>% glimpse()
+atlas_6digit %>% nrow() # 9898
+atlas_6digit %>% distinct(location_code) %>% nrow() # 27
+atlas_6digit %>% count(year) 
+atlas_6digit %>% count(hs_product_code, fuel_type) %>% print(n = nrow(.))
+atlas_6digit %>% count(location_code) %>% print(n = nrow(.))
+
+
+atlas_6digit %>% group_by(location_code) %>% summarize(import_sum = sum(import_value)) %>% arrange(desc(import_sum))
+atlas_6digit %>% group_by(location_code, partner_code) %>% summarize(import_sum = sum(import_value)) %>% 
+        arrange(location_code, desc(import_sum)) %>% print(n = nrow(.))
+
+atlas_4digit %>% group_by(location_code) %>% summarize(import_sum = sum(import_value)) %>% arrange(desc(import_sum))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# clean atlas_4digit to create consolidated atlas dataset ####
+# for crosswalk between HS product codes to IEA/SIEC classifications, see notes above w/ sources
+atlas_4digit
+atlas_4digit %>% glimpse()
+atlas_4digit %>% count(hs_product_code, fuel_type)
+atlas_4digit %>% distinct(location_code, year) %>% count(location_code)
+
+# get one row per country/year/fuel_type
+atlas <- atlas_4digit %>% 
+        group_by(location_code, year, hs_product_code) %>%
+        mutate(global_fuel_type_import_sum = sum(import_value),
+               russia_fuel_type_import = case_when(partner_code == "RUS" ~ import_value,
+                                                   TRUE ~ 0),
+               russia_flag = case_when(partner_code == "RUS" ~ 1, TRUE ~ 0),
+               ans_fuel_type_import = case_when(partner_code == "ANS" ~ import_value,
+                                                   TRUE ~ 0),
+               ans_fuel_type_import = max(ans_fuel_type_import)) %>%
+        arrange(desc(russia_flag)) %>% slice(1) %>%
+        select(location_code, year, hs_product_code, fuel_type, russia_fuel_type_import, ans_fuel_type_import,
+               global_fuel_type_import_sum, global_import_value_sum) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(russia_fuel_type_import = sum(russia_fuel_type_import),
+               ans_fuel_type_import = sum(ans_fuel_type_import),
+               global_fuel_type_import_sum = sum(global_fuel_type_import_sum)) %>%
+        select(-hs_product_code) %>%
+        slice(1) %>%
+        ungroup() %>%
+        left_join(., ee_country_crosswalk, by = c("location_code" = "iso_3_alpha")) %>%
+        select(country, mcp_grouping, everything()) %>%
+        mutate(country = case_when(country == "North Macedonia" ~ "N. Macedonia",
+                                   country == "Bosnia and Herzegovina" ~ "BiH",
+                                   TRUE ~ country))
+
+
+#////////////////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1037
+atlas %>% count(country) %>% nrow() # 27
+atlas %>% count(fuel_type)
+atlas %>% count(mcp_grouping, country, location_code) %>% print(n = nrow(.))
+
+# inspect countries missing one or more years for a given fuel_type
+# this was manually spot-checked in the atlas viewer/download and confirmed
+# i will add placeholder records with 0 import_value for these countries below
+atlas %>% count(country, year) %>% select(-n) %>% count(country) %>% print(n = nrow(.))
+atlas %>% count(country) %>% arrange(n) %>% print(n = nrow(.))
+atlas %>% count(country) %>% count(n)
+atlas %>% count(country) %>% filter(n < 40)
+
+# note armenia is missing crude oil record for every year except 2010
+atlas %>% filter(country == "Armenia") %>% count(fuel_type)
+atlas %>% filter(country == "Armenia", fuel_type == "Crude oil") %>% count(year)
+atlas_4digit %>% filter(location_code == "ARM", fuel_type == "Crude oil")
+
+# turkmenistan is missing crude oil for every year except 2009 and 2017
+atlas %>% filter(country == "Turkmenistan") %>% count(fuel_type)
+atlas %>% filter(country == "Turkmenistan", fuel_type == "Crude oil") %>% count(year)
+
+# albania is missing crude oil for 2013, 2014, 2015, 2017, 2018
+atlas %>% filter(country == "Albania") %>% count(fuel_type)
+atlas %>% filter(country == "Albania", fuel_type == "Crude oil") %>% count(year)
+
+# Tajikistan is missing crude oil for 2009, 2010, 2011, 2014, 2015
+atlas %>% filter(country == "Tajikistan") %>% count(fuel_type)
+atlas %>% filter(country == "Tajikistan", fuel_type == "Crude oil") %>% count(year)
+
+# Azerbaijan is missing crude oil for 2010, 2012, 2013, 2014
+atlas %>% filter(country == "Azerbaijan") %>% count(fuel_type)
+atlas %>% filter(country == "Azerbaijan", fuel_type == "Crude oil") %>% count(year)
+
+# Montenegro is missing crude oil for 2012, 2013, 2015, 2017
+atlas %>% filter(country == "Montenegro") %>% count(fuel_type)
+atlas %>% filter(country == "Montenegro", fuel_type == "Crude oil") %>% count(year)
+
+# N. Macedonia is missing crude oil for 2009, 2014, 2015, 2016
+atlas %>% filter(country == "N. Macedonia") %>% count(fuel_type)
+atlas %>% filter(country == "N. Macedonia", fuel_type == "Crude oil") %>% count(year)
+
+# Kyrgyzstan is missing crude oil for 2011
+atlas %>% filter(country == "Kyrgyzstan") %>% count(fuel_type)
+atlas %>% filter(country == "Kyrgyzstan", fuel_type == "Crude oil") %>% count(year)
+
+# Moldova is missing crude oil for 2010
+atlas %>% filter(country == "Moldova") %>% count(fuel_type)
+atlas %>% filter(country == "Moldova", fuel_type == "Crude oil") %>% count(year)
+
+# Slovenia is missing crude oil for 2010
+atlas %>% filter(country == "Slovenia") %>% count(fuel_type)
+atlas %>% filter(country == "Slovenia", fuel_type == "Crude oil") %>% count(year)
+
+# uzbekistan is missing natural gas for 2009
+atlas %>% filter(country == "Uzbekistan") %>% count(fuel_type)
+atlas %>% filter(country == "Uzbekistan", fuel_type == "Natural gas") %>% count(year)
+
+# check for ANS undeclared country
+atlas %>% arrange(desc(ans_fuel_type_import)) %>% select(country, year, fuel_type, ans_fuel_type_import) %>% print(n = 50)
+atlas %>% group_by(country) %>%
+        summarize(ans_imports = sum(ans_fuel_type_import)) %>%
+        ungroup() %>%
+        arrange(desc(ans_imports)) %>% print(n = 50)
+
+
+#///////////////////////////
+
+
+# create placeholder records for those country/years missing a fuel_type record ####
+
+# note armenia is missing crude oil record for every year except 2010
+armenia_placeholder <- atlas %>% filter(country == "Armenia", fuel_type == "Coal", 
+                                        year %in% c(2009, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+armenia_placeholder
+
+# turkmenistan is missing crude oil for every year except 2009 and 2017
+turkmenistan_placeholder <- atlas %>% filter(country == "Turkmenistan", fuel_type == "Coal", 
+                                             year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+turkmenistan_placeholder
+
+# albania is missing crude oil for 2013, 2014, 2015, 2017, 2018
+albania_placeholder <- atlas %>% filter(country == "Albania", fuel_type == "Coal", 
+                                        year %in% c(2013, 2014, 2015, 2017, 2018)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+albania_placeholder
+
+# Tajikistan is missing crude oil for 2009, 2010, 2011, 2014, 2015
+tajikistan_placeholder <- atlas %>% filter(country == "Tajikistan", fuel_type == "Coal", 
+                                        year %in% c(2009, 2010, 2011, 2014, 2015)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+tajikistan_placeholder
+
+# Azerbaijan is missing crude oil for 2010, 2012, 2013, 2014
+azerbaijan_placeholder <- atlas %>% filter(country == "Azerbaijan", fuel_type == "Coal", 
+                                           year %in% c(2010, 2012, 2013, 2014)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+azerbaijan_placeholder
+
+# Montenegro is missing crude oil for 2012, 2013, 2015, 2017
+montenegro_placeholder <- atlas %>% filter(country == "Montenegro", fuel_type == "Coal", 
+                                           year %in% c(2012, 2013, 2015, 2017)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+montenegro_placeholder
+
+# N. Macedonia is missing crude oil for 2009, 2014, 2015, 2016
+n_macedonia_placeholder <- atlas %>% filter(country == "N. Macedonia", fuel_type == "Coal", 
+                                           year %in% c(2009, 2014, 2015, 2016)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+n_macedonia_placeholder
+
+# Kyrgyzstan is missing crude oil for 2011
+kyrgyzstan_placeholder <- atlas %>% filter(country == "Kyrgyzstan", fuel_type == "Coal", 
+                                            year %in% c(2011)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+kyrgyzstan_placeholder
+
+# Moldova is missing crude oil for 2010
+moldova_placeholder <- atlas %>% filter(country == "Moldova", fuel_type == "Coal", 
+                                           year %in% c(2010)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+moldova_placeholder
+
+# Slovenia is missing crude oil for 2010
+slovenia_placeholder <- atlas %>% filter(country == "Slovenia", fuel_type == "Coal", 
+                                        year %in% c(2010)) %>% 
+        mutate(fuel_type = "Crude oil",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+slovenia_placeholder
+
+# uzbekistan is missing natural gas for 2009
+uzbekistan_placeholder <- atlas %>% filter(country == "Uzbekistan", fuel_type == "Coal", year %in% c(2009)) %>% 
+        mutate(fuel_type = "Natural gas",
+               russia_fuel_type_import = 0,
+               global_fuel_type_import_sum = 0) 
+uzbekistan_placeholder
+
+# bind placeholder rows to atlas 
+atlas <- atlas %>% bind_rows(., armenia_placeholder) %>% 
+        bind_rows(., turkmenistan_placeholder) %>%
+        bind_rows(., albania_placeholder) %>%
+        bind_rows(., tajikistan_placeholder) %>%
+        bind_rows(., azerbaijan_placeholder) %>%
+        bind_rows(., montenegro_placeholder) %>%
+        bind_rows(., n_macedonia_placeholder) %>%
+        bind_rows(., kyrgyzstan_placeholder) %>%
+        bind_rows(., moldova_placeholder) %>%
+        bind_rows(., slovenia_placeholder) %>%
+        bind_rows(., uzbekistan_placeholder) %>%
+        arrange(country, year)
+
+
+#/////////////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1080 ; 10 years * 4 fuel_types * 27 countries = 1080
+atlas %>% count(country) %>% arrange(n)
+atlas %>% count(country) %>% count(n)
+atlas %>% count(country, fuel_type) %>% count(n)
+
+atlas %>% filter(country == "Armenia") %>% count(fuel_type)
+atlas %>% filter(country == "Armenia", fuel_type == "Crude oil") %>% count(year)
+atlas %>% filter(country == "Armenia") 
+atlas_4digit %>% filter(location_code == "ARM", fuel_type == "Crude oil")
+atlas_4digit %>% filter(location_code == "ARM", hs_product_code %in% c("2709"))
+atlas_4digit %>% filter(location_code == "ARM", hs_product_code %in% c("2707"))
+
+
+#////////////////////////////
+
+
+# get 6digit atlas_non_natural_gas to add/subtract from atlas 4digit crude/natural gas ####
+# summarized as one record per country/year showing russian non_gas imports and global non_gas imports
+# will then join this below with atlas data and subtract russia/global crude/oil product from russia/global natural gas, 
+# and add to crude/oil products
+# atlas_non_natural_gas is at one record per country/year
+# atlas is at one record per country/year/fuel-type
+atlas_non_natural_gas <- atlas_6digit %>%
+        mutate(russia_non_gas_crude_oil_import = case_when(partner_code == "RUS" & fuel_type == "Crude oil" ~ import_value, 
+                                                           TRUE ~ 0),
+               russia_non_gas_oil_products_import = case_when(partner_code == "RUS" & fuel_type == "Oil products" ~ import_value, 
+                                                           TRUE ~ 0),
+               ans_non_gas_crude_oil_import = case_when(partner_code == "ANS" & fuel_type == "Crude oil" ~ import_value, 
+                                              TRUE ~ 0),
+               ans_non_gas_oil_products_import = case_when(partner_code == "ANS" & fuel_type == "Oil products" ~ import_value, 
+                                                        TRUE ~ 0),
+               global_non_gas_crude_oil_import = case_when(fuel_type == "Crude oil" ~ import_value, 
+                                                           TRUE ~ 0),
+               global_non_gas_oil_products_import = case_when(fuel_type == "Oil products" ~ import_value, 
+                                                           TRUE ~ 0)) %>%
+        group_by(location_code, year) %>%
+        mutate(russia_non_gas_crude_oil_import = sum(russia_non_gas_crude_oil_import),
+               ans_non_gas_crude_oil_import = sum(ans_non_gas_crude_oil_import),
+               russia_non_gas_oil_products_import = sum(russia_non_gas_oil_products_import),
+               ans_non_gas_oil_products_import = sum(ans_non_gas_oil_products_import),
+                global_non_gas_crude_oil_import_value_sum = sum(global_non_gas_crude_oil_import),
+               global_non_gas_oil_products_import_value_sum = sum(global_non_gas_oil_products_import)) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(location_code, year, 
+               russia_non_gas_crude_oil_import, ans_non_gas_crude_oil_import,
+               russia_non_gas_oil_products_import, ans_non_gas_oil_products_import,
+               global_non_gas_crude_oil_import_value_sum, global_non_gas_oil_products_import_value_sum) 
+
+# inspect
+atlas_non_natural_gas
+atlas_non_natural_gas %>% glimpse()
+atlas_non_natural_gas %>% nrow() # 269
+atlas_non_natural_gas %>% count(location_code) %>% nrow() # 27
+atlas_non_natural_gas %>% count(location_code, year)
+atlas_non_natural_gas %>% count(location_code, year) %>% distinct(n) # 1
+# note that uzbekistan didnt have any non-natural-gas for 2009, which is fine
+atlas_non_natural_gas %>% count(location_code, year) %>% count(location_code) %>% print(n = nrow(.))
+atlas_non_natural_gas %>% filter(location_code == "UZB") %>% count(year)
+
+# check russia, ans, and global
+atlas_non_natural_gas %>% filter(ans_non_gas_crude_oil_import > 0 | russia_non_gas_crude_oil_import > 0)
+atlas_6digit %>% filter(location_code == "ARM", year == 2017)
+# ans sum matches
+# check russia sum 
+1456640 + 680818 == 2137458 # 2711 series converted to oil products
+2607 # 2711 series converted to crude oil
+# check global
+atlas_6digit %>% filter(location_code == "ARM", year == 2017) %>% group_by(fuel_type) %>% summarize(sum = sum(import_value))
+2607 # global_non_gas_crude_oil_imports
+2720004 # global_non_gas_oil_products_imports
+
+# check zero values
+atlas_non_natural_gas %>% skim()
+atlas_non_natural_gas %>% filter(ans_non_gas_crude_oil_import == 0)
+atlas_non_natural_gas %>% filter(russia_non_gas_crude_oil_import == 0)
+atlas_non_natural_gas %>% filter(ans_non_gas_oil_products_import == 0)
+atlas_non_natural_gas %>% filter(russia_non_gas_oil_products_import == 0)
+atlas_6digit %>% filter(location_code == "ALB", year == 2017)
+
+
+#///////////////////////////
+
+
+# subtract non-gas from natural gas fuel type, and add it to crude oil
+# in line with SIEC/IEA classification standards (documented in notes above)
+atlas <- atlas %>% left_join(., atlas_non_natural_gas %>% 
+                select(location_code, year, russia_non_gas_crude_oil_import, ans_non_gas_crude_oil_import, 
+                       russia_non_gas_oil_products_import, ans_non_gas_oil_products_import,
+                       global_non_gas_crude_oil_import_value_sum, global_non_gas_oil_products_import_value_sum), 
+                    by = c("location_code", "year")) %>% 
+        # select(country, year, fuel_type, russia_fuel_type_import, russia_non_gas_crude_oil_import,
+        # russia_non_gas_oil_products_import)
+        # note that uzbekistan in 2009 has no non-natural gas, so has NA values and won't have any adjustments
+        mutate(russia_fuel_type_import_adj = case_when(is.na(russia_non_gas_crude_oil_import) ~ russia_fuel_type_import,
+                fuel_type == "Crude oil" ~ russia_fuel_type_import + russia_non_gas_crude_oil_import,
+                fuel_type == "Oil products" ~ russia_fuel_type_import + russia_non_gas_oil_products_import,
+                fuel_type == "Natural gas" ~ russia_fuel_type_import - russia_non_gas_crude_oil_import - 
+                        russia_non_gas_oil_products_import,
+                TRUE ~ russia_fuel_type_import),
+               ans_fuel_type_import_adj = case_when(is.na(ans_non_gas_crude_oil_import) ~ ans_fuel_type_import,
+                    fuel_type == "Crude oil" ~ ans_fuel_type_import + ans_non_gas_crude_oil_import,
+                    fuel_type == "Oil products" ~ ans_fuel_type_import + ans_non_gas_oil_products_import,
+                    fuel_type == "Natural gas" ~ ans_fuel_type_import - ans_non_gas_crude_oil_import - 
+                            ans_non_gas_oil_products_import,
+                    TRUE ~ ans_fuel_type_import),
+               global_fuel_type_import_sum_adj = case_when(is.na(global_non_gas_crude_oil_import_value_sum) ~ 
+                                                                   global_fuel_type_import_sum,
+                   fuel_type == "Crude oil" ~ global_fuel_type_import_sum + global_non_gas_crude_oil_import_value_sum,
+                   fuel_type == "Oil products" ~ global_fuel_type_import_sum + global_non_gas_oil_products_import_value_sum,
+                   fuel_type == "Natural gas" ~ global_fuel_type_import_sum - global_non_gas_crude_oil_import_value_sum -
+                           global_non_gas_oil_products_import_value_sum,
+                   TRUE ~ global_fuel_type_import_sum))
+
+
+#////////////////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1080
+atlas %>% ncol() # 24
+atlas %>% distinct(country) %>% nrow() # 27
+
+atlas %>% filter(russia_non_gas_crude_oil_import == 0 | ans_non_gas_crude_oil_import == 0) %>% 
+        select(country, year, fuel_type, russia_fuel_type_import, russia_non_gas_crude_oil_import, 
+               russia_non_gas_oil_products_import, russia_fuel_type_import_adj, 
+               ans_fuel_type_import, ans_non_gas_crude_oil_import, ans_non_gas_oil_products_import, ans_fuel_type_import_adj, 
+               global_fuel_type_import_sum, global_non_gas_crude_oil_import_value_sum, 
+               global_non_gas_oil_products_import_value_sum, global_fuel_type_import_sum_adj)
+
+# check russia adjustments
+atlas %>% filter(russia_non_gas_crude_oil_import > 0 | ans_non_gas_crude_oil_import > 0) %>% 
+        select(country, year, fuel_type, russia_fuel_type_import, russia_non_gas_crude_oil_import, 
+                russia_non_gas_oil_products_import, russia_fuel_type_import_adj)
+# armenia natural gas / crude oil in 2017: 
+247302865 - 2137458 - 2607 == 245162800
+143752565 + 2137458 == 145890023
+0 + 2607 == 2607
+
+# check ans adjustments
+atlas %>% filter(ans_non_gas_crude_oil_import > 0, ans_non_gas_oil_products_import > 0) %>% 
+        select(country, year, fuel_type, ans_fuel_type_import, ans_non_gas_crude_oil_import, 
+               ans_non_gas_oil_products_import, ans_fuel_type_import_adj) %>%
+        print(n = 20)
+# slovakia natural gas / crude oil in 2009: 
+13656698 - 373410 - 4514640 == 8768648
+3765 + 373410 == 377175
+71040966 + 4514640 == 75555606
+
+# check global adjustments
+atlas %>% filter(global_non_gas_crude_oil_import_value_sum > 0 | global_non_gas_oil_products_import_value_sum > 0) %>% 
+        select(country, year, fuel_type, 
+               global_fuel_type_import_sum, global_non_gas_crude_oil_import_value_sum, 
+               global_non_gas_oil_products_import_value_sum, global_fuel_type_import_sum_adj) %>%
+        print(n = 20)
+# albania natural gas / crude oil in 2009: 
+50229328 - 275323 - 47553791 == 2400214
+268807578 + 47553791 == 316361369
+117923328 + 275323 == 118198651
+
+
+#////////////////////////////
+
+
+# calculate fuel-type level and aggregate fossil fuel-level shares ####
+# (for russia and ans) used in analysis
+# note the fossil_fuel totals are left joined to fuel-type records, so the fossil fuel totals are duplicated for each fuel type
+# this is fine and convenient, will just need to group_by(country, year) %>% slice(1) to get one fossil record per country/year
+atlas <- atlas %>% mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum = russia_fuel_type_import / 
+                       global_fuel_type_import_sum,
+                 russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = russia_fuel_type_import_adj / 
+                         global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_import_value_sum = russia_fuel_type_import / 
+                       global_import_value_sum,
+               russia_fuel_type_import_as_share_of_global_import_value_sum_adj = russia_fuel_type_import_adj / 
+                       global_import_value_sum,
+               ans_fuel_type_import_as_share_of_global_fuel_type_import_sum = ans_fuel_type_import / 
+                       global_fuel_type_import_sum,
+               ans_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = ans_fuel_type_import_adj / 
+                       global_fuel_type_import_sum_adj,
+               ans_fuel_type_import_as_share_of_global_import_value_sum = ans_fuel_type_import / 
+                       global_import_value_sum,
+               ans_fuel_type_import_as_share_of_global_import_value_sum_adj = ans_fuel_type_import_adj / 
+                       global_import_value_sum) %>%
+        group_by(location_code, year) %>%
+        # note there is no need to use the HS/SIEC code adjusted figures here, since 
+        # the adjustment just reallocated some imports across fuel types, but the total fossil import sum is the same
+        mutate(russia_fossil_import_sum = sum(russia_fuel_type_import),
+               ans_fossil_import_sum = sum(ans_fuel_type_import),
+               global_fossil_import_sum = sum(global_fuel_type_import_sum)) %>%
+        ungroup() %>%
+        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum = russia_fossil_import_sum /
+                       global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum = russia_fossil_import_sum / 
+                       global_import_value_sum,
+               ans_fossil_import_sum_as_share_of_global_fossil_import_sum = ans_fossil_import_sum /
+                       global_fossil_import_sum,
+               ans_fossil_import_sum_as_share_of_global_import_value_sum = ans_fossil_import_sum / 
+                       global_import_value_sum) 
+        
+
+#/////////////////////        
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1080
+atlas %>% ncol() # 39
+atlas %>% distinct(country) %>% nrow() # 27
+atlas %>% count(fuel_type)
+atlas %>% count(mcp_grouping, country, location_code) %>% print(n = nrow(.))
+atlas %>% count(country, year) %>% count(country) %>% distinct(n)
+atlas %>% count(country) %>% count(n)
+
+
+# note the checks below are to confirm the one country/year per row structure, not really the values
+# so for simplicity, they just use the unadjusted values, since no extra calculations are needed to confirm those
+# the adjustments themselves are checked above
+
+# check russia/global fuel_type summaries 
+atlas_4digit %>% filter(location_code == "ALB", year == 2009, fuel_type == "Crude oil") 
+atlas_4digit %>% filter(location_code == "ALB", year == 2009, fuel_type == "Crude oil") %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "ALB", year == 2009, fuel_type == "Crude oil") %>%
+        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, global_import_value_sum)
+
+
+atlas_4digit %>% filter(location_code == "BLR", year == 2012, fuel_type == "Natural gas") 
+atlas_4digit %>% filter(location_code == "BLR", year == 2012, fuel_type == "Natural gas") %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "BLR", year == 2012, fuel_type == "Natural gas") %>%
+        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, global_import_value_sum)
+
+
+atlas_4digit %>% filter(location_code == "MDA", year == 2015, fuel_type == "Coal") %>% print(n = nrow(.))
+atlas_4digit %>% filter(location_code == "MDA", year == 2015, fuel_type == "Coal") %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "MDA", year == 2015, fuel_type == "Coal") %>%
+        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, global_import_value_sum)
+
+
+atlas_4digit %>% filter(location_code == "UKR", year == 2018, fuel_type == "Oil products") %>% print(n = nrow(.))
+atlas_4digit %>% filter(location_code == "UKR", year == 2018, fuel_type == "Oil products") %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "UKR", year == 2018, fuel_type == "Oil products") %>%
+        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, global_import_value_sum)
+
+
+# check russia/global fossil fuel summaries
+atlas_4digit %>% filter(location_code == "ALB", year == 2009) 
+atlas_4digit %>% filter(location_code == "ALB", year == 2009) %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "ALB", year == 2009) %>%
+        select(country, year, fuel_type, russia_fossil_import_sum, global_fossil_import_sum, global_import_value_sum)
+
+atlas_4digit %>% filter(location_code == "ARM", year == 2011) 
+atlas_4digit %>% filter(location_code == "ARM", year == 2011) %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "ARM", year == 2011) %>%
+        select(country, year, fuel_type, russia_fossil_import_sum, global_fossil_import_sum, global_import_value_sum)
+
+
+atlas_4digit %>% filter(location_code == "AZE", year == 2017) 
+atlas_4digit %>% filter(location_code == "AZE", year == 2017) %>%
+        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
+                  global_fuel_type_import_sum = sum(import_value))
+atlas %>% filter(location_code == "AZE", year == 2017) %>%
+        select(country, year, fuel_type, russia_fossil_import_sum, global_fossil_import_sum, global_import_value_sum)
+
+
+# check ans
+# result, ANS isn't an issue for E&E, E&E grads or CARS the way it is for EU-15
+# georgia has the highest ans share at .016 (1.6%), following by .008
+# note on atlas website, germany has 36 bil in 2711 natural gas imports in 2018; only 102 mil from russia; 27.1 bil from ANS
+# 92% of german imports from ANS are of 2711 natural gas
+atlas %>% glimpse()
+atlas %>% group_by(country, fuel_type) %>% 
+        summarize(avg_ans_fuel_type_import_as_share_of_global_import_value = 
+                          mean(ans_fuel_type_import_as_share_of_global_import_value_sum_adj)) %>%
+        ungroup() %>% arrange(desc(avg_ans_fuel_type_import_as_share_of_global_import_value)) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get iea_extract ####
+iea
+iea %>% glimpse()
+iea %>% nrow() # 350
+iea %>% ncol() # 157
+iea %>% count(mcp_grouping, country) %>% print(n = nrow(.)) # 35 countries * 10 years = 350 records
+iea %>% select(country, year)
+
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1080
+atlas %>% ncol() # 39
+atlas %>% count(mcp_grouping, country) %>% print(n = nrow(.)) # 31 countries (no kosovo, eu, us, russia)
+
+
+# get iea extract
+iea_extract <- iea %>% filter(country %in% (atlas %>% distinct(country) %>% pull(country))) %>%
+        select(country, year, net_energy_imports_as_share_of_tes, 
+               net_coal_imports_as_share_of_tes, net_crude_oil_imports_as_share_of_tes,
+               net_oil_products_imports_as_share_of_tes, net_natural_gas_imports_as_share_of_tes) %>%
+        pivot_longer(cols = -c(country, year, net_energy_imports_as_share_of_tes),
+                     names_to = "var", values_to = "net_fuel_type_imports_as_share_of_tes") %>%
+        mutate(fuel_type = case_when(var == "net_coal_imports_as_share_of_tes" ~ "Coal",
+                                     var == "net_crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                                     var == "net_oil_products_imports_as_share_of_tes" ~ "Oil products",
+                                     var == "net_natural_gas_imports_as_share_of_tes" ~ "Natural gas")) %>%
+        select(-var)
+
+# inspect
+iea_extract
+iea_extract %>% glimpse()
+iea_extract %>% nrow() # 1080
+iea_extract %>% ncol() # 5
+iea_extract %>% count(country) %>% nrow() # 27
+iea_extract %>% count(fuel_type) # 270
+
+
+#///////////////////
+
+
+# get iea_extract_2 including raw imports by fuel type, which is needed for ron's request of 
+# estimated russian imports as share of tes chart
+iea_extract_2 <- iea %>% filter(country %in% (atlas %>% distinct(country) %>% pull(country))) %>%
+        select(country, year,
+               Imports_coal, Imports_crude_oil, Imports_oil_products, Imports_natural_gas, TES_total) %>%
+        mutate(coal_imports_as_share_of_tes = Imports_coal / TES_total,
+               crude_oil_imports_as_share_of_tes = Imports_crude_oil / TES_total,
+               oil_products_imports_as_share_of_tes = Imports_oil_products / TES_total,
+               natural_gas_imports_as_share_of_tes = Imports_natural_gas / TES_total) %>%
+        select(country, year, coal_imports_as_share_of_tes, crude_oil_imports_as_share_of_tes, 
+               oil_products_imports_as_share_of_tes, natural_gas_imports_as_share_of_tes, TES_total) %>%
+        pivot_longer(cols = -c(country, year, TES_total),
+                     names_to = "var", values_to = "fuel_type_imports_as_share_of_tes") %>%
+        mutate(fuel_type = case_when(var == "coal_imports_as_share_of_tes" ~ "Coal",
+                                     var == "crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                                     var == "oil_products_imports_as_share_of_tes" ~ "Oil products",
+                                     var == "natural_gas_imports_as_share_of_tes" ~ "Natural gas")) %>%
+        select(-var)
+
+# inspect
+iea_extract_2
+iea_extract_2 %>% glimpse()
+iea_extract_2 %>% nrow() # 1080
+iea_extract_2 %>% ncol() # 5
+iea_extract_2 %>% count(country) %>% nrow() # 27
+iea_extract_2 %>% count(fuel_type) # 270
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# join iea_extract and iea_extract_2 with atlas ####
+atlas <- atlas %>% left_join(., iea_extract, by = c("country", "year", "fuel_type")) %>%
+        left_join(., iea_extract_2, by = c("country", "year", "fuel_type"))
+
+
+#////////////////////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1080
+atlas %>% filter(year == 2018) %>%
+        select(country, year, fuel_type, net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes)
+
+# confirm adding net_fuel_type_imports_as_share_of_tes across 4 fuel types will give aggregate 
+# correctly into net_fossil_imports_as_share_of_tes
+# this is also confirmed in the iea code, but reconfirming here manually as a check
+# for albania 2018
+atlas %>% filter(country == "Albania", year == 2018) %>% 
+        select(country, year, fuel_type, net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes)
+# sum of each fuels net_fuel_imports_as_share_of_tes (note tes is overall tes, not fuel-level tes) is .1442,
+# which matches aggregate net_energy_imports_as_share_of_test (w very small rounding errors)
+((223 - 144) / 2336) +
+        ((298 - 911) / 2336) +
+        ((841 - 0) / 2336) +
+        ((32 - 32) / 2336) +
+        ((0 - 0) / 2336) +
+        ((735 - 735) / 2336) +
+        ((14 - 14) / 2336) +
+        ((271 - 162) / 2336) +
+        ((-79 - 0) / 2336) +
+        ((0 - 0) / 2336)
+
+(2336 - 1998) / 2336 # 14.46
+
+# so summing the 4 fuel_type net imports into a fossil_net_imports measure is valid
+atlas %>% filter(country == "Albania", year == 2018) %>% 
+        select(country, year, fuel_type, net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes) %>%
+        summarize(net_fossil_imports_as_share_of_tes = sum(net_fuel_type_imports_as_share_of_tes))
+((223 - 144) / 2336) +
+        ((298 - 911) / 2336) +
+        ((841 - 0) / 2336) +
+        ((32 - 32) / 2336)
+
+
+#////////////////////////////////
+
+
+# add net_fossil_imports_as_share_of_tes ####
+atlas <- atlas %>% group_by(country, year) %>% 
+        mutate(net_fossil_imports_as_share_of_tes = sum(net_fuel_type_imports_as_share_of_tes)) %>%
+        ungroup()
+
+# inspect
+atlas 
+atlas %>% glimpse()
+atlas %>% nrow() # 1080
+atlas %>% ncol() # 44
+atlas %>% filter(country == "Albania", year == 2018) %>% 
+        select(country, year, fuel_type, net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes,
+               net_fossil_imports_as_share_of_tes)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# manually update moldova numbers ####
+
+# manual updates are needed because moldova's figures in atlas/comtrade are unreliable
+# most notably the natural gas figure, probably because russia gives transnistria gas effectively for free
+# with debt added to moldovagaz's account
+# but the oil products atlas/comtrade numbers could also be off, 
+# so developed method to estimate it based on moldova ministry of energy docs (see emails)
+
+# based on email discussion with andrew popelka in EI, will set moldova natural gas imports to come 100% from russia
+
+# will also set moldova crude oil imports from russia to 0%
+# i guess i could zero out all moldova's crude imports, because andrews says they don't have a refinery
+# but IEA does show 1 ktoe of crude imports in 2013, and atlas shows small but non-zero imports as well
+# and since zeroing out just russia's share is really enough to avoid issues in the charts, it's probably
+# best to do as little manual edits as necessary, so will leave non-russia crude imports alone
+
+# inspect moldova crude oil imports
+atlas %>% filter(country == "Moldova", fuel_type == "Crude oil") %>% 
+        select(country, year, fuel_type, russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)
+
+
+# inspect manual update to atlas for moldova
+atlas %>% left_join(., moe_oil_products_extract %>% select(country, year, share_of_total_oil_products_imports_from_russia), 
+                    by = c("country", "year")) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = case_when(country == "Moldova" &
+                                                                                                       fuel_type == "Natural gas" ~ 1,
+                                                                                               country == "Moldova" & fuel_type == "Crude oil" ~ 0,
+                                                                                               country == "Moldova" & fuel_type == "Oil products" ~ share_of_total_oil_products_imports_from_russia / 100,
+                                                                                               TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               russia_fuel_type_import_as_share_of_tes = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>%
+        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum = case_when(country == "Moldova" ~
+                                                                                                 sum(russia_fuel_type_import_as_share_of_tes),
+                                                                                         TRUE ~ russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) %>%
+        ungroup() %>%
+        filter(country == "Moldova") %>% 
+        arrange(desc(year)) %>%
+        select(country, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               share_of_total_oil_products_imports_from_russia,
+               fuel_type_imports_as_share_of_tes,
+               russia_fuel_type_import_as_share_of_tes,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum)
+
+
+#////////////////////////////////
+
+
+# read in moe_oil_products_extract
+moe_oil_products_extract <- read_excel(path = "data/atlas_un_comtrade_trade_flows/moldova/moldova_moe_oil_products_extract.xlsx",
+                                       sheet = "data")
+moe_oil_products_extract
+moe_oil_products_extract %>% glimpse()
+moe_oil_products_extract %>% nrow() # 10
+moe_oil_products_extract %>% ncol() # 11
+
+# update atlas manually for moldova
+atlas <- atlas %>% left_join(., moe_oil_products_extract %>% select(country, year, share_of_total_oil_products_imports_from_russia), 
+                     by = c("country", "year")) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = case_when(country == "Moldova" &
+                         fuel_type == "Natural gas" ~ 1,
+                        country == "Moldova" & fuel_type == "Crude oil" ~ 0,
+                        country == "Moldova" & fuel_type == "Oil products" ~ share_of_total_oil_products_imports_from_russia / 100,
+                        TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               russia_fuel_type_import_as_share_of_tes = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>%
+        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum = case_when(country == "Moldova" ~
+                                        sum(russia_fuel_type_import_as_share_of_tes),
+                                        TRUE ~ russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) %>%
+        ungroup() %>%
+        select(-c(share_of_total_oil_products_imports_from_russia,
+               russia_fuel_type_import_as_share_of_tes))
+       
+ 
+#///////////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1080
+atlas %>% ncol() # 44
+
+atlas %>%  filter(country == "Moldova") %>% 
+        select(country, year, fuel_type,
+               russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               fuel_type_imports_as_share_of_tes,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>%
+        print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get mcp_grouping_aggregate_records for atlas ####
+# note it will have NA for measurement vars not being used in analysis
+
+
+# get grouping_vars 
+grouping_vars <- atlas %>% select(mcp_grouping, year, fuel_type) %>% names()
+grouping_vars
+
+# get measurement_vars
+measurement_vars <- atlas %>% select(-c(country, mcp_grouping, location_code, year, fuel_type, world_bank_region,
+                                        iso_3_numeric, ee_status, 
+                                        mcp_subgroup, region, sub_region)) %>%
+        names()
+measurement_vars
+
+# get non_measurement_vars
+non_measurement_vars <- atlas %>% select(-c(!!!syms(measurement_vars), !!!syms(grouping_vars))) %>% names()
+non_measurement_vars
+
+# create get_non_measurement_vars_tbl()
+get_non_measurement_vars_tbl <- function(non_measurement_vars) {
+        
+        map(.x = non_measurement_vars, .f = ~ tibble(!!.x := NA)) %>% bind_cols()
+}
+# map(.x = 1:2, .f = ~ get_non_measurement_vars_tbl(non_measurement_vars)) %>% bind_rows()
+
+# get mcp_grouping_aggregate_records
+mcp_grouping_aggregate_records <- atlas %>% 
+        group_by(!!!syms(grouping_vars)) %>%
+        summarize(across(.cols = all_of(measurement_vars), ~ mean(.x, na.rm = TRUE))) %>%
+        ungroup() %>%
+        bind_cols(., map(.x = 1:nrow(atlas %>% distinct(!!!syms(grouping_vars))), 
+                         .f = ~ get_non_measurement_vars_tbl(non_measurement_vars)) %>% bind_rows()) %>%
+        select(c(!!!syms(atlas %>% names()))) %>% 
+        mutate(country = mcp_grouping,
+               mcp_grouping = mcp_grouping,
+               location_code = mcp_grouping,
+               mcp_grouping_aggregate_flag = 1)
+
+
+#/////////////////////
+
+
+# inspect
+mcp_grouping_aggregate_records %>% print(n = 20)
+mcp_grouping_aggregate_records %>% glimpse()
+mcp_grouping_aggregate_records %>% nrow() # 160
+mcp_grouping_aggregate_records %>% ncol() # 45
+mcp_grouping_aggregate_records %>% count(country)
+mcp_grouping_aggregate_records %>% distinct(mcp_grouping, country, location_code)
+atlas %>% distinct(mcp_grouping, year, fuel_type) %>% nrow() # 160
+atlas %>% nrow() # 1080
+atlas %>% ncol() # 44
+# check that nrow(atlas) + nrow(aggregates) == nrow(final iea once aggregates are joined - see below)
+1080 + 160 == 1240
+
+# check CARs
+identical(mcp_grouping_aggregate_records %>% filter(mcp_grouping == "CARs") %>% 
+                  select(!!!syms(grouping_vars), !!!syms(measurement_vars)) %>% filter(year < 2019) %>%
+                  select(mcp_grouping, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+                         russia_fuel_type_import_as_share_of_global_import_value_sum_adj),
+          
+          atlas %>% filter(mcp_grouping == "CARs") %>% 
+                  group_by(!!!syms(grouping_vars)) %>%
+                  summarize(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, na.rm = TRUE),
+                            russia_fuel_type_import_as_share_of_global_import_value_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_import_value_sum_adj, na.rm = TRUE)) %>%
+                  ungroup() %>%
+                  filter(year < 2019))
+
+# check E&E Eurasia
+identical(mcp_grouping_aggregate_records %>% filter(mcp_grouping == "E&E Eurasia") %>% 
+                  select(!!!syms(grouping_vars), !!!syms(measurement_vars)) %>% filter(year < 2019) %>%
+                  select(mcp_grouping, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+                         russia_fuel_type_import_as_share_of_global_import_value_sum_adj),
+          
+          atlas %>% filter(mcp_grouping == "E&E Eurasia") %>% 
+                  group_by(!!!syms(grouping_vars)) %>%
+                  summarize(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, na.rm = TRUE),
+                            russia_fuel_type_import_as_share_of_global_import_value_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_import_value_sum_adj, na.rm = TRUE)) %>%
+                  ungroup() %>%
+                  filter(year < 2019))
+
+# check E&E Balkans
+identical(mcp_grouping_aggregate_records %>% filter(mcp_grouping == "E&E Balkans") %>% 
+                  select(!!!syms(grouping_vars), !!!syms(measurement_vars)) %>% filter(year < 2019) %>%
+                  select(mcp_grouping, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+                         russia_fuel_type_import_as_share_of_global_import_value_sum_adj),
+          
+          atlas %>% filter(mcp_grouping == "E&E Balkans") %>% 
+                  group_by(!!!syms(grouping_vars)) %>%
+                  summarize(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, na.rm = TRUE),
+                            russia_fuel_type_import_as_share_of_global_import_value_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_import_value_sum_adj, na.rm = TRUE)) %>%
+                  ungroup() %>%
+                  filter(year < 2019))
+
+# check E&E graduates
+identical(mcp_grouping_aggregate_records %>% filter(mcp_grouping == "E&E graduates") %>% 
+                  select(!!!syms(grouping_vars), !!!syms(measurement_vars)) %>% filter(year < 2019) %>%
+                  select(mcp_grouping, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+                         russia_fuel_type_import_as_share_of_global_import_value_sum_adj),
+          
+          atlas %>% filter(mcp_grouping == "E&E graduates") %>% 
+                  group_by(!!!syms(grouping_vars)) %>%
+                  summarize(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, na.rm = TRUE),
+                            russia_fuel_type_import_as_share_of_global_import_value_sum_adj = 
+                                    mean(russia_fuel_type_import_as_share_of_global_import_value_sum_adj, na.rm = TRUE)) %>%
+                  ungroup() %>%
+                  filter(year < 2019))
+
+
+#/////////////////////
+
+
+# add the aggregate records
+atlas <- atlas %>% 
+        mutate(mcp_grouping_aggregate_flag = 0) %>%
+        bind_rows(., mcp_grouping_aggregate_records)
+
+
+#/////////////////////
+
+
+# inspect
+atlas 
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 45
+atlas %>% distinct(country) %>% nrow() # 31
+atlas %>% count(mcp_grouping, country, location_code, mcp_grouping_aggregate_flag) %>% print(n = nrow(.))
+atlas %>% count(mcp_grouping_aggregate_flag)
+atlas %>% filter(mcp_grouping_aggregate_flag == 1) %>% count(mcp_grouping, country, location_code) %>% print(n = nrow(.))
+
+# manually check e&E eurasia for 2018
+
+# coal
+atlas %>% filter(mcp_grouping == "E&E Eurasia" | country == "E&E Eurasia", year == 2018,
+                 fuel_type == "Coal") %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) 
+(.442  + .0107 + .695 + .882 + .895 + .626) / 6 # .592
+
+# natural gas
+atlas %>% filter(mcp_grouping == "E&E Eurasia" | country == "E&E Eurasia", year == 2018,
+                 fuel_type == "Natural gas") %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) 
+(.756 + .488 + 1 + .0271 + 1 + 0) / 6 # .54
+
+# crude oil
+# note crude only has five countries in denominator
+atlas %>% filter(mcp_grouping == "E&E Eurasia" | country == "E&E Eurasia", year == 2018,
+                 fuel_type == "Crude oil") %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) 
+(.617 + .999 + 0 + 0 + .0129) / 5 # .32
+
+# oil products
+atlas %>% filter(mcp_grouping == "E&E Eurasia" | country == "E&E Eurasia", year == 2018,
+                 fuel_type == "Oil products") %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) 
+(.697 + .138 + .944 + .178 + .149 + .373) / 6 # .41
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////        
+
+
+# final checks
+
+# look up serbia in 2018 in atlas explorer
+# 235 mil in 2711 imports from russia, on 301 mil total 2711 imports
+# atlas explorer shows 78% russia share of 2711 imports
+235 / 301 # ~ .78
+# but after adjusting to drop non_gas from 2711, it boosts russia share of 2711 imports to ~ 99%
+atlas %>% filter(country == "Serbia", year == 2018) %>% 
+        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, 
+               russia_fuel_type_import_adj, 
+               global_fuel_type_import_sum_adj)
+225502624 / 225569191 # ~ 99%
+atlas %>% filter(country == "Serbia", year == 2018) %>% 
+        select(country, year, fuel_type, russia_fuel_type_import_adj,
+               global_fuel_type_import_sum_adj, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# correct mcp_grouping_aggregate_records to drop azerbaijan from iea net figures ####
+# note that the iea dataset did drop azerbaijan when creating iea_grouping_aggregate_records; 
+# azerbaijan is the only difference between the iea-variable aggregate records in atlas vs the original iea dataset 
+# but because the sequence of adding the iea_extracts before getting mcp_grouping_aggregate_records
+# i didn't take aggregate records direct from iea, since no other atlas variables had aggregate records yet
+# will recreate iea_extract and iea_extract_2 for eurasia
+
+# get iea_extract_eurasia
+iea_extract_eurasia <- iea %>% filter(country == "E&E Eurasia") %>%
+        select(country, year, net_energy_imports_as_share_of_tes, 
+               net_coal_imports_as_share_of_tes, net_crude_oil_imports_as_share_of_tes,
+               net_oil_products_imports_as_share_of_tes, net_natural_gas_imports_as_share_of_tes) %>%
+        pivot_longer(cols = -c(country, year, net_energy_imports_as_share_of_tes),
+                     names_to = "var", values_to = "net_fuel_type_imports_as_share_of_tes") %>%
+        mutate(fuel_type = case_when(var == "net_coal_imports_as_share_of_tes" ~ "Coal",
+                                     var == "net_crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                                     var == "net_oil_products_imports_as_share_of_tes" ~ "Oil products",
+                                     var == "net_natural_gas_imports_as_share_of_tes" ~ "Natural gas")) %>%
+        select(-var) %>%
+        rename(net_energy_imports_as_share_of_tes_eurasia = net_energy_imports_as_share_of_tes,
+               net_fuel_type_imports_as_share_of_tes_eurasia = net_fuel_type_imports_as_share_of_tes)
+iea_extract_eurasia
+
+# get iea_extract_2_eurasia
+iea_extract_2_eurasia <- iea %>% filter(country == "E&E Eurasia") %>%
+        select(country, year,
+               Imports_coal, Imports_crude_oil, Imports_oil_products, Imports_natural_gas, TES_total) %>%
+        mutate(coal_imports_as_share_of_tes = Imports_coal / TES_total,
+               crude_oil_imports_as_share_of_tes = Imports_crude_oil / TES_total,
+               oil_products_imports_as_share_of_tes = Imports_oil_products / TES_total,
+               natural_gas_imports_as_share_of_tes = Imports_natural_gas / TES_total) %>%
+        select(country, year, coal_imports_as_share_of_tes, crude_oil_imports_as_share_of_tes, 
+               oil_products_imports_as_share_of_tes, natural_gas_imports_as_share_of_tes, TES_total) %>%
+        pivot_longer(cols = -c(country, year, TES_total),
+                     names_to = "var", values_to = "fuel_type_imports_as_share_of_tes") %>%
+        mutate(fuel_type = case_when(var == "coal_imports_as_share_of_tes" ~ "Coal",
+                                     var == "crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                                     var == "oil_products_imports_as_share_of_tes" ~ "Oil products",
+                                     var == "natural_gas_imports_as_share_of_tes" ~ "Natural gas")) %>%
+        select(-var) %>%
+        rename(TES_total_eurasia = TES_total, 
+               fuel_type_imports_as_share_of_tes_eurasia = fuel_type_imports_as_share_of_tes)
+iea_extract_2_eurasia
+
+# add iea_extract_eurasia and iea_extract_2_eurasia to atlas
+atlas <- atlas %>% left_join(., iea_extract_eurasia, by = c("country", "year", "fuel_type")) %>%
+        left_join(., iea_extract_2_eurasia, by = c("country", "year", "fuel_type")) %>%
+        mutate(net_energy_imports_as_share_of_tes = case_when(country == "E&E Eurasia" ~ 
+                                                                      net_energy_imports_as_share_of_tes_eurasia,
+                                TRUE ~ net_energy_imports_as_share_of_tes),
+               net_fuel_type_imports_as_share_of_tes = case_when(country == "E&E Eurasia" ~
+                                                                         net_fuel_type_imports_as_share_of_tes_eurasia,
+                                                                 TRUE ~ net_fuel_type_imports_as_share_of_tes),
+               TES_total = case_when(country == "E&E Eurasia" ~ TES_total_eurasia,
+                                     TRUE ~ TES_total),
+               fuel_type_imports_as_share_of_tes = case_when(country == "E&E Eurasia" ~ 
+                                                                     fuel_type_imports_as_share_of_tes_eurasia,
+                                                             TRUE ~ fuel_type_imports_as_share_of_tes)) %>%
+        select(-c(net_energy_imports_as_share_of_tes_eurasia, net_fuel_type_imports_as_share_of_tes_eurasia,
+                  TES_total_eurasia, fuel_type_imports_as_share_of_tes_eurasia)) %>%
+        group_by(country, year) %>% 
+        mutate(net_fossil_imports_as_share_of_tes = sum(net_fuel_type_imports_as_share_of_tes)) %>%
+        ungroup()
+
+
+#/////////////////////////
+
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 45
+
+# check iea_extract_eurasia
+atlas %>% filter(country == "E&E Eurasia") %>%
+        select(country, year, fuel_type, net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes,
+               net_fossil_imports_as_share_of_tes, TES_total) %>% print(n = nrow(.))
+iea %>% filter(country == "E&E Eurasia") %>%
+        select(country, year, TES_total, net_energy_imports_as_share_of_tes, 
+               net_coal_imports_as_share_of_tes, net_crude_oil_imports_as_share_of_tes,
+               net_oil_products_imports_as_share_of_tes, net_natural_gas_imports_as_share_of_tes) %>%
+        rowwise() %>%
+        mutate(net_fossil_imports_as_share_of_tes = sum(net_coal_imports_as_share_of_tes,
+                                                        net_crude_oil_imports_as_share_of_tes,
+                                                        net_natural_gas_imports_as_share_of_tes,
+                                                        net_oil_products_imports_as_share_of_tes)) %>%
+        ungroup()
+
+# check iea_extract_2_eurasia
+atlas %>% filter(country == "E&E Eurasia") %>%
+        select(country, year, fuel_type, 
+               TES_total, fuel_type_imports_as_share_of_tes) %>% print(n = nrow(.))
+iea %>% filter(country == "E&E Eurasia") %>%
+        select(country, year, Imports_coal, Imports_crude_oil, Imports_oil_products, Imports_natural_gas, TES_total) %>%
+        mutate(coal_imports_as_share_of_tes = Imports_coal / TES_total,
+               crude_oil_imports_as_share_of_tes = Imports_crude_oil / TES_total,
+               natural_gas_imports_as_share_of_tes = Imports_natural_gas / TES_total,
+               oil_products_imports_as_share_of_tes = Imports_oil_products / TES_total) %>%
+        select(-c(Imports_coal, Imports_crude_oil, Imports_oil_products, Imports_natural_gas, TES_total))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# write/read final atlas data ####
+# atlas %>% write_csv("data/atlas_un_comtrade_trade_flows/atlas_20201218.csv")
+atlas <- read_csv(file = "data/atlas_un_comtrade_trade_flows/atlas_20201218.csv")
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 45
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas and iea checks ####
+
+# looking at old charts ron sent, 
+# it says moldova's natural gas imports from russia as share of primary energy consumption is very high, ~ 65%
+# in atlas data though, the share of natural gas imports as share of total gas imports is 22.6% unadjusted, 0% adjusted 
+# and my atlas data matches atlas explorer
+# in atlas explorer, moldova imports 19.3 mil petro gas in 2015; 4.38 mil petro gas imports from russia
+4.38 / 19.3
+# after adjusting to reassign non_gas to crude oil, russia's share drops to zero
+# granted, the atlas metric is russian gas imports as share of total gas imports, by value
+# and the old chart's metric is russian gas imports as share of primary energy consumption (not clear value/ktoe??), 
+# so it's not apples to apples
+atlas %>% filter(country == "Moldova", year == 2015) %>% 
+        select(fuel_type, russia_fuel_type_import, russia_non_gas_import, russia_fuel_type_import_adj, 
+               global_fuel_type_import_sum, 
+               global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum, 
+                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)
+
+atlas %>% filter(country == "Moldova", year == 2015) %>% 
+        select(fuel_type, 
+               global_fuel_type_import_sum, 
+               global_non_gas_import_value_sum, global_fuel_type_import_sum_adj)
+
+# the sum of non_gas is correct from atlas_6_digit_raw
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2015) %>%
+        filter(str_detect(string = hs_product_code, pattern = regex("^2711")),
+               !(hs_product_code %in% c("271111", "271121"))) %>%
+        mutate(russia_flag = case_when(partner_code == "RUS" ~ "Russian import", TRUE ~ "Non-russian import")) %>%
+        group_by(russia_flag) %>%
+        summarize(sum_non_gas = sum(import_value))
+
+# looking at atlas ranked by russia imports as share of global fuel_type
+atlas %>% filter(year == 2015, fuel_type == "Natural gas") %>% 
+        select(country, fuel_type, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
+        rename(russia_share = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
+               russia_share_adj = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
+        arrange(desc(russia_share_adj)) %>%
+        print(n = nrow(.))
+
+
+#/////////////////////////////////////
+
+
+# in iea data, moldova's net imports of natural gas as share of TES is .57; net energy imports as share of TES is .818
+# this is confirmed manually in the iea data explorer
+2130 / 3709
+(3709 - 675) / 3709
+iea %>% filter(country == "Moldova", year == 2015) %>% 
+        select(country, year, net_natural_gas_imports_as_share_of_tes, net_energy_imports_as_share_of_tes)
+
+# looking at the countries in iea ranked by desc(net_natural_gas_imports_as_share_of_tes) 
+# it does broadly follow the trend in the old gas imports from russia chart, though it's all gas imports, not just russia
+iea %>% filter(year == 2015) %>% select(country, year, net_natural_gas_imports_as_share_of_tes) %>%
+        arrange(desc(net_natural_gas_imports_as_share_of_tes)) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////
+
+
+# another old chart shows "imported energy from russia as % of primary energy consumption for 2013-2014"
+iea %>% filter(year %in% c(2013, 2014)) %>% select(country, year, net_energy_imports_as_share_of_tes) %>%
+        arrange(desc(net_energy_imports_as_share_of_tes)) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart ####
+
+atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+               year == 2018) %>%
+        count(mcp_grouping, country)
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+               year == 2018) %>%
+        mutate(color_bin = fuel_type,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                             fill = factor(color_bin, levels = c("Natural gas", "Coal", "Crude oil", "Oil products")))) + 
+        geom_bar(stat = "identity", position = position_dodge(width = .7), width = .7) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .10), 
+                           limits = c(0, 1.1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Energy imports from Russia as a share\nof total energy-type imports, by value", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 4/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart ####
+
+atlas %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"), year == 2018) %>%
+        count(mcp_grouping, country)
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"), year == 2018) %>%
+        mutate(color_bin = fuel_type,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                             fill = factor(color_bin, levels = c("Natural gas", "Coal", "Crude oil", "Oil products")))) + 
+        geom_bar(stat = "identity", position = position_dodge(width = .7), width = .7) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .10), 
+                           limits = c(0, 1.1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Energy imports from Russia as a share\nof total energy-type imports, by value", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 2/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart ####
+
+# check filter
+atlas %>% select(country, year, fuel_type, starts_with("russia_fossil_import"))
+atlas %>% select(country, year, fuel_type, starts_with("russia_fossil_import")) %>% glimpse()
+atlas %>% select(country, year, fuel_type, starts_with("russia_fossil_import")) %>% 
+        group_by(country, year) %>% slice(1) %>% ungroup()
+
+atlas %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(
+                       # linetype_bin == "Serbia" ~ "dotted", 
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                             linetype = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Balkans"), 
+                  mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum + .02, 
+                                label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Eurasia"), 
+                  mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                                label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E graduates"), 
+                  mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                                label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "CARs"), 
+                  mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum + .05, 
+                                label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .7, by = .1), limits = c(0, .7), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Fossil fuel imports from Russia as a share\nof total fossil fuel imports, by value", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 8 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create atlas_fossil_country_scatter_plot ####
+
+# check filter
+atlas %>% select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                 russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                 russia_fuel_type_import_as_share_of_global_import_value_sum_adj,
+                 russia_fossil_import_sum_as_share_of_global_import_value_sum,
+                 net_fuel_type_imports_as_share_of_tes, 
+                 net_fossil_imports_as_share_of_tes)
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                 russia_fossil_import_sum_as_share_of_global_import_value_sum,
+                 net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup()
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year,location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>% count(country)
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>% 
+        filter(country %in% c("E&E graduates"))
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup()
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(!country %in% c("E&E Balkans", "E&E Eurasia", "Azerbaijan", "E&E graduates"),
+               # mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates"),
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates"),
+               year == 2018) %>%
+        select(country, location_code, year, mcp_grouping, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(5) %>% pull(hex)
+                                 # color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 # color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 # color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex))
+                                 ))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_fossil_country_scatter_plot <- chart_data %>% 
+        ggplot(data = ., aes(x = net_fossil_imports_as_share_of_tes, 
+                             y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                             label = location_code,
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates")))) + 
+        geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
+        geom_point(size = 6) + 
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25) +
+        scale_color_manual(values = chart_data_color_list) +
+        # scale_fill_manual(values = chart_data_color_list) +
+        # scale_x_discrete(expand = c(0, 0)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.05, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = "Net fossil fuel imports\nas a share of total primary energy use, by ktoe", 
+             y = "Fossil fuel imports from Russia\nas a share of total fossil fuel imports, by value", 
+             title = NULL,
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1/2, clip = "off") +
+        coord_fixed(ratio = 1/2.1, clip = "off") +
+        # coord_flip() + 
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_blank(),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                # axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0)),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_line(color = "#333333"),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = -5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(color = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+# inspect
+atlas_fossil_country_scatter_plot
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_fossil_country_scatter_plot)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_fossil_country_scatter_plot.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create atlas_fossil_country_bubble_chart ####
+
+# check filter
+atlas %>% select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                 russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                 russia_fuel_type_import_as_share_of_global_import_value_sum_adj,
+                 russia_fossil_import_sum_as_share_of_global_import_value_sum,
+                 net_fuel_type_imports_as_share_of_tes, 
+                 net_fossil_imports_as_share_of_tes)
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup()
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year,location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>% count(country)
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>% 
+        filter(country %in% c("E&E graduates"))
+
+atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup()
+
+# add color_bin and color
+# note need to drop moldova, bc it has no accurate imports in dollars, so doesn't have share of global imports for bubble size
+chart_data <- atlas %>% 
+        filter(!country %in% c("E&E Balkans", "E&E Eurasia", "Azerbaijan", "E&E graduates"),
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates"),
+               country != "Moldova",
+               year == 2018) %>%
+        select(country, location_code, year, mcp_grouping, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(5) %>% pull(hex)
+                                 # color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 # color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 # color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex))
+               ))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_fossil_country_bubble_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = net_fossil_imports_as_share_of_tes, 
+                             y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                             size = russia_fossil_import_sum_as_share_of_global_import_value_sum,
+                             label = location_code,
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates")))) + 
+        # geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
+        geom_point(alpha = .5) + 
+        scale_size(range = c(5, 20), breaks = c(.01, .1, .2), labels = percent_format(accuracy = 1)) +
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25, segment.alpha = 0) +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        # scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+        #                       labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
+        # scale_fill_manual(values = chart_data_color_list) +
+        # scale_x_discrete(expand = c(0, 0)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(-.05, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1.1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = "Net fossil fuel imports\nas a share of total primary energy use, by ktoe", 
+             y = "Fossil fuel imports from Russia\nas a share of\ntotal fossil fuel imports, by value", 
+             title = NULL, size = "   Fossil fuel imports\n        from Russia\n        as a share of\ntotal imports, by value",
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1/2, clip = "off") +
+        coord_fixed(ratio = 1/1.5, clip = "off") +
+        # coord_flip() + 
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_blank(),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                # axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0)),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_line(color = "#333333"),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = -5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333", hjust = 0),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+        # guides(color = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+# inspect
+atlas_fossil_country_bubble_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_fossil_country_bubble_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_fossil_country_bubble_chart.docx")
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create atlas_fossil_mcp_grouping_line_scatter_plot ####
+
+# check filter
+atlas %>% select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                 russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                 russia_fuel_type_import_as_share_of_global_import_value_sum_adj,
+                 russia_fossil_import_sum_as_share_of_global_import_value_sum,
+                 net_fuel_type_imports_as_share_of_tes, 
+                 net_fossil_imports_as_share_of_tes)
+
+atlas %>% filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup()
+
+atlas %>% filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates")) %>%
+        select(country, year,location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>% count(country)
+
+atlas %>% filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates")) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>% 
+        filter(country %in% c("E&E graduates"))
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates")) %>%
+        select(country, year, mcp_grouping, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(5) %>% pull(hex)
+                                 # color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 # color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 # color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex))
+               ))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_fossil_mcp_grouping_line_scatter_plot <- chart_data %>% 
+        ggplot(data = ., aes(x = net_fossil_imports_as_share_of_tes, 
+                             y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                             label = year,
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates")))) + 
+        # geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
+        geom_point(size = 1, alpha = 1) + 
+        geom_text_repel(fontface = "bold", point.padding = .02, size = 3.25, segment.alpha = 0) +
+        geom_segment(data = chart_data %>% filter(mcp_grouping == "E&E Balkans"),
+                mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                              y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                        xend = c(chart_data %>% filter(mcp_grouping == "E&E Balkans") %>% slice(-1) %>% 
+                                         pull(net_fossil_imports_as_share_of_tes), NA), 
+                        yend = c(chart_data %>% filter(mcp_grouping == "E&E Balkans") %>% slice(-1) %>%
+                                         pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                # arrow = arrow(length = unit(0.3, "cm"))
+                ) +
+        geom_segment(data = chart_data %>% filter(mcp_grouping == "E&E Eurasia"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(mcp_grouping == "E&E Eurasia") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(mcp_grouping == "E&E Eurasia") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.1, "cm"))
+                     ) +
+        geom_segment(data = chart_data %>% filter(mcp_grouping == "E&E graduates"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(mcp_grouping == "E&E graduates") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(mcp_grouping == "E&E graduates") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.15, "cm"))
+                     ) +
+        annotate(geom = "text", x = .3, y = .3, label = "E&E Balkans", color = "#08306B", fontface = "bold") +
+        annotate(geom = "text", x = .7, y = .4, label = "E&E Eurasia", color = "#4292C6", fontface = "bold") +
+        annotate(geom = "text", x = .5, y = .35, label = "E&E graduates", color = "#BDBDBD", fontface = "bold") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        # scale_fill_manual(values = chart_data_color_list) +
+        # scale_x_discrete(expand = c(0, 0)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = .6, by = .1), limits = c(-.01, .6), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = .2, to = .8, by = .1), limits = c(.2, .8), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = "Net fossil fuel imports\nas a share of total primary energy use, by ktoe", 
+             y = "Fossil fuel imports from Russia\nas a share of total fossil fuel imports, by value", 
+             title = NULL,
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1/2, clip = "off") +
+        coord_fixed(ratio = 1/2.1, clip = "off") +
+        # coord_flip() + 
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_blank(),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                # axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0)),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_line(color = "#333333"),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = -5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+        # guides(color = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+# inspect
+atlas_fossil_mcp_grouping_line_scatter_plot
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_fossil_mcp_grouping_line_scatter_plot)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_fossil_mcp_grouping_line_scatter_plot.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart ####
+
+# at ron's request, this chart uses russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+# which is measured by value, to stand-in for russia's share of net_fuel_type_imports_as_share_of_tes,
+# which is measured by ktoe. this is a rough approximation, since the calculation will be biased
+# if prices per ktoe vary across import partners for a given fuel
+# but the decision was that the usefulness of a tidy estimate outweighed the risk of bias 
+# (see 12/8/2020 email thread w/ ron for more detail)
+
+# adjusted data with shares
+atlas %>% filter(country == "Moldova", year == 2018) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+        ungroup() %>%
+        select(fuel_type,
+               russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes,
+               estimated_russia_fossil_imports_as_share_of_tes)
+
+# adjusted and unadjusted data
+atlas %>% filter(country == "Moldova", year == 2018) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+        ungroup() %>%
+        select(fuel_type,
+               russia_fuel_type_import, global_fuel_type_import_sum,
+               russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               fuel_type_imports_as_share_of_tes)
+
+
+
+# inspect relevant variables
+# note that calculating estimated_russia_pct_of_net_fossil_imports_as_share_of_tes at the fuel-type level
+# is problematic because of irregularities between atlas and iea
+# for instance, moldova in 2018 shows 0 natural gas imports, but atlas shows imports from russia and other global partners
+# but as shown below, this method is preferable to just taking high level russia share of fossil imports times
+# net imports of fossil as share of tes, because the fuel-type calculation only assumes same price per ktoe across partners
+# but not the extra implausible assumption of same price per ktoe across fuel-types
+# atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018,
+#                             str_detect(string = hs_product_code, pattern = regex("^271111|^271121")))
+# 
+# atlas %>% filter(country == "Moldova", year == 2018) %>%
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+#         select(fuel_type, russia_fuel_type_import, global_fuel_type_import_sum,
+#                russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum)
+# 
+# atlas %>% filter(country == "Moldova", year == 2018) %>%
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+#         select(fuel_type, 
+#                russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+#                net_fuel_type_imports_as_share_of_tes,
+#                net_fossil_imports_as_share_of_tes)
+# 
+# # inspect limited selection of relevant variables
+# atlas %>% filter(country == "Belarus", year == 2018) %>%
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+#         select(country, year, fuel_type,
+#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+#                net_fuel_type_imports_as_share_of_tes) %>%
+#         mutate(estimated_russia_pct_of_net_fuel_type_imports_as_share_of_tes =
+#                        russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+#                        net_fuel_type_imports_as_share_of_tes) %>%
+#         group_by(country, year) %>%
+#         mutate(estimated_russia_pct_of_net_fossil_imports_as_share_of_tes =
+#                        sum(estimated_russia_pct_of_net_fuel_type_imports_as_share_of_tes)) %>%
+#         ungroup()
+
+
+# alternative is to just make the approximation using rolled up russia_fossil_import_sum_as_share_of_global_fossil_import_sum *
+# net_fossil_imports_as_share_of_tes
+# but this measure actually has more bias, because it lumps different fuel types by value
+# and assumes russia has the same share in ktoe terms - this assumes same price across countries AND fuel types
+# whereas the prior method converting value to ktoe as the fuel-type level has the more limited and reasonable sounding
+# assumption that all country's have same price per ktoe for the given fuel type, but doesn't require the extra assumption
+# of same price per ktoe across fuel types
+# atlas %>% filter(country == "Moldova", year == 2018) %>% 
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+#         select(fuel_type, russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+#                net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes,
+#                net_fossil_imports_as_share_of_tes)
+# 
+# atlas %>% filter(country == "Moldova", year == 2018) %>% 
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+#         mutate(estimated_russia_pct_of_net_fossil_imports_as_share_of_tes = 
+#                        russia_fossil_import_sum_as_share_of_global_fossil_import_sum * net_fossil_imports_as_share_of_tes) %>%
+#         group_by(country, year) %>% slice(1) %>%
+#         ungroup() %>%
+#         select(country, year, fuel_type, 
+#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+#                net_fossil_imports_as_share_of_tes,
+#                estimated_russia_pct_of_net_fossil_imports_as_share_of_tes)
+# 
+# atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+#                  mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+#                  year %in% c(2015, 2018)) %>%
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+#         mutate(estimated_russia_pct_of_net_fossil_imports_as_share_of_tes = 
+#                        russia_fossil_import_sum_as_share_of_global_fossil_import_sum * net_fossil_imports_as_share_of_tes) %>%
+#         group_by(country, year) %>% slice(1) %>%
+#         ungroup() %>%
+#         select(country, year, fuel_type, 
+#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+#                net_fossil_imports_as_share_of_tes,
+#                estimated_russia_pct_of_net_fossil_imports_as_share_of_tes) 
+
+
+
+
+# inspect filter for countries
+atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+               year %in% c(2015, 2018)) %>%
+        count(mcp_grouping, country)
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+               year %in% c(2015, 2018)) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>%
+        group_by(year) %>% arrange(desc(estimated_russia_fossil_imports_as_share_of_tes)) %>%
+        mutate(estimate_index = row_number()) %>%
+        ungroup() %>%
+        mutate(estimate_index_2018 = case_when(year == 2018 ~ estimate_index, TRUE ~ int(0))) %>%
+        select(country, year, location_code, fuel_type,
+               estimated_russia_fossil_imports_as_share_of_tes, estimate_index, estimate_index_2018) %>%
+        mutate(color_bin = as.character(year),
+               color = case_when(color_bin == "2015" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "2018" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = factor(country, levels = chart_data %>% arrange(estimate_index_2018) %>%
+                                                filter(estimate_index_2018 > 0) %>% pull(country)), 
+                             y = estimated_russia_fossil_imports_as_share_of_tes, 
+                             fill = factor(color_bin, levels = c("2015", "2018")))) + 
+        geom_bar(stat = "identity", position = position_dodge(width = .7), width = .7) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.6, by = .20), 
+                           limits = c(0, 1.6), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Est. fossil fuel imports from Russia\nas a share of\ntotal primary energy use", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 2/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 5), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# moldova question ####
+
+
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>% 
+        mutate(fuel_type = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                             str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                             str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                             str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                             str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                             str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                             str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / total_fuel_type_imports) %>%
+        arrange(desc(fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type, desc(fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-global_lng_import_value_sum) %>%
+        print(n = nrow(.))
+
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, 
+                            str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(total_natural_gas_imports_unadj = sum(import_value),
+               partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj)
+
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(total_natural_gas_imports_unadj = sum(import_value),
+               partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj)
+
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^2709"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(total_natural_gas_imports_unadj = sum(import_value),
+               partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj) %>% print(n = nrow(.))
+
+# check for ANS undeclared country
+# there is no ANS imports for moldova in 2018, so that's not the issue
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, partner_code == "ANS",
+                            str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# answer front office questions on energy charts
+
+# 1) why does moldova appear to have so low a dependence on russian energy imports when they are known 
+# to get nearly all their natural gas from russia?
+
+# chart_data shows 5.75% of moldovan energy imports in 2018 came from russia
+atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+               year %in% c(2015, 2018)) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% select(country, year, estimated_russia_fossil_imports_as_share_of_tes)
+
+# check iea data and manually confirm fuel_type imports as share of TES
+iea_extract_2 %>% filter(country == "Moldova", year == 2018)
+# natural gas
+2140 / 4067 # 52.6
+iea %>% filter(country == "Moldova", year == 2018) %>%
+        select(country, year, Imports_natural_gas, TES_total)
+# coal
+87 / 4067 # .021
+iea %>% filter(country == "Moldova", year == 2018) %>%
+        select(country, year, Imports_coal, TES_total)
+# crude oil
+0 / 4067 # 0
+iea %>% filter(country == "Moldova", year == 2018) %>%
+        select(country, year, Imports_crude_oil, TES_total)
+# oil products
+1030 / 4067 # .253
+iea %>% filter(country == "Moldova", year == 2018) %>%
+        select(country, year, Imports_oil_products, TES_total)
+
+
+# modified chart_data to show data just for moldova 2018, and including all fuel_types before slicing
+atlas %>% 
+        filter(country == "Moldova", year == 2018) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+        ungroup() %>%
+        select(country, year, fuel_type, fuel_type_imports_as_share_of_tes, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               estimated_russia_fuel_type_imports_as_share_of_tes, 
+               estimated_russia_fossil_imports_as_share_of_tes)
+
+# w unadjusted HS codes, atlas_6digit_raw shows russia having 34.9% of 2711 imports coming from russia (7.93 mil)
+# so this is still counter to the IEA/E&E common claim that they import almost all their natural gas from russia
+# the issue is therefore not in the HS/SIEC codes, it's the Atlas self-reported data
+# manual checks in atlas show the same: 7.93 mil in 2711 russian natural gas imports, on 22.7 mil total natural gas imports
+7.93 / 22.7 # 34.9
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, 
+                            str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(total_natural_gas_imports_unadj = sum(import_value),
+               partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj)
+
+# unadjusted 4 digit for all HS 27
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                            str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        mutate(total_crude_imports_unadj = sum(import_value))
+
+# unadjusted 4 digit for all HS 27, rolled up to total 27 series imports from partner_country 
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>% summarize(total_imports = sum(import_value)) %>%
+        ungroup() %>% arrange(desc(total_imports))
+
+# inspect unadjusted russia 27 series imports for recent prior years, with all 4 digit HS remainning
+atlas_4digit %>% filter(location_code == "MDA", 
+                            str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(year) %>% mutate(total_annual_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(year, partner_code) %>%
+        mutate(total_partner_imports = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(partner_share_of_total_annual_imports = total_partner_imports / total_annual_imports) %>%
+        arrange(desc(year), desc(partner_share_of_total_annual_imports)) %>%
+        print(n = nrow(.))
+
+# inspect unadjusted russia 27 series imports for recent prior years, sliced to only country_level, dropping 4digit level
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(year) %>% mutate(total_annual_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(year, partner_code) %>%
+        mutate(total_partner_imports = sum(import_value)) %>% slice(1) %>% select(-hs_product_code) %>%
+        ungroup() %>%
+        mutate(partner_share_of_total_annual_imports = total_partner_imports / total_annual_imports) %>%
+        arrange(desc(year), desc(partner_share_of_total_annual_imports)) %>%
+        # group_by(year) %>% slice(1:5) %>%
+        # ungroup() %>%
+        print(n = nrow(.))
+
+# chart partner share of imports for all 27 series
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(year) %>% mutate(total_annual_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(year, partner_code) %>%
+        mutate(total_partner_imports = sum(import_value)) %>% slice(1) %>% select(-hs_product_code) %>%
+        ungroup() %>%
+        mutate(partner_share_of_total_annual_imports = total_partner_imports / total_annual_imports) %>%
+        filter(partner_code %in% c("RUS", "ROU", "UKR", "BLR", "BGR", "GRC")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = partner_share_of_total_annual_imports, color = partner_code)) +
+        geom_line()
+
+# chart partner share of imports for 2711 natural gas
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(year) %>% mutate(total_annual_2711_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(year, partner_code) %>%
+        mutate(total_partner_2711_imports = sum(import_value)) %>% slice(1) %>% select(-hs_product_code) %>%
+        ungroup() %>%
+        mutate(partner_share_of_total_annual_2711_imports = total_partner_2711_imports / total_annual_2711_imports) %>%
+        filter(partner_code %in% c("RUS", "ROU", "UKR", "BLR", "BGR", "GRC")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = partner_share_of_total_annual_2711_imports, color = partner_code)) +
+        geom_line()
+
+
+# chart partner share of imports for 2710 refined petrol
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^2710"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(year) %>% mutate(total_annual_2710_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(year, partner_code) %>%
+        mutate(total_partner_2710_imports = sum(import_value)) %>% slice(1) %>% select(-hs_product_code) %>%
+        ungroup() %>%
+        mutate(partner_share_of_total_annual_2710_imports = total_partner_2710_imports / total_annual_2710_imports) %>%
+        filter(partner_code %in% c("RUS", "ROU", "UKR", "BLR", "BGR", "GRC")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = partner_share_of_total_annual_2710_imports, color = partner_code)) +
+        geom_line()
+
+
+# chart fuel_type share imports by value
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, hs_product_code, import_value) %>%
+        group_by(year) %>% mutate(total_annual_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, hs_product_code) %>%
+        mutate(total_fuel_type_imports = sum(import_value)) %>% slice(1) %>%
+        ungroup() %>% 
+        mutate(fuel_type_share_of_total_annual_imports = total_fuel_type_imports / total_annual_imports) %>%
+        filter(fuel_type_share_of_total_annual_imports > .01) %>%
+        ggplot(data = ., mapping = aes(x = year, y = fuel_type_share_of_total_annual_imports, color = factor(hs_product_code))) +
+        geom_line()
+
+
+# inspect the unadjusted natural gas imports from russia for recent prior years is also single digit millions, 
+# though it spikes to 191 mil in 2010 - maybe some kind of change with self-reporting procedures
+atlas_6digit_raw %>% filter(location_code == "MDA", 
+                            str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(year, partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(year) %>%
+        mutate(total_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj) %>%
+        filter(partner_code == "RUS") %>% print(n = nrow(.))
+
+
+# EIA country profile for moldova
+# https://www.eia.gov/international/overview/country/MDA
+# "Moldova has no domestic production of natural gas and relies entirely on pipeline imports from Russia. 
+# Natural gas made up about 40% of total primary energy supply in 2012, according to Moldova's National Bureau of Statistics."
+# could just take fact that moldova gets 100% of natural gas from russia (per EIA quote above),
+# and that IEA says natural gas is 53% of primary energy supply for moldova in 2018
+# to give russian imports credit for 53% of moldova's primary energy supply, regardless of what the COMTRADE data say
+
+
+# the IEA country profile for moldova cites
+# "All natural gas consumption (2.1 Mtoe, or 2.9 billion cubic metres (bcm) in 2018) is met through imports, mainly from Russia." 
+# https://www.iea.org/reports/moldova-energy-profile
+# and in the Energy Statistics section at bottom, the IEA profile also links to moldova's own stats on energy balances
+# https://statistica.gov.md/pageview.php?l=en&idc=263&id=2197
+# 2.9 bcm * .9 = 2.9 * .9 = 2.61 mtoe; note this .9 conversion is from iowa state univ. (see below)
+# 2.61 mtoe / 2.9 bcm = 2.61 / 2.9 = .9 mtoe per bcm
+# 2.1 mtoe / 2.9 bcm = 2.1 / 2.9 = .72;  if you use implied conversion rate from IEA quote above, it's .72, which is a bit off??
+
+
+# moldova government "security of supply" report from 2019 (just google the title)
+# https://www.energy-community.org/dam/jcr:67aa937b-abd5-41db-8513-b7b7b343f7f0/SOS_ML_2019.pdf
+
+
+# if we just use the IEA's 2.9 bil cubic meteres number as given, instead of trying to start with IEA's mtoe number
+# and not use the iowa/israel 1bcm = .9 mtoe rate,
+# 2.9 bil cubic meters / 1000  = 2900000000 / 1000 = 2900000 thousand cubic meters
+2900000 * 235
+(2900000000 / 1000) * 235
+(2900000000 / 1000) * 240 # using $240 per 1000 cubic meters price from reuters article above
+
+
+# iea unit converter - note really very inuitive to use??
+# https://www.iea.org/reports/unit-converter-and-glossary
+
+# eia unit converter - 
+# https://www.eia.gov/energyexplained/units-and-calculators/energy-conversion-calculators.php
+# 1bcm NG = 38,660,777,385.159 megajoules
+# 1bcm NG = 38660777385.159 / 1000 megajoules = 38660777 gigajoules
+# from iea converter: 1,000,000,000 J = 1 gigajoule = 0.0239 toe
+# so 38,660,777 gigajoules * .0239 toe = 38660777 * .0239 = 923992.6 toe
+# and 923,992.6 toe / 1,000,000 = 923992.6 / 1000000 = .92399 mtoe per 1bcm
+# this calculation pretty much matches iowa state and israel converter
+# but it seems like israel/iowa just stick with .9 approximation
+# since 2.9 * .9 = 2.61 ; but 2.9 * .923 = 2.67; the 2.61 answer is exactly the one given by israeli calculator
+
+
+# israeli.gov unit converter: https://www.energy-sea.gov.il/English-Site/Pages/Data%20and%20Maps/calc.aspx
+# 2140 ktoe = 2375400 thousand cubic meters
+# 2375400 * 235 = $558 mil
+# 2375400 * 240 = $570 mil
+
+# iowa state university chart showing conversion between cubic meter of natural gas and metric ton of oil equivalent
+# "1 billion cubic meters NG = .90 million metric tons oil equivalent"; 1 bcm NG = 1 mtoe
+# "1 million metric tons oil equivalent = 1.111 billion cubic meters NG"; 1 mtoe = 1.111 bcm NG
+# https://www.extension.iastate.edu/agdm/wholefarm/html/c6-89.html
+# if reuters 2019 article says $240 per 1000 cubic meters, and we assume the same for 2018
+# and if iea says 2140 ktoe of natural gas imports in 2018, then that equals 2140 / 1000 = 2.14 mtoe
+# note this ktoe to mtoe conversion is confirmed with oecd table of country TES by mtoe
+# where moldova in 2017 is 3.85, and in IEA it's 3,851 ktoe, so 3851 / 1000 = 3.85
+# https://data.oecd.org/energy/primary-energy-supply.htm#:~:text=Primary%20energy%20supply%20is%20defined,plus%20or%20minus%20stock%20changes.&text=This%20quantity%20of%20energy%20is,one%20tonne%20of%20crude%20oil.
+# then 2.140 mtoe natural gas imports / .9 mtoe per 1 bil cubic meters NG = 2.37 bil cubic meters natural gas
+2.140 / .9
+# equivalently, 2.140 mtoe * 1.111 bcm NG = 2.37754 bcm NG
+2.140 * 1.111
+# ((2.140 * 1.111) * 1000 * 1000) * 240 = $570 mil
+
+# free russia article explaining how transnistria doesn't pay for russian gas, it gets put on moldovagaz debt 
+# might explain why moldova/russia then doesn't report import duties to COMTRADE??
+# "Thus, Gazprom supplies gas to Moldovagaz, while the latter supplies gas to Moldovan consumers and 
+# to Tiraspol-Transgaz from Transnistria."
+# "The largest gas consumer in Transnistria is MGRES power plant (generation capacity of 2520 MW), 
+# controlled by Russian energy holding Inter RAO UES. MGRES generates electricity from gas provided by Tiraspol-Transgaz and 
+# supplies 80 percent of Moldova’s electricity consumption."
+# "Although Gazprom mentions in all its financial reports that Transnistria does not pay for gas consumption and 
+# it leads to the increase of Moldova’s gas debt, gas supply to the region still continues.[24] From an economic point of view, 
+# the supply of gas without recovery of value is in fact a subsidy."
+# "Between 2007 and 2016, the separatist region received a USD 6 billion “gas subsidy,
+# out of which USD 1.3 billion was converted into budgetary funds."
+# https://www.4freerussia.org/russian-gas-and-the-financing-of-separatism-in-moldova/
+# if the 6 bil gas subsidy over 10 years / 10 years = ~ 1bil per year, which isn't too far off $550-700 mil 2018 estimate
+
+
+# 2015 world bank web post citing 98% of energy being imported, and 80% of electricity from single country, 
+# and all natural gas from single country
+
+
+# energy-community.org profile of moldova - an interesting pdf report, the stats seem weird
+# https://www.energy-community.org/implementation/Moldova.html
+
+
+# open source article citing russian lukoil is largest import source for refined oil (not romania like atlas says)
+# https://www.moldova.org/en/lukoil-moldova-still-largest-importer-of-oil-products-165589-eng/
+# https://www.lukoil.com/Company/BusinessOperation/GeographicReach/Europe/LUKOILinMoldova
+
+
+# 2018 EU slideshow showing depdence on russian gas, and the gas conumption by moldova vs transistria
+# https://ec.europa.eu/energy/sites/ener/files/documents/moldova_-_lng_situation.pdf
+
+
+# reuters 2019 article saying moldova pays $240 per 1000 cubic meters for russian natural gas
+# https://www.reuters.com/article/uk-russia-moldova-gas/russia-and-moldova-close-to-gas-price-agreement-ria-idUSKCN1VS0LQ
+
+
+# open source reports from TASS russian news agency(?) say moldova imported 2.9 bil cubic meters of natural gas
+# from russia in 2018 or 2019 (not clear from the 11/2019 article's phrasing of "last year"), at $235 per 1000 cubic meters
+# but in either case, (2.9 bil cubic meters / 1000 cubic meters) * 235 = $681 mil
+# note the 2.9 bil figure matches the IEA website
+(2900000000 / 1000) * 235
+(2900000000 / 1000) * 240 # using $240 per 1000 cubic meters price from reuters article above 
+# https://tass.com/economy/1091341#:~:text=Moldova%20is%20currently%20buying%20gas,%24235%20per%201%2C000%20cubic%20meters.
+
+
+# the IEA energy profile talks about the Iasi-Ungheni gas pipeline allowing moldova to import romanian natural gas
+# saying it "was commissioned, and became operational in 2015", 
+# and "Once at full capacity in 2020, the pipeline is expected to supply almost all the gas Moldova consumes"
+# https://www.iea.org/reports/moldova-energy-profile
+# this open source report mentions the same info
+# https://balkaninsight.com/2020/04/29/gas-pipeline-linking-moldova-to-romania-nears-completion/
+
+
+# this open source SPglobal report says that the ungheni gas pipeline is not yet running to chisinau as of aug 2020,
+# confirms it will bring 1.5 bil cubic meter of romanian gas, vs russia's 2.89 bcm of natural gas to moldova in 2019
+# https://www.spglobal.com/platts/en/market-insights/latest-news/natural-gas/081920-feature-moldova-set-for-gas-diversity-as-romania-links-launch-imminent
+
+
+
+# so if all 2.1 mtoe in moldova's 2018 NG imports (per IEA) came from russia, how much $ would that be?
+# iowa state: "1 million metric tons oil equivalent = 1.111 billion cubic meters NG"
+# 2.1 mtoe * 1.111 bcm NG = 2.1 * 1.111 = 2.3331 bcm NG
+# 2.3331 bcm NG * 1000 = 2.331 * 1000 = 2331 million cubic meters
+# 2331 mil cubic meters NG * 1000 = 2331 * 1000 = 2,331,000 thousand cubic meters
+# $235 per thousand cubic meters NG = 235 * 2331000 = 547785000 = ~ $547 mil
+# 240 * 2331000 = $559 mil
+
+
+
+
+# this EBRD press release about a $50 mil pledge to moldova in 12/2019 to help 
+# "The financial arrangement will enable Energocom to purchase one month of natural gas supply from Naftogaz, 
+# the national oil and gas company of Ukraine, to avoid any gas supply risk."
+# so it's not russian prices per se, but it gives a ballpark sense of the total dollar value of natural gas imports
+# if one months's worth is ~ $50 mil, yet gas imports from russia are only ~ $8 mil
+# https://www.ebrd.com/news/2019/ebrd-helps-moldova-secure-winter-gas-supplies.html
+
+
+# older EBRD moldova profile - with good detail on energy sector
+# https://www.ebrd.com/downloads/legal/irc/countries/moldova.pdf
+
+
+
+
+# confirm that the adjusted atlas data shows zero natural gas imports (271111 or 271121), 
+# only 271112, 271113, and 271119 imports show up, which are classified as crude oil
+# in the SIEC doc, 
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, 
+                            str_detect(string = hs_product_code, pattern = regex("^2711"))) %>% 
+        group_by(hs_product_code) %>% summarize(total_fuel_type_imports = sum(import_value))
+# note that for simplicity i categories non_gas into crude oil, 
+# but technically 271112 and 271113 are a larger share (liquefied petroleum gas)
+# and they are only found in oil products according to SIEC, 
+# the other 2711 series non-gas are asterixed btw crude oil and oil products
+# this may have been an over-simplificaiton, and should be updated in future, but it doesn't change the story about natural gas
+# since either way the 2711 series HS "natural gas" category would be decreased (to either crude or oil products) 
+atlas_6digit_raw %>% filter(str_detect(string = hs_product_code, pattern = regex("^2711"))) %>% 
+        group_by(hs_product_code) %>% summarize(total_fuel_type_imports = sum(import_value)) %>%
+        mutate(total_2711_imports = sum(total_fuel_type_imports),
+               fuel_type_share_of_total_fuel_type_imports = total_fuel_type_imports / total_2711_imports) %>%
+        arrange(desc(total_fuel_type_imports))
+
+# atlas_4digit_raw shows the same 34.9% of unadjusted 2711 imports coming from russia (7.93 mil)
+# confirmed manually in atlas explorer for response paper
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(total_natural_gas_imports_unadj = sum(partner_country_natural_gas_imports_unadj),
+               partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj)
+
+
+# if we change 2711 imports from russia to be $550 mil, as estimated from mtoe and price per thousand cubic meters above
+# then the russia share of NG imports would be 97% instead
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_natural_gas_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(partner_country_natural_gas_imports_unadj = case_when(partner_code == "RUS" ~ 550000000, 
+                                                                     TRUE ~ partner_country_natural_gas_imports_unadj),
+               total_natural_gas_imports_unadj = sum(partner_country_natural_gas_imports_unadj),
+               partner_country_natural_gas_imports_as_share_of_total_natural_gas_imports_unadj = 
+                       partner_country_natural_gas_imports_unadj / total_natural_gas_imports_unadj)
+
+
+# check unadjusted 2710 refine oil imports
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^2710"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(partner_code) %>%
+        mutate(partner_country_oil_products_imports_unadj = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(
+               total_oil_products_imports_unadj = sum(partner_country_oil_products_imports_unadj),
+               partner_country_oil_products_imports_as_share_of_total_oil_products_imports_unadj = 
+                       partner_country_oil_products_imports_unadj / total_oil_products_imports_unadj) %>% 
+        arrange(desc(partner_country_oil_products_imports_unadj)) %>% print(n = nrow(.))
+
+
+# confirm russia's unadjusted imports for all HS 27 - about $119 mil, which matches manual check in COMTRADE
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, partner_code == "RUS",
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        mutate(total_HS27_imports_from_russia = sum(import_value))
+
+# confirm ukraine's unadjusted imports for all HS 27
+# 53 mil for electricity is largest category, then 1.1 mil in 2713 petroleum coke (gas/crude), ~900k 2710 refined oil, 752k coal 
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, partner_code == "UKR",
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        mutate(total_HS27_imports_from_russia = sum(import_value)) %>% arrange(desc(import_value))
+
+# confirm unadjusted russian share of natural gas imports
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^2711"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        mutate(total_imports = sum(import_value),
+               country_import_share = import_value / total_imports) 
+
+# check HS 27 imports from all countries
+atlas_4digit %>% filter(location_code == "MDA", year == 2018, 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, hs_product_code, import_value) %>%
+        group_by(location_code, year, partner_code) %>%
+        mutate(total_country_HS27_imports = sum(import_value)) %>%
+        ungroup() %>% arrange(desc(total_country_HS27_imports)) %>% print(n = nrow(.))
+
+# look at imports from romania over time
+# results, romania has had the largest share of moldovan HS 27 imports by value since 2010, so
+# it doesn't seem like the Iasi-Ungheni gas pipeline is a major factor causing romania to just now displace russia
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, import_value) %>%
+        group_by(location_code, year, partner_code) %>%
+        mutate(total_country_HS27_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year) %>%
+        mutate(total_HS27_imports = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(country_share_of_HS27_imports = total_country_HS27_imports / total_HS27_imports) %>%
+        group_by(location_code, year, partner_code) %>%
+        slice(1) %>%
+        ungroup() %>% 
+        group_by(location_code, year) %>%
+        arrange(desc(country_share_of_HS27_imports)) %>%
+        slice(1:10) %>%
+        ungroup() %>% print(n = nrow(.))
+
+# compare russia to romania total imports over time
+atlas_4digit %>% filter(location_code == "MDA", 
+                        str_detect(string = hs_product_code, pattern = regex("^27"))) %>%
+        select(location_code, year, partner_code, import_value) %>%
+        group_by(location_code, year, partner_code) %>%
+        mutate(total_country_HS27_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year) %>%
+        mutate(total_HS27_imports = sum(import_value)) %>%
+        ungroup() %>%
+        mutate(country_share_of_HS27_imports = total_country_HS27_imports / total_HS27_imports) %>%
+        group_by(location_code, year, partner_code) %>%
+        slice(1) %>%
+        ungroup() %>% filter(partner_code %in% c("ROU",  "RUS")) %>% print(n = nrow(.))
+
+
+#////////////////////
+
+
+# note iea moldova profile discusses tranistria electricity plant using natural gas to supply electricity to moldova
+# https://www.iea.org/reports/moldova-energy-profile
+
+
+# radio free europe post saying russia sends natural gas through transnistria; maybe not requiring payment??
+# "He said Moldova was heavily reliant on Russian natural-gas giant Gazprom, which sends its supplies through Transdniester."
+# Allin said Gazprom had been supplying gas to Transdniester through the same pipeline, but had not been requiring payment, 
+# as a means of subsidizing the separatists against Chisinau, leaving an unpaid debt of some $6 billion."
+# https://www.rferl.org/a/moldova-heavy-reliance-russian-transdniester-energy-seen-risky-allin-baker-hughes/28615600.html
+
+# moldova had 50 mil in electricity imports from ukraine; ukraine is sole supplier
+# not clear how much electricty ktoe that 50 mil buys though; 
+# iea shows moldova imported 82 ktoe of electricity in 2018, which was 2.0% of TES 
+# note that 
+atlas_6digit_raw %>% filter(location_code == "MDA", hs_product_code %in% c("271600"))
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018, partner_code == "UKR",
+                            str_detect(string = hs_product_code, pattern = regex("^27")))
+atlas_6digit_raw %>% filter(location_code == "MDA", partner_code == "UKR",
+                            str_detect(string = hs_product_code, pattern = regex("^2711")))
+
+iea %>% filter(country == "Moldova", year == 2018) %>% select(country, year, Imports_electricity, 
+                                                              electricity_tes_as_share_of_overall_tes)
+
+# use fuel_type_3 definition including electricity to compare electricity vs fossil imports
+# note that electricity is ~7% of fossil + electricity imports by value, 
+# more than coal and crude combined, but an order of magnitude less than oil products
+# not clear how that converts via prices into ktoe units though
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>%
+        mutate(fuel_type_3 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                     str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2716")) ~ "Electricity")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type_3, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type_3) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               country_fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / 
+                       total_fuel_type_imports) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type_3, desc(country_fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-c(location_code, year, global_lng_import_value_sum)) %>%
+        # distinct(fuel_type_3, total_fuel_type_imports) %>% 
+        # mutate(pct_total_fuel_type_imports = total_fuel_type_imports / sum(total_fuel_type_imports))
+        print(n = nrow(.))
+
+
+# since transnistria is a breakaway area, 
+# there might be an issue where the customs reporting is skewed btw moldova and transnistria
+# https://en.wikipedia.org/wiki/Transnistria
+
+# quote from IEA moldova profile
+# "Natural gas, which serves most of its energy needs, 
+# was entirely imported from Russia via Ukraine up to the end of 2014. 
+# In August 2014 the Iasi-Ungheni gas interconnector between Romania and Moldova was commissioned, 
+# and became operational in 2015. Once at full capacity in 2020, the pipeline is expected to supply 
+# almost all the gas Moldova consumes, 
+# but not that of the Transnistria region."
+
+
+#//////////////
+
+
+# showing moldova 2018 all fossil fuels from atlas, both adjusted (fuel_type) and unadjusted (fuel_type_2)
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>% 
+        mutate(fuel_type = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                     str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        mutate(fuel_type_2 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               country_fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / 
+                       total_fuel_type_imports) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type, desc(country_fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-c(location_code, year, global_lng_import_value_sum)) %>%
+        print(n = nrow(.))
+
+# showing modova 2018 just crude and natural gas from atlas, both adjusted (fuel_type) and unadjusted (fuel_type_2)
+# since crude and natural gas are where the changes from atlas website are
+# russia has 34.8% of crude oil imports, romania has 41.6% of crude oil imports
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>% 
+        mutate(fuel_type = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                     str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        mutate(fuel_type_2 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               country_fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / 
+                       total_fuel_type_imports) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type, desc(country_fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-c(location_code, year, global_lng_import_value_sum)) %>%
+        filter(fuel_type %in% c("Natural gas", "Crude oil")) %>%
+        print(n = nrow(.))
+
+# showing moldova 2018 natural gas and crude from russia
+# confirms that all of the 2711 series imports is non_gas, which is reassigned to crude 
+# as discussed above, it might be more accurate to assign 271112 and 271113 in oil products, but that's besides point about gas
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>% 
+        mutate(fuel_type = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                     str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        mutate(fuel_type_2 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               country_fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / 
+                       total_fuel_type_imports) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type, desc(country_fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-c(location_code, year, global_lng_import_value_sum)) %>%
+        filter(fuel_type %in% c("Natural gas", "Crude oil"), partner_code == "RUS") %>%
+        print(n = nrow(.))
+
+
+#/////////////
+
+
+# w/ modified SICE/HS classification 
+
+# will classify 271112 and 271113 (LPG) in oil products; the other non_gas will remain re-classified w/ crude oil
+# result: under modification, russia has 24.8% share of crude imports, vs 34.8% under original adjustment
+# under mod: russia has 15.8% share of oil products imports, vs 15.1% under original adjustment
+# under mod: natural gas category is unaffected in this case, since moldova has no remainingly 271111/271121 natural gas
+# under mod: coal is unaffected
+# note this modification would barely alter the moldova stat for russian imports as share of energy supply,
+# because IEA has zero crude oil imports for moldova in 2018, so russia's share of that under mod is 24.8 * 0
+# and the modified 15.8 vs original adjustment 15.1 russia share of oil products imports doesn't move the needle
+# in both the mod and original adjustment scenario, the main story is atlas showing zero 271111/271121 natural gas,
+# plus IEA showing zero crude oil imports for moldova
+atlas_6digit_raw %>% filter(str_detect(string = hs_product_code, pattern = regex("^2711"))) %>% 
+        group_by(hs_product_code) %>% summarize(total_fuel_type_imports = sum(import_value)) %>%
+        mutate(total_2711_imports = sum(total_fuel_type_imports),
+               fuel_type_share_of_total_fuel_type_imports = total_fuel_type_imports / total_2711_imports) %>%
+        arrange(desc(total_fuel_type_imports))
+
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>% 
+        mutate(fuel_type = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                     str_detect(string = hs_product_code, pattern = regex("^271112|271113")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        mutate(fuel_type_2 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               country_fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / 
+                       total_fuel_type_imports) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type, desc(country_fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-c(location_code, year, global_lng_import_value_sum)) %>%
+        filter(fuel_type %in% c("Natural gas", "Crude oil", "Oil products")) %>%
+        print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# bosnia question ####
+# bosnia net energy imports as share of tes
+# manually confirmed from iea
+(6742 - 4624) / 6742 # .314 in 2017
+(7468 - 5672) / 7468 # .24 in 2018
+iea %>% filter(country == "BiH", year %in% c(2017, 2018)) %>%
+        select(country, year, Imports_total, TES_total, net_energy_imports_as_share_of_tes)
+# BiH's production spiked in 2018
+iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes)
+iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        ggplot(data = ., mapping = aes(x = year, y = Production_total)) + geom_line()
+# tes, imports, and production
+iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "TES_total")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# net energy imports and production as share of tes
+iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("production_as_share_of_tes", "net_energy_imports_as_share_of_tes")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# production by type
+iea %>% filter(country == "BiH") %>%
+        select(country, year, starts_with("Production_")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+iea %>% filter(country == "BiH") %>%
+        select(country, year, starts_with("Production_"))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# albania question ####
+# albania net energy imports as share of tes
+# manually confirmed from iea
+(2254 - 1961) / 2254 # .129 in 2016
+(2355 - 1634) / 2355 # .306 in 2017
+(2336 - 1998) / 2336 # .145 in 2018
+iea %>% filter(country == "Albania", year %in% c(2017, 2018)) %>%
+        select(country, year, Imports_total, TES_total, net_energy_imports_as_share_of_tes)
+# albania's production dipped sharply in 2017
+iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes)
+iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        ggplot(data = ., mapping = aes(x = year, y = Production_total)) + geom_line()
+# imports, production, and TES
+iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# net energy imports as share of tes; production as share of tes
+iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("production_as_share_of_tes", "net_energy_imports_as_share_of_tes")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# production by type
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Production_")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Imports_")) %>%
+        filter(year> 2015)
+# imports by type
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Imports_")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# imports by type (dropping total and oil products to see variation better)
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Imports_")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>% filter(!(var %in% c("Imports_total", "Imports_oil_products"))) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create albania_energy_exports_imports_production_tes_line_chart ####
+
+# check filter
+iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(Exports_total = abs(Exports_total)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(Exports_total = abs(Exports_total)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        mutate(var = case_when(var == "Production_total" ~ "Production",
+                               var == "Imports_total" ~ "Imports",
+                               var == "Exports_total" ~ "Exports",
+                               var == "TES_total" ~ "Total primary\nenergy use")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Total primary\nenergy use" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Production" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Exports" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Imports" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+albania_energy_exports_imports_production_tes_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Total primary\nenergy use", "Production", 
+                                                                  "Imports", "Exports")),
+                             linetype = factor(color_bin, levels = c("Total primary\nenergy use", "Production", 
+                                                                     "Imports", "Exports")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total primary\nenergy use"), 
+                  mapping = aes(x = year + .15, y = value - 25, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Production"), 
+                  mapping = aes(x = year + .15, y = value - 70, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Imports"), 
+                  mapping = aes(x = year + .15, y = value - 25, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Exports"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Total primary energy use", "Production", "Imports", "Exports")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Total primary energy use", "Production", "Imports", "Exports")) +
+        scale_y_continuous(breaks = seq(from = 500, to = 2500, by = 500), limits = c(300, 2600), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Total primary energy use, production,\nimports, and exports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 50, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+albania_energy_exports_imports_production_tes_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(albania_energy_exports_imports_production_tes_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/albania_energy_exports_imports_production_tes_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create albania_production_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(!(var %in% c("production_as_share_of_overall_production_sum"))) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(!(var %in% c("production_as_share_of_overall_production_sum"))) %>%
+        mutate(var = case_when(var == "Production_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Production_coal" ~ "Coal",
+                               var == "Production_crude_oil" ~ "Crude oil",
+                               var == "Production_electricity" ~ "Electricity",
+                               var == "Production_heat" ~ "Heat",
+                               var == "Production_hydro" ~ "Hydro",
+                               var == "Production_natural_gas" ~ "Natural gas",
+                               var == "Production_nuclear" ~ "Nuclear",
+                               var == "Production_oil_products" ~ "Oil products",
+                               var == "Production_wind_solar_etc" ~ "Wind/solar",
+                               var == "Production_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                       TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+albania_production_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+                  mapping = aes(x = year + .15, y = value - 45, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 2200, by = 500), limits = c(0, 2200), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy production, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 40, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+albania_production_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(albania_production_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/albania_production_by_fuel_type_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create albania_imports_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Imports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Imports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "Imports_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Imports_coal" ~ "Coal",
+                               var == "Imports_crude_oil" ~ "Crude oil",
+                               var == "Imports_electricity" ~ "Electricity",
+                               var == "Imports_heat" ~ "Heat",
+                               var == "Imports_hydro" ~ "Hydro",
+                               var == "Imports_natural_gas" ~ "Natural gas",
+                               var == "Imports_nuclear" ~ "Nuclear",
+                               var == "Imports_oil_products" ~ "Oil products",
+                               var == "Imports_wind_solar_etc" ~ "Wind/solar",
+                               var == "Imports_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+albania_imports_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"),
+        #           mapping = aes(x = year + .15, y = value, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"),
+                  mapping = aes(x = year - .85, y = value + 250, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+          mapping = aes(x = year + .15, y = value - 45, label = color_bin), 
+          fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 2200, by = 500), limits = c(0, 2200), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy imports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 50, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+albania_imports_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(albania_imports_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/albania_imports_by_fuel_type_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create albania_exports_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Exports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        mutate(value = abs(value)) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Albania") %>%
+        select(country, year, starts_with("Exports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        mutate(value = abs(value)) %>%
+        mutate(var = case_when(var == "Exports_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Exports_coal" ~ "Coal",
+                               var == "Exports_crude_oil" ~ "Crude oil",
+                               var == "Exports_electricity" ~ "Electricity",
+                               var == "Exports_heat" ~ "Heat",
+                               var == "Exports_hydro" ~ "Hydro",
+                               var == "Exports_natural_gas" ~ "Natural gas",
+                               var == "Exports_nuclear" ~ "Nuclear",
+                               var == "Exports_oil_products" ~ "Oil products",
+                               var == "Exports_wind_solar_etc" ~ "Wind/solar",
+                               var == "Exports_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+albania_exports_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"),
+        #           mapping = aes(x = year + .15, y = value, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"),
+        #           mapping = aes(x = year - .85, y = value + 250, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"),
+        #           mapping = aes(x = year + .15, y = value, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+                  mapping = aes(x = year + .15, y = value - 45, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1200, by = 200), limits = c(0, 1300), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy exports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 30, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+albania_exports_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(albania_exports_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/albania_exports_by_fuel_type_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create albania_net_imports_and_production_as_share_of_tes_line_chart ####
+
+
+# check filter
+iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("production_as_share_of_tes", "net_energy_imports_as_share_of_tes")) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Albania") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("production_as_share_of_tes", "net_energy_imports_as_share_of_tes")) %>%
+        mutate(var = case_when(var == "production_as_share_of_tes" ~ "Production",
+                               var == "net_energy_imports_as_share_of_tes" ~ "Net imports")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Production" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Net imports" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(
+                       # color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+albania_net_imports_and_production_as_share_of_tes_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Production", "Net imports")),
+                             linetype = factor(color_bin, levels = c("Production", "Net imports")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Production"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Net imports"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Production", "Net imports")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Production", "Net imports")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = label_percent(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Share of\ntotal primary energy use,\nby ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 4.7 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+albania_net_imports_and_production_as_share_of_tes_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(albania_net_imports_and_production_as_share_of_tes_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/albania_net_imports_and_production_as_share_of_tes_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create bih_energy_exports_imports_production_tes_line_chart ####
+
+# check filter
+iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(Exports_total = abs(Exports_total)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(Exports_total = abs(Exports_total)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        mutate(var = case_when(var == "Production_total" ~ "Production",
+                               var == "Imports_total" ~ "Imports",
+                               var == "Exports_total" ~ "Exports",
+                               var == "TES_total" ~ "Total primary\nenergy use")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Total primary\nenergy use" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Production" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Exports" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Imports" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+bih_energy_exports_imports_production_tes_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Total primary\nenergy use", "Production", 
+                                                                  "Imports", "Exports")),
+                             linetype = factor(color_bin, levels = c("Total primary\nenergy use", "Production", 
+                                                                     "Imports", "Exports")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total primary\nenergy use"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Production"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Imports"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Exports"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Total primary energy use", "Production", "Imports", "Exports")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Total primary energy use", "Production", "Imports", "Exports")) +
+        scale_y_continuous(breaks = seq(from = 1000, to = 8000, by = 1000), limits = c(800, 8100), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Total primary energy use, production,\nimports, and exports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 150, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+bih_energy_exports_imports_production_tes_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(bih_energy_exports_imports_production_tes_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/bih_energy_exports_imports_production_tes_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create bih_production_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "BiH") %>%
+        select(country, year, starts_with("Production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(!(var %in% c("production_as_share_of_overall_production_sum"))) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "BiH") %>%
+        select(country, year, starts_with("Production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(!(var %in% c("production_as_share_of_overall_production_sum"))) %>%
+        mutate(var = case_when(var == "Production_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Production_coal" ~ "Coal",
+                               var == "Production_crude_oil" ~ "Crude oil",
+                               var == "Production_electricity" ~ "Electricity",
+                               var == "Production_heat" ~ "Heat",
+                               var == "Production_hydro" ~ "Hydro",
+                               var == "Production_natural_gas" ~ "Natural gas",
+                               var == "Production_nuclear" ~ "Nuclear",
+                               var == "Production_oil_products" ~ "Oil products",
+                               var == "Production_wind_solar_etc" ~ "Wind/solar",
+                               var == "Production_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+bih_production_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+                  mapping = aes(x = year + .15, y = value - 45, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 6000, by = 1000), limits = c(0, 6200), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy production, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 130, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 25, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+bih_production_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(bih_production_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/bih_production_by_fuel_type_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create bih_net_imports_and_production_as_share_of_tes_line_chart ####
+
+
+# check filter
+iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("production_as_share_of_tes", "net_energy_imports_as_share_of_tes")) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "BiH") %>%
+        select(country, year, Production_total, Imports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("production_as_share_of_tes", "net_energy_imports_as_share_of_tes")) %>%
+        mutate(var = case_when(var == "production_as_share_of_tes" ~ "Production",
+                               var == "net_energy_imports_as_share_of_tes" ~ "Net imports")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Production" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Net imports" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(
+                       # color_bin == "Total" ~ "dotted",
+                       TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+bih_net_imports_and_production_as_share_of_tes_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Production", "Net imports")),
+                             linetype = factor(color_bin, levels = c("Production", "Net imports")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Production"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Net imports"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Production", "Net imports")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Production", "Net imports")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = label_percent(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Share of\ntotal primary energy use,\nby ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 4.7 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+bih_net_imports_and_production_as_share_of_tes_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(bih_net_imports_and_production_as_share_of_tes_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/bih_net_imports_and_production_as_share_of_tes_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create bih_exports_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "BiH") %>%
+        select(country, year, starts_with("Exports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        mutate(value = abs(value)) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "BiH") %>%
+        select(country, year, starts_with("Exports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        mutate(value = abs(value)) %>%
+        mutate(var = case_when(var == "Exports_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Exports_coal" ~ "Coal",
+                               var == "Exports_crude_oil" ~ "Crude oil",
+                               var == "Exports_electricity" ~ "Electricity",
+                               var == "Exports_heat" ~ "Heat",
+                               var == "Exports_hydro" ~ "Hydro",
+                               var == "Exports_natural_gas" ~ "Natural gas",
+                               var == "Exports_nuclear" ~ "Nuclear",
+                               var == "Exports_oil_products" ~ "Oil products",
+                               var == "Exports_wind_solar_etc" ~ "Wind/solar",
+                               var == "Exports_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+bih_exports_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"),
+        #           mapping = aes(x = year + .15, y = value, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+# geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"), 
+#           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"),
+          mapping = aes(x = year + .15, y = value - 75, label = color_bin),
+          fontface = "bold", hjust = 0) +
+# geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+#           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+          mapping = aes(x = year + .15, y = value, label = color_bin), 
+          fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1500, by = 500), limits = c(0, 1700), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy exports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 35, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+bih_exports_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(bih_exports_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/bih_exports_by_fuel_type_line_chart.docx")
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# armenia question ####
+# armenia imports of natural gas
+# iea profile confirms armenia gets 75% of energy needs from oil and gas imports
+# https://www.iea.org/countries/aremina#analysis
+
+# manually confirmed from iea
+(2044 - 0) / 3083 # .66
+iea %>% filter(country == "Armenia", year == 2018) %>%
+        select(country, year, TES_natural_gas, Production_natural_gas, TES_total, 
+               net_natural_gas_imports_as_share_of_tes,
+               net_energy_imports_as_share_of_tes)
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, TES_natural_gas, Production_natural_gas, TES_total, natural_gas_tes_as_share_of_overall_tes,
+               net_natural_gas_imports_as_share_of_tes,
+               net_energy_imports_as_share_of_tes)
+# imports, produciton, tes, tes_natural gas
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, Imports_natural_gas, Production_natural_gas, TES_natural_gas, TES_total, 
+               net_natural_gas_imports_as_share_of_tes,
+               net_energy_imports_as_share_of_tes) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Imports_natural_gas", "Production_natural_gas", "TES_natural_gas", "TES_total")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# net natural gas imports as share of tes
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, Imports_natural_gas, Production_natural_gas, TES_natural_gas, TES_total, 
+               net_natural_gas_imports_as_share_of_tes,
+               net_energy_imports_as_share_of_tes) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("net_natural_gas_imports_as_share_of_tes")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+# production of nuclear, hydro, natural gas, TES
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, Production_nuclear, Production_hydro, Imports_natural_gas, TES_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        ggplot(data = ., mapping = aes(x = year, y = value, color = var)) + geom_line()
+        
+
+# modified chart_data to show data just for armenia 2018, and including all fuel_types before slicing
+atlas %>% 
+        filter(country == "Armenia", year == 2018) %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+        ungroup() %>%
+        select(country, year, fuel_type, fuel_type_imports_as_share_of_tes, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               estimated_russia_fuel_type_imports_as_share_of_tes, 
+               estimated_russia_fossil_imports_as_share_of_tes)
+
+
+# confirm unadjusted figures in atlas explorer
+# these are very close to the adjusted russian shares of imports (.756 for gas, .71 for oil products)
+243 / 326 # .745 russian share of 2711 gas
+136 / 176 # .77 russian share of 2710 refined oil products
+
+# showing moldova 2018 all fossil fuels from atlas, both adjusted (fuel_type) and unadjusted (fuel_type_2)
+atlas_6digit_raw %>% filter(location_code == "ARM", year == 2018) %>% 
+        mutate(fuel_type = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                     str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                     str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                     str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                     str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        mutate(fuel_type_2 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                                       str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^271111|271121")) ~ "Natural gas",
+                                       # str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                                       str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                                       str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               country_fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / 
+                       total_fuel_type_imports) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type, desc(country_fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-c(location_code, year, global_lng_import_value_sum)) %>%
+        filter(partner_code == "RUS") %>%
+        print(n = nrow(.))
+
+#///////////////////
+
+
+# unadjusted fuel_type
+atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018) %>% 
+        mutate(fuel_type_2 = case_when(str_detect(string = hs_product_code, pattern = regex("^2701")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2702")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2703")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2704")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2705")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2706")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2707")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2708")) ~ "Coal",
+                             str_detect(string = hs_product_code, pattern = regex("^2709")) ~ "Crude oil",
+                             str_detect(string = hs_product_code, pattern = regex("^2710")) ~ "Oil products",
+                             str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Natural gas",
+                             # str_detect(string = hs_product_code, pattern = regex("^2711")) ~ "Crude oil",
+                             str_detect(string = hs_product_code, pattern = regex("^2712")) ~ "Oil products",
+                             str_detect(string = hs_product_code, pattern = regex("^2713")) ~ "Oil products",
+                             str_detect(string = hs_product_code, pattern = regex("^2714")) ~ "Coal")) %>%
+        filter(!str_detect(string = hs_product_code, pattern = regex("^2715"))) %>%
+        group_by(location_code, year, fuel_type_2, partner_code) %>%
+        mutate(country_fuel_type_imports = sum(import_value)) %>%
+        ungroup() %>%
+        group_by(location_code, year, fuel_type_2) %>%
+        mutate(total_fuel_type_imports = sum(import_value),
+               fuel_type_import_as_share_of_total_fuel_type_imports = country_fuel_type_imports / total_fuel_type_imports) %>%
+        arrange(desc(fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        # slice(1:5) %>%
+        ungroup() %>% arrange(fuel_type_2, desc(fuel_type_import_as_share_of_total_fuel_type_imports)) %>%
+        select(-global_lng_import_value_sum) %>%
+        print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create armenia_production_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, starts_with("Production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(!(var %in% c("production_as_share_of_overall_production_sum"))) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Armenia") %>%
+        select(country, year, starts_with("Production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(!(var %in% c("production_as_share_of_overall_production_sum"))) %>%
+        mutate(var = case_when(var == "Production_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Production_coal" ~ "Coal",
+                               var == "Production_crude_oil" ~ "Crude oil",
+                               var == "Production_electricity" ~ "Electricity",
+                               var == "Production_heat" ~ "Heat",
+                               var == "Production_hydro" ~ "Hydro",
+                               var == "Production_natural_gas" ~ "Natural gas",
+                               var == "Production_nuclear" ~ "Nuclear",
+                               var == "Production_oil_products" ~ "Oil products",
+                               var == "Production_wind_solar_etc" ~ "Wind/solar",
+                               var == "Production_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+armenia_production_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"), 
+                  mapping = aes(x = year + .15, y = value + 50, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+          mapping = aes(x = year + .15, y = value + 25, label = color_bin), 
+          fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1200, by = 200), limits = c(0, 1200), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy production, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 25, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+armenia_production_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(armenia_production_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/armenia_production_by_fuel_type_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create armenia_energy_exports_imports_production_tes_line_chart ####
+
+# check filter
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(Exports_total = abs(Exports_total)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Armenia") %>%
+        select(country, year, Production_total, Imports_total, Exports_total, TES_total, net_energy_imports_as_share_of_tes) %>%
+        mutate(Exports_total = abs(Exports_total)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        filter(var %in% c("Production_total", "Imports_total", "Exports_total", "TES_total")) %>%
+        mutate(var = case_when(var == "Production_total" ~ "Production",
+                               var == "Imports_total" ~ "Imports",
+                               var == "Exports_total" ~ "Exports",
+                               var == "TES_total" ~ "Total primary\nenergy use")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Total primary\nenergy use" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Production" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Exports" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Imports" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+armenia_energy_exports_imports_production_tes_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Total primary\nenergy use", "Production", 
+                                                                  "Imports", "Exports")),
+                             linetype = factor(color_bin, levels = c("Total primary\nenergy use", "Production", 
+                                                                     "Imports", "Exports")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total primary\nenergy use"), 
+                  mapping = aes(x = year + .15, y = value + 150, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Production"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Imports"), 
+                  mapping = aes(x = year + .15, y = value - 50, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Exports"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Total primary energy use", "Production", "Imports", "Exports")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Total primary energy use", "Production", "Imports", "Exports")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 3500, by = 500), limits = c(0, 3500), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Total primary energy use, production,\nimports, and exports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 70, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+armenia_energy_exports_imports_production_tes_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(armenia_energy_exports_imports_production_tes_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/armenia_energy_exports_imports_production_tes_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create armenia_imports_by_fuel_type_line_chart ####
+
+# check filter
+iea %>% filter(country == "Armenia") %>%
+        select(country, year, starts_with("Imports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% filter(country == "Armenia") %>%
+        select(country, year, starts_with("Imports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "Imports_biofuels_and_waste" ~ "Biofuels/waste",
+                               var == "Imports_coal" ~ "Coal",
+                               var == "Imports_crude_oil" ~ "Crude oil",
+                               var == "Imports_electricity" ~ "Electricity",
+                               var == "Imports_heat" ~ "Heat",
+                               var == "Imports_hydro" ~ "Hydro",
+                               var == "Imports_natural_gas" ~ "Natural gas",
+                               var == "Imports_nuclear" ~ "Nuclear",
+                               var == "Imports_oil_products" ~ "Oil products",
+                               var == "Imports_wind_solar_etc" ~ "Wind/solar",
+                               var == "Imports_total" ~ "Total")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels/waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind/solar" ~ "#2E6657",
+                                 color_bin == "Total" ~ color_palette %>% slice(1) %>% pull(hex)),
+               linetype_bin = var,
+               linetype = case_when(color_bin == "Total" ~ "dotted",
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+armenia_imports_by_fuel_type_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = value, 
+                             color = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                  "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                  "Nuclear", "Oil products", "Wind/solar", "Total")),
+                             linetype = factor(color_bin, levels = c("Biofuels/waste", "Coal", "Crude oil",
+                                                                     "Electricity", "Heat", "Hydro", "Natural gas",
+                                                                     "Nuclear", "Oil products", "Wind/solar", "Total")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Biofuels/waste"),
+        #           mapping = aes(x = year + .15, y = value, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Coal"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Crude oil"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Electricity"),
+        #           mapping = aes(x = year - .85, y = value + 250, label = color_bin),
+        #           fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Heat"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Hydro"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Natural gas"),
+                  mapping = aes(x = year + .15, y = value, label = color_bin),
+                  fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Nuclear"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+#           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Oil products"),
+                mapping = aes(x = year + .15, y = value, label = color_bin),
+                fontface = "bold", hjust = 0) +
+        # geom_text(data = chart_data %>% filter(year == max(year), var == "Wind/solar"), 
+        #           mapping = aes(x = year + .15, y = value, label = color_bin), 
+        #           fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), var == "Total"), 
+                  mapping = aes(x = year + .15, y = value, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                      "Electricity", "Heat", "Hydro", "Natural gas",
+                                      "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Biofuels/waste", "Coal", "Crude oil",
+                                         "Electricity", "Heat", "Hydro", "Natural gas",
+                                         "Nuclear", "Oil products", "Wind/solar", "Total")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 2500, by = 500), limits = c(0, 2600), expand = c(0, 0),
+                           labels = label_comma()) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Energy imports, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = .1 / 60, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+armenia_imports_by_fuel_type_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(armenia_imports_by_fuel_type_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/armenia_imports_by_fuel_type_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea data ####
+# slides 5-11
+
+# could not find publically available IEA net energy imports series beyond 2015
+# only an iea highlights series with limited countries
+# https://tcdata360.worldbank.org/indicators/EG.IMP.CONS.ZS?country=BRA&indicator=1255&viz=line_chart&years=1960,2014
+# https://data.worldbank.org/indicator/EG.IMP.CONS.ZS
+# https://wits.worldbank.org/CountryProfile/en/country/by-country/startyear/LTST/endyear/LTST/indicator/EG-IMP-CONS-ZS
+# https://data.oecd.org/energy/primary-energy-supply.htm
+# https://www.iea.org/data-and-statistics/data-tables?country=WORLD
+# https://www.eia.gov/totalenergy/data/annual/index.php 
+# https://www.iea.org/countries/russia
+# iea highlights data: https://www.iea.org/reports/world-energy-balances-overview
+
+# IEA albania in 2014: 1905 ktoe imports; 2132 ktoe total final consumption; 2132 - 1905 = 227 ktoe imports or inventory decrease??
+# imports as share of total final consumption: 1905 / 2132 = .89
+1905 - 1237 == 668 # imports - exports
+# 2013 ktoe production - 1237 ktoe exports = 776 ktoe non-exported production??
+# ?? 776 non-exported production - ??227 imports or inventory decrease = 549 inventory increase??
+# -20 ktoe intl marine bunker; -8 ktoe intl aviation bunker
+# -317 stock changes
+# note this matches exactly (w/ rounding) OECD mtoe https://data.oecd.org/energy/primary-energy-supply.htm
+2013 + 1905 - 1237 - 20 - 8 - 317 == 2336 # 2336 ktoe primary energy supply
+
+# official net energy imports = energy use - production; 
+# https://www.indexmundi.com/facts/indicators/EG.IMP.CONS.ZS#:~:text=Energy%20production%20%26%20use-,Energy%20imports%2C%20net%20(%25%20of%20energy%20use),country%20is%20a%20net%20exporter.
+# https://data.oecd.org/energy/primary-energy-supply.htm
+# energy supply = primary energy before transformation to other end-use fuels
+# energy supply = production + imports + stock changes - exports - intl marine - intl aviation
+2013 + 1905 + (-317) - 1237 - 20 - 8 == 2336 # 2336 toe primary energy use
+# note "net energy imports" is calculated as primary energy use minus production 
+# https://data.worldbank.org/indicator/EG.IMP.CONS.ZS
+(2336 - 2013) / 2336 # 13.8; net energy imports as share of primary energy supply - matches exactly World Bank/IEA
+
+
+# some variation in naming conventions for the denominator (e.g. TES, primary energy supply, energy use)
+# note the IEA balance sheet uses term total energy supply (TES)
+# but World Bank used "energy used": https://data.worldbank.org/indicator/EG.IMP.CONS.ZS
+# IEA also seems to use "energy used" here: https://www.iea.org/reports/world-energy-balances-overview
+# and also IEA seems to show an earlier version of the balance sheets with "TPES" for total primary energy supply
+# https://www.youtube.com/watch?v=n9jua1s551I&list=PL2_s0lyLynIRwpXSCyXWaxNAXZP3YYMeM&index=4
+# OECD uses "primary energy supply": https://data.oecd.org/energy/primary-energy-supply.htm
+
+
+# this doesn't match toes/1000 USD on OECD - not clear how they calculate it (GDP, GDP per capita??)
+# world bank has an IEA version with oil kg / USD GDP: https://data.worldbank.org/indicator/EG.USE.COMM.GD.PP.KD
+# note it uses toe/1000 USD GDP based on 2017 PPP; so the PPP calculation could be the issue
+# albania 2014 gdp: 13228144008 / 1000 = 13228144; toe/1000 USD: (2336*1000) / 13228144 = .17659
+
+# oecd site has primary energy mtoe for countries until 2018, (excluding kosovo & macedonia)
+# but oecd site does not have the production stats needed to calculation "net enery imports" (aka the numerator)
+
+# also un energy statistics database - but it basically just has the same data as IEA energy balances
+# but at a more granular fuel-type level
+# https://unstats.un.org/unsd/energystats/data/
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read world bank net energy imports
+# https://data.worldbank.org/indicator/EG.IMP.CONS.ZS
+wb_net_energy_imports <- read_excel(path = "data/world_bank_net_energy_imports/API_EG.IMP.CONS.ZS_DS2_en_excel_v2_1742332.xls",
+                                    sheet = "Data", skip = 3)
+wb_net_energy_imports
+wb_net_energy_imports %>% glimpse()
+
+
+#///////////////////////
+
+
+# clean and reshape
+wb_net_energy_imports <- wb_net_energy_imports %>% 
+        rename(country = "Country Name", iso_3_alpha = "Country Code") %>%
+        select(-c(`Indicator Name`, `Indicator Code`)) %>%
+        pivot_longer(cols = -c(country, iso_3_alpha), names_to = "year", 
+                     values_to = "net_energy_imports_as_share_of_energy_use") %>%
+        mutate(year = as.numeric(year))
+        
+
+# inspect
+wb_net_energy_imports
+wb_net_energy_imports %>% glimpse()
+wb_net_energy_imports %>% filter(country == "Albania", year > 2010)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read in iea data
+iea_highlights <- read_excel(path = "data/iea/WorldEnergyBalancesHighlights_final.xlsx", sheet = "TimeSeries_1971-2019",
+                  skip = 1)
+iea_highlights
+iea_highlights %>% glimpse()
+
+
+#//////////////////////////
+
+
+# clean and reshape
+iea_highlights <- iea_highlights %>% select(-c(NoCountry, NoProduct, NoFlow)) %>%
+        rename(country = "Country", product = "Product", flow = "Flow") %>%
+        pivot_longer(cols = -c(country, product, flow), names_to = "year", values_to = "value") %>%
+        mutate(year = case_when(year == "2019 Provisional" ~ "2019", TRUE ~ year),
+               year = as.numeric(year))
+
+# inspect
+iea_highlights
+iea_highlights %>% glimpse()
+iea_highlights %>% count(year) %>% print(n = nrow(.))
+iea_highlights %>% filter(country == "Albania", year > 2015)
+iea_highlights %>% filter(country == "Australia", year > 2015)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# load iea data ####
+iea <- dir_ls("data/iea") %>% tibble(path = as.character(.)) %>% select(path) %>% 
+        filter(str_detect(string = path, pattern = "data/iea/iea_")) %>% pull(path) %>%
+        map(.x = ., .f = ~ read_csv(file = .x, na = c("", "NA", "nan"))) %>% bind_rows()
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% nrow() # 13860
+iea %>% distinct(country) %>% print(n = nrow(.))
+iea %>% distinct(country) %>% nrow() # 45
+ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                                    "EU-15", "U.S.", "Russia")) %>% nrow() # 45
+iea %>% skim()
+
+
+#///////////////////////
+
+
+# clean iea, drop unused categories, convert NA to 0 for energy ktoe variables, join with ee_country_crosswalk,
+iea <- iea %>% rename(biofuels_and_waste = "Biofuels and waste", coal = Coal, crude_oil = "Crude oil",
+               electricity = Electricity, heat = Heat, hydro = Hydro, natural_gas = "Natural gas",
+               nuclear = Nuclear, oil_products = "Oil products", total = Total, wind_solar_etc = "Wind, solar, etc.") %>%
+        filter(category %in% c("Production", "Imports", "Exports", "International aviation bunkers",
+                               "International marine bunkers", "Stock changes", "TES", "Total final consumption")) %>%
+        mutate(across(.cols = c(biofuels_and_waste, coal, crude_oil, electricity, heat, hydro, natural_gas,
+                                   nuclear, oil_products, total, wind_solar_etc),
+                      .fns = ~ ifelse(is.na(.x), 0, .x))) %>%
+        mutate(country = case_when(country == "BOSNIAHERZ" ~ "Bosnia and Herzegovina",
+                                   country == "CZECH" ~ "Czechia",
+                                   country == "NORTHMACED" ~ "North Macedonia",
+                                   country == "TURKMENIST" ~ "Turkmenistan",
+                                   country == "LUXEMBOU" ~ "Luxembourg",
+                                   country == "NETHLAND" ~ "Netherlands",
+                                   country == "UK" ~ "United Kingdom",
+                                   country == "USA" ~ "United States",
+                                   TRUE ~ str_to_title(string = country)),
+               measurement_units = "ktoe") %>%
+        select(country, year, category, measurement_units, everything()) %>%
+        left_join(., ee_country_crosswalk, by = "country")
+
+# inspect
+iea 
+iea %>% glimpse()
+iea %>% nrow() # 3960
+iea %>% ncol() # 23
+iea %>% distinct(country) %>% nrow() # 45
+iea %>% count(country) # 88 = 8 categories x 11 years
+iea %>% distinct(category)
+iea %>% count(mcp_grouping, country) %>% print(n = nrow(.))
+set.seed(3)
+iea %>% filter(category %in% c("Production", "Imports", "Exports", "International marine bunkers",
+                               "International aviation bunkers", "Stock changes", "TES")) %>% sample_n(10) %>% 
+        select(country, year, category, coal, crude_oil, oil_products, natural_gas, electricity)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# reshape iea to unite category and fuel type vars, giving a wide record per country/year
+iea <- iea %>% pivot_longer(cols = -c(country, year, category, measurement_units, world_bank_region,
+                               iso_3_alpha, iso_3_numeric, ee_status, mcp_grouping, mcp_subgroup,
+                               region, sub_region), names_to = "var", values_to = "value") %>%
+        unite(col = category_var, category, var) %>% 
+        pivot_wider(id_cols = -c(category_var, value), names_from = category_var, values_from = value)
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% nrow() # 495
+iea %>% ncol() # 99
+iea %>% distinct(country) %>% nrow() # 45
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# manually confirm iea stats ####
+
+# calculate primary energy supply to confirm it matches iea's TES (total energy supply)
+# for IEA definition of TES, see their world energy balance highlights dataset
+# https://www.iea.org/reports/world-energy-balances-overview
+# "Total energy supply (TES) is made up of production + imports - exports - international marine bunkers - 
+# international aviation bunkers ± stock changes. 
+# Note, exports, bunkers and stock changes incorporate the algebraic sign directly in the number.
+# iea's energy balances webinar video also has ealier version of balance sheet where TES is TPES (total primary energy supply)
+# https://www.iea.org/areas-of-work/training/online-training
+# https://www.youtube.com/playlist?list=PL2_s0lyLynIRwpXSCyXWaxNAXZP3YYMeM
+
+# primary energy supply definition: 
+# "Primary energy supply is defined as energy production plus energy imports, minus energy exports, 
+# minus international bunkers, then plus or minus stock changes."
+# https://www.indexmundi.com/facts/indicators/EG.IMP.CONS.ZS#:~:text=Energy%20production%20%26%20use-,Energy%20imports%2C%20net%20(%25%20of%20energy%20use),country%20is%20a%20net%20exporter.
+# https://data.oecd.org/energy/primary-energy-supply.htm # oecd also has primary energy supply data in mtoe, but not 2018 yet
+# https://www.eia.gov/tools/glossary/index.php?id=Primary%20energy
+
+# note the manual calculation matches TES pretty much exactly, excluding rounding errors (max difference is 2 ktoe)
+iea %>% mutate(primary_energy_supply = Production_total + Imports_total + Exports_total +
+                       `International marine bunkers_total` + `International aviation bunkers_total` +
+                       `Stock changes_total`) %>%
+        select(country, TES_total, primary_energy_supply, Production_total, Imports_total, Exports_total, 
+               `International marine bunkers_total`, `International aviation bunkers_total`,
+                       `Stock changes_total`) %>%
+        mutate(abs_difference = abs(TES_total - primary_energy_supply)) %>%
+        # ggplot(data = ., mapping = aes(x = abs_difference)) + stat_ecdf()
+        skim(TES_total, primary_energy_supply, abs_difference)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# calculate net energy imports as % of energy supply/use
+# https://data.worldbank.org/indicator/EG.IMP.CONS.ZS
+# https://data.oecd.org/energy/primary-energy-supply.htm
+# https://www.indexmundi.com/facts/indicators/EG.IMP.CONS.ZS#:~:text=Energy%20production%20%26%20use-,Energy%20imports%2C%20net%20(%25%20of%20energy%20use),country%20is%20a%20net%20exporter
+# "Net energy imports are estimated as energy use less production, both measured in oil equivalents. 
+# A negative value indicates that the country is a net exporter."
+
+# there is also the more traditional definition of net imports as simply imports - exports (eg see eu link below)
+# but testing that simple method clearly does a worse job matching the world bank net imports as % of energy series
+# https://www.eea.europa.eu/data-and-maps/indicators/net-energy-import-dependency/net-energy-import-dependency-assessment-2
+
+# get net_energy_imports_as_share_of_tes, 
+iea <- iea %>% mutate(net_energy_imports = TES_total - Production_total,
+                      net_energy_imports2 = Imports_total + Exports_total,
+                net_energy_imports_as_share_of_tes = (TES_total - Production_total) / TES_total,
+                net_energy_imports_as_share_of_tes2 = (Imports_total + Exports_total) / TES_total) 
+
+
+#////////////////////
+
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% nrow() # 495
+iea %>% distinct(country) %>% nrow() # 45
+iea %>% count(country) %>% distinct(n) # 11
+
+# join with wb_net_energy_imports and compare
+# results: it's an extremely close match 
+# the max abs_difference is .32 (32%), but that's a single obs for kazakhstan in 2014
+# the next largest abs_difference is .085 (8.5%), which seems reasonable
+# the 75% percentile abs_difference is only .004 (0.4%), which can be ignored
+# note the simple IM-EX net imports calculation clearly does a worse job 
+# matching the world bank net imports as % of energy series
+iea %>% left_join(., wb_net_energy_imports %>% filter(year %in% (iea %>% distinct(year) %>% pull(year))) %>%
+                          select(country, year, net_energy_imports_as_share_of_energy_use) %>%
+                          mutate(net_energy_imports_as_share_of_energy_use = net_energy_imports_as_share_of_energy_use / 100), 
+                  by = c("country", "year")) %>%
+        mutate(abs_difference = abs(net_energy_imports_as_share_of_tes - net_energy_imports_as_share_of_energy_use),
+               abs_difference2 = abs(net_energy_imports_as_share_of_tes2 - net_energy_imports_as_share_of_energy_use)) %>%
+        select(country, year, net_energy_imports_as_share_of_tes, net_energy_imports_as_share_of_tes2,
+               net_energy_imports_as_share_of_energy_use,
+               abs_difference, abs_difference2) %>%
+        # print(n = 20)
+        # glimpse()
+        # arrange(desc(abs_difference))
+        # ggplot(data = ., mapping = aes(x = abs_difference)) + stat_ecdf()
+        # ggplot(data = ., mapping = aes(x = abs_difference)) + geom_histogram()
+        skim(net_energy_imports_as_share_of_tes, net_energy_imports_as_share_of_tes2, 
+             net_energy_imports_as_share_of_energy_use, 
+             abs_difference, abs_difference2)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add net imports by type, and as a share of overall tes
+# also drop the net_energy_imports2 and net_energy_imports_as_share_of_tes2, which were just tests or world bank series above
+iea <- iea %>% 
+        select(-c(net_energy_imports2, net_energy_imports_as_share_of_tes2)) %>%
+        mutate(net_coal_imports = TES_coal - Production_coal,
+               net_coal_imports_as_share_of_tes = (TES_coal - Production_coal) / TES_total,
+               coal_tes_as_share_of_overall_tes = `TES_coal` / `TES_total`,
+               coal_production_as_share_of_overall_production = `Production_coal` / `Production_total`,
+               coal_tfc_as_share_of_overall_tfc = `Total final consumption_coal` / `Total final consumption_total`,
+               net_crude_oil_imports = TES_crude_oil - Production_crude_oil,
+               net_crude_oil_imports_as_share_of_tes = (TES_crude_oil - Production_crude_oil) / TES_total,
+               crude_oil_tes_as_share_of_overall_tes = `TES_crude_oil` / `TES_total`,
+               crude_oil_production_as_share_of_overall_production = `Production_crude_oil` / `Production_total`,
+               crude_oil_tfc_as_share_of_overall_tfc = `Total final consumption_crude_oil` / `Total final consumption_total`,
+               net_oil_products_imports = TES_oil_products - Production_oil_products,
+               net_oil_products_imports_as_share_of_tes = (TES_oil_products - Production_oil_products) / TES_total,
+               oil_products_tes_as_share_of_overall_tes = `TES_oil_products` / `TES_total`,
+               oil_products_production_as_share_of_overall_production = `Production_oil_products` / `Production_total`,
+               oil_products_tfc_as_share_of_overall_tfc = `Total final consumption_oil_products` / `Total final consumption_total`,
+               net_natural_gas_imports = TES_natural_gas - Production_natural_gas,
+               net_natural_gas_imports_as_share_of_tes = (TES_natural_gas - Production_natural_gas) / TES_total,
+               natural_gas_tes_as_share_of_overall_tes = `TES_natural_gas` / `TES_total`,
+               natural_gas_production_as_share_of_overall_production = `Production_natural_gas` / `Production_total`,
+               natural_gas_tfc_as_share_of_overall_tfc = `Total final consumption_natural_gas` / `Total final consumption_total`,
+               net_electricity_imports = TES_electricity - Production_electricity,
+               net_electricity_imports_as_share_of_tes = (TES_electricity - Production_electricity) / TES_total,
+               electricity_tes_as_share_of_overall_tes = `TES_electricity` / `TES_total`,
+               electricity_tfc_as_share_of_overall_tfc = `Total final consumption_electricity` / `Total final consumption_total`,
+               net_biofuels_and_waste_imports = TES_biofuels_and_waste - Production_biofuels_and_waste,
+               net_biofuels_and_waste_imports_as_share_of_tes = (TES_biofuels_and_waste - Production_biofuels_and_waste) / TES_total,
+               biofuels_and_waste_tes_as_share_of_overall_tes = `TES_biofuels_and_waste` / `TES_total`,
+               biofuels_and_waste_production_as_share_of_overall_production = `Production_biofuels_and_waste` / `Production_total`,
+               biofuels_and_waste_tfc_as_share_of_overall_tfc = `Total final consumption_biofuels_and_waste` / `Total final consumption_total`,
+               net_heat_imports = TES_heat - Production_heat,
+               net_heat_imports_as_share_of_tes = (TES_heat - Production_heat) / TES_total,
+               heat_tes_as_share_of_overall_tes = `TES_heat` / `TES_total`,
+               heat_production_as_share_of_overall_production = `Production_heat` / `Production_total`,
+               heat_tfc_as_share_of_overall_tfc = `Total final consumption_heat` / `Total final consumption_total`,
+               net_hydro_imports = TES_hydro - Production_hydro,
+               net_hydro_imports_as_share_of_tes = (TES_hydro - Production_hydro) / TES_total,
+               hydro_tes_as_share_of_overall_tes = `TES_hydro` / `TES_total`,
+               hydro_production_as_share_of_overall_production = `Production_hydro` / `Production_total`,
+               hydro_tfc_as_share_of_overall_tfc = `Total final consumption_hydro` / `Total final consumption_total`,
+               net_nuclear_imports = TES_nuclear - Production_nuclear,
+               net_nuclear_imports_as_share_of_tes = (TES_nuclear - Production_nuclear) / TES_total,
+               nuclear_tes_as_share_of_overall_tes = `TES_nuclear` / `TES_total`,
+               nuclear_production_as_share_of_overall_production = `Production_nuclear` / `Production_total`,
+               nuclear_tfc_as_share_of_overall_tfc = `Total final consumption_nuclear` / `Total final consumption_total`,
+               net_wind_solar_etc_imports = TES_wind_solar_etc - Production_wind_solar_etc,
+               net_wind_solar_etc_imports_as_share_of_tes = (TES_wind_solar_etc - Production_wind_solar_etc) / TES_total,
+               wind_solar_etc_tes_as_share_of_overall_tes = `TES_wind_solar_etc` / `TES_total`,
+               wind_solar_etc_production_as_share_of_overall_production = `Production_wind_solar_etc` / `Production_total`,
+               wind_solar_etc_tfc_as_share_of_overall_tfc = `Total final consumption_wind_solar_etc` / `Total final consumption_total`) %>%
+        rowwise() %>%
+        mutate(net_imports_sum = sum(c_across(cols = matches("^net_(?!energy).*_imports", perl = TRUE))),
+               net_imports_as_share_of_tes_sum = sum(c_across(cols = matches("^net_(?!energy).*_imports_as_share_of_tes", 
+                                                                             perl = TRUE))),
+               tes_as_share_of_overall_tes_sum = sum(c_across(cols = matches("tes_as_share_of_overall_tes", perl = TRUE))),
+               production_as_share_of_overall_production_sum = sum(c_across(cols = matches("production_as_share_of_overall_production", perl = TRUE))),
+               tfc_as_share_of_overall_tfc_sum = sum(c_across(cols = matches("tfc_as_share_of_overall_tfc", perl = TRUE)))
+        ) %>%
+        ungroup()
+
+
+#//////////////////////
+
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% nrow() # 495
+iea %>% distinct(country) %>% nrow() # 45
+
+# results: aggregate net_energy_imports does equal the sum of net_imports by fuel type, w rounding/update errors
+# the max difference is 3.5 ktoe, 75 percentile diff is 1.03 ktoe
+iea %>%
+        mutate(difference = net_imports_sum - net_energy_imports) %>%
+        select(country, year, net_imports_sum, net_energy_imports, difference) %>% 
+        # head()
+        # ggplot(data = ., mapping = aes(x = difference)) + stat_ecdf()
+        skim()
+
+# results: aggregate net_energy_imports_as_share_of_tes does equal the sum of net_imports_as_share_of_tes by fuel type
+# max diff is .0009 (0.09%); 
+iea %>%
+        mutate(difference = net_imports_as_share_of_tes_sum - net_energy_imports_as_share_of_tes) %>%
+        select(country, year, net_imports_as_share_of_tes_sum, net_energy_imports_as_share_of_tes, difference) %>% 
+        # head()
+        # ggplot(data = ., mapping = aes(x = difference)) + stat_ecdf()
+        skim()
+
+# results: each fuel-tes as a share of overall-tes, when summed across all fuel types, equals 1
+iea %>% skim(tes_as_share_of_overall_tes_sum)
+
+# results: each fuel-production as a share of overall-production, when summed across all fuel types, equals 1
+iea %>% skim(production_as_share_of_overall_production_sum)
+
+# results: each fuel-tfc as a share of overall-tfc, when summed across all fuel types, equals 1
+iea %>% skim(tfc_as_share_of_overall_tfc_sum)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get mcp_grouping_aggregate_records for iea ####
+# note it will have NA for measurement vars not being used in analysis
+
+# add iea_grouping, which just drops azerbaijan from e&e eurasia, since its a net exporter and biases average
+# note the CARs, graduates, and EU will retain their net exporters though, no changes other than dropping azerbaijan
+iea %>% filter(net_energy_imports_as_share_of_tes < 0) %>% 
+        select(country, mcp_grouping, year, net_energy_imports_as_share_of_tes) %>%
+        print(n = nrow(.))
+
+# get iea_grouping
+iea <- iea %>% mutate(iea_grouping = case_when(country == "Azerbaijan" ~ "Azerbaijan_placeholder",
+                                               TRUE ~ mcp_grouping))
+iea %>% count(mcp_grouping, iea_grouping, country) %>% print(n = nrow(.))
+iea %>% distinct(country) %>% nrow() # 45
+
+# get grouping_vars 
+grouping_vars <- iea %>% select(iea_grouping, year) %>% names()
+grouping_vars
+
+# get measurement_vars
+measurement_vars <- iea %>% select(-c(country, year, measurement_units, world_bank_region,
+                                      iso_3_alpha, iso_3_numeric, ee_status, mcp_grouping, iea_grouping,
+                                      mcp_subgroup, region, sub_region)) %>%
+        names()
+measurement_vars
+
+# get non_measurement_vars
+non_measurement_vars <- iea %>% select(-c(!!!syms(measurement_vars), !!!syms(grouping_vars))) %>% names()
+non_measurement_vars
+
+# create get_non_measurement_vars_tbl()
+get_non_measurement_vars_tbl <- function(non_measurement_vars) {
+        
+        map(.x = non_measurement_vars, .f = ~ tibble(!!.x := NA)) %>% bind_cols()
+}
+# map(.x = 1:2, .f = ~ get_non_measurement_vars_tbl(non_measurement_vars)) %>% bind_rows()
+
+# get mcp_grouping_aggregate_records
+mcp_grouping_aggregate_records <- iea %>% 
+        group_by(!!!syms(grouping_vars)) %>%
+        summarize(across(.cols = all_of(measurement_vars), ~ mean(.x, na.rm = TRUE))) %>%
+        ungroup() %>%
+        bind_cols(., map(.x = 1:nrow(iea %>% distinct(!!!syms(grouping_vars))), 
+                         .f = ~ get_non_measurement_vars_tbl(non_measurement_vars)) %>% bind_rows()) %>%
+        select(c(!!!syms(iea %>% names()))) %>% 
+        filter(!(iea_grouping %in% c("Russia", "U.S.", "Azerbaijan_placeholder"))) %>%
+        mutate(country = iea_grouping,
+               mcp_grouping = iea_grouping,
+               iso_3_alpha = mcp_grouping,
+               mcp_grouping_aggregate_flag = 1)
+
+
+#/////////////////////
+
+
+# inspect
+mcp_grouping_aggregate_records
+mcp_grouping_aggregate_records %>% glimpse()
+mcp_grouping_aggregate_records %>% nrow() # 55
+mcp_grouping_aggregate_records %>% distinct(country)
+mcp_grouping_aggregate_records %>% distinct(mcp_grouping, iea_grouping, country, iso_3_alpha)
+iea %>% filter(!(country %in% c("Russia", "United States"))) %>% distinct(mcp_grouping, year) %>% nrow() # 55
+mcp_grouping_aggregate_records %>% ncol() # 157
+iea %>% nrow() # 495
+iea %>% ncol() # 156
+iea %>% filter(mcp_grouping == "EU-15") %>% nrow() # 165
+iea %>% filter(mcp_grouping != "EU-15") %>% nrow() # 330
+165 + 330 == 495
+# check that nrow(iea) - eu-15 countries + nrow(aggregates) == nrow(final iea once aggregates are joined - see below)
+495 - 165 + 55 == 385
+
+# check means
+identical(mcp_grouping_aggregate_records %>% filter(iea_grouping == "EU-15") %>% 
+                  select(!!!syms(grouping_vars), !!!syms(measurement_vars)) %>% filter(year < 2019) %>%
+                  select(iea_grouping, year, TES_total, net_energy_imports_as_share_of_tes),
+          
+          iea %>% filter(iea_grouping == "EU-15") %>% 
+                  group_by(!!!syms(grouping_vars)) %>%
+                  summarize(TES_total = mean(TES_total, na.rm = TRUE),
+                            net_energy_imports_as_share_of_tes = mean(net_energy_imports_as_share_of_tes, na.rm = TRUE)) %>%
+                  ungroup() %>%
+                  filter(year < 2019))
+
+
+#/////////////////////
+
+
+# drop the individual eu-15 country records, since the analysis will only use the aggregate eu_15_record
+iea <- iea %>% filter(iea_grouping != "EU-15") %>% 
+        mutate(mcp_grouping_aggregate_flag = 0) %>%
+        bind_rows(., mcp_grouping_aggregate_records)
+
+
+#/////////////////////
+
+
+# inspect
+iea 
+iea %>% glimpse()
+iea %>% nrow() # 385
+iea %>% ncol() # 157
+iea %>% distinct(country) %>% nrow() # 35
+iea %>% count(mcp_grouping, country, iso_3_alpha, mcp_grouping_aggregate_flag) %>% print(n = nrow(.))
+iea %>% count(mcp_grouping_aggregate_flag)
+iea %>% filter(mcp_grouping_aggregate_flag == 1) %>% count(mcp_grouping, country, iso_3_alpha) %>% print(n = nrow(.))
+
+ee_country_crosswalk %>% filter(!is.na(mcp_grouping), mcp_grouping != "EU-15") %>% arrange(mcp_grouping) %>% print(n = nrow(.))
+ee_country_crosswalk %>% filter(!is.na(mcp_grouping), mcp_grouping != "EU-15") %>% nrow() # 31
+# note there are 35 distinct "countries" in iea
+# this matches the 31 non-eu-15 mcp_grouping countries in ee_country_crosswalk + the aggregate records for 
+# 1) EU-15, 2) E&E Balkans, 3) E&E Eurasia, 4) E&E graduates, and 5) CAR
+# 31 mcp_grouping countries + 5 aggregates - 1 countries not found in iea (greenland) = 35 "countries" in iea
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# final inspection/cleaning before plotting
+
+# inspect years
+# result: 2019 is incomplete for many countries - 50th or greater percentile values are 0
+iea %>% group_by(year) %>% skim(TES_total)
+iea %>% group_by(year) %>% skim(`Total final consumption_total`)
+
+# filter iea data down to < 2019, edit long country names, overwrite mcp_grouping with iea_grouping for convenience 
+iea <- iea %>% filter(year < 2019) %>% 
+        mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH",
+                                   country == "North Macedonia" ~ "N. Macedonia",
+                                   country == "United States" ~ "U.S.",
+                                   TRUE ~ country))
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% dim()
+iea %>% nrow() # 350
+iea %>% distinct(country) %>% nrow() # 35
+iea %>% distinct(country) %>% print(n = nrow(.))
+iea %>% distinct(iea_grouping, country) %>% count(iea_grouping)
+iea %>% distinct(mcp_grouping, country) %>% count(mcp_grouping)
+iea %>% filter(net_energy_imports_as_share_of_tes < 0) %>% 
+        select(country, mcp_grouping, year, net_energy_imports_as_share_of_tes, mcp_grouping_aggregate_flag) %>%
+        print(n = nrow(.))
+iea %>% count(year)
+iea %>% count(mcp_grouping_aggregate_flag)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# write/read final iea data ####
+# iea %>% write_csv(path = "data/iea/iea_20201218.csv")
+iea <- read_csv(file = "data/iea/iea_20201218.csv")
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% nrow()
+iea %>% ncol()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_net_energy_imports_as_share_of_tes_bar_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2018) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+iea %>% filter(year == 2018, country %in% c("Azerbaijan", "Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
+        select(country, year, net_energy_imports_as_share_of_tes)
+
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2018) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_net_energy_imports_as_share_of_tes_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes), 
+                             y = net_energy_imports_as_share_of_tes, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        # geom_text(data = chart_data %>% filter(year == 2018),
+        #           mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
+        #                         y = net_energy_imports_as_share_of_tes,
+        #                         label = country), angle = 340, size = 3, nudge_y = -.25, hjust = .5, color = "#333333") +
+        geom_text(data = chart_data %>% filter(year == 2018, net_energy_imports_as_share_of_tes > 0),
+                  mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
+                                y = net_energy_imports_as_share_of_tes, 
+                                color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                     "CARs", "Russia", "EU-15", "U.S.")),
+                                label = country), angle = 45, size = 3, nudge_y = .1, hjust = 0, fontface = "bold") +
+        geom_text(data = chart_data %>% filter(year == 2018, country == "Estonia"),
+                  mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
+                                y = net_energy_imports_as_share_of_tes,
+                                color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                     "CARs", "Russia", "EU-15", "U.S.")),
+                                label = country), angle = 360, size = 3, nudge_y = -.1, hjust = 0, fontface = "bold") +
+        geom_text(data = chart_data %>% filter(year == 2018, country %in% c("Russia", "Uzbekistan")),
+                  mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
+                                y = net_energy_imports_as_share_of_tes,
+                                color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                     "CARs", "Russia", "EU-15", "U.S.")),
+                                label = country), angle = 360, size = 3, nudge_y = -.2, hjust = 0, fontface = "bold") +
+        geom_text(data = chart_data %>% filter(year == 2018, 
+                                               country %in% c("Turkmenistan", "Kazakhstan", "Azerbaijan")),
+                  mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
+                                y = net_energy_imports_as_share_of_tes,
+                                color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                     "CARs", "Russia", "EU-15", "U.S.")),
+                                label = country), angle = 360, size = 3, nudge_y = -.3, hjust = 0, fontface = "bold") +
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = -3.5, to = 1, by = .50), 
+                           limits = c(-3.5, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Net energy imports as a share\nof primary energy use, by ktoe", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 3/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 10, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                # axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                #                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_net_energy_imports_as_share_of_tes_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_net_energy_imports_as_share_of_tes_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_net_energy_imports_as_share_of_tes_importers_bar_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2018,
+               net_energy_imports_as_share_of_tes > 0) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+iea %>% filter(year == 2018, country %in% c("Azerbaijan", "Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
+        select(country, year, net_energy_imports_as_share_of_tes)
+
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2018,
+               net_energy_imports_as_share_of_tes > 0) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_net_energy_imports_as_share_of_tes_importers_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes), 
+                             y = net_energy_imports_as_share_of_tes, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .10), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Net energy imports as a share\nof primary energy use, by ktoe", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 12/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_net_energy_imports_as_share_of_tes_importers_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_net_energy_imports_as_share_of_tes_importers_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_importers_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart ####
+
+# check filter
+# will exclude CARs because they are net energy exporter and it obscures e&e trends in chart
+iea %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "EU-15")) %>%
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check data
+iea %>% filter(net_energy_imports_as_share_of_tes <= 0) %>% 
+        select(country, mcp_grouping, year, net_energy_imports_as_share_of_tes) %>%
+        print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "EU-15")) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 # color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)
+                                 # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex)
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex)
+                                 # color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex))
+               ))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart <- chart_data %>%
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = net_energy_imports_as_share_of_tes, 
+                                       color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                            "EU-15")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Balkans"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Eurasia"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes - .01, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "E&E graduates"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) +  
+        geom_text(data = chart_data %>% filter(year == max(year), country == "EU-15"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) +  
+        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        scale_y_continuous(breaks = seq(from = .2, to = .8, by = .10), limits = c(.2, .8), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Net energy imports as a share\nof primary energy use, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "") +
+        coord_fixed(ratio = 10 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 22, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        )
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_net_energy_imports_as_share_of_tes_balkans_line_chart ####
+
+# check filter
+iea %>% 
+        filter(country != "E&E Balkans", mcp_grouping %in% c("E&E Balkans")) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(country != "E&E Balkans", mcp_grouping %in% c("E&E Balkans")) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(1) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(linetype_bin == "Serbia" ~ "dotted", 
+                                    TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_net_energy_imports_as_share_of_tes_balkans_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = net_energy_imports_as_share_of_tes, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo", 
+                                      "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo", 
+                                         "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .6, by = .1), limits = c(0, .6), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Net energy imports as a share\nof primary energy use, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 10 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+iea_net_energy_imports_as_share_of_tes_balkans_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_net_energy_imports_as_share_of_tes_balkans_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_balkans_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_net_energy_imports_as_share_of_tes_eurasia_line_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "Azerbaijan")), mcp_grouping == "E&E Eurasia") %>%
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "Azerbaijan")), mcp_grouping == "E&E Eurasia") %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 # color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(1) %>% pull(hex)),
+                                 # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(linetype_bin == "Ukraine" ~ "dotted", 
+                                    TRUE ~ "solid"))
+
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_net_energy_imports_as_share_of_tes_eurasia_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = net_energy_imports_as_share_of_tes, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine", "Russia")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine", "Russia")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes - .01, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes + .01, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes - .02, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"), 
+                  mapping = aes(x = year + 0.15, y = net_energy_imports_as_share_of_tes, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine", "Russia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine", "Russia")) +
+        scale_y_continuous(breaks = seq(from = .2, to = 1, by = .1), limits = c(.2, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Net energy imports as a share\nof primary energy supply, by ktoe", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 7 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 10, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+iea_net_energy_imports_as_share_of_tes_eurasia_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_net_energy_imports_as_share_of_tes_eurasia_line_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_eurasia_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_net_energy_imports_as_share_of_tes_stacked_bar_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+iea %>% filter(year == 2018, country %in% c("Azerbaijan", "Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
+        select(country, year, net_energy_imports_as_share_of_tes)
+
+# note they arent net importers of 
+iea %>% 
+        filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
+        select(-net_energy_imports_as_share_of_tes) %>%
+        arrange(net_natural_gas_imports_as_share_of_tes) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        group_by(var) %>% skim(value)
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
+        select(-net_energy_imports_as_share_of_tes) %>%
+        arrange(net_natural_gas_imports_as_share_of_tes) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "net_natural_gas_imports_as_share_of_tes" ~ "Natural gas",
+                               var == "net_coal_imports_as_share_of_tes" ~ "Coal",
+                               var == "net_crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                               var == "net_oil_products_imports_as_share_of_tes" ~ "Oil products",
+                               var == "net_electricity_imports_as_share_of_tes" ~ "Electricity",
+                               var == "net_biofuels_and_waste_imports_as_share_of_tes" ~ "Biofuels and waste",
+                               var == "net_heat_imports_as_share_of_tes" ~ "Heat",
+                               var == "net_hydro_imports_as_share_of_tes" ~ "Hydro",
+                               var == "net_nuclear_imports_as_share_of_tes" ~ "Nuclear",
+                               var == "net_wind_solar_etc_imports_as_share_of_tes" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                 color_bin == "Hydro" ~ "#99ba78",
+                 color_bin == "Nuclear" ~ "#24A99C",
+                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_net_energy_imports_as_share_of_tes_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = value, 
+                             fill = factor(color_bin, 
+                levels = c("Wind, solar, etc.",
+                            "Nuclear", "Hydro",
+                            "Heat", "Biofuels and waste",
+                            "Electricity", "Oil products",
+                            "Crude oil", "Coal",
+                           "Natural gas")))) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = -.5, to = 1.5, by = .25), 
+                           limits = c(-.5, 1.5), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Net energy imports as a share\nof total primary energy supply, by ktoe", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 3/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_net_energy_imports_as_share_of_tes_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_net_energy_imports_as_share_of_tes_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_stacked_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_tes_as_share_of_overall_tes_stacked_bar_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+iea %>% filter(year == 2018, country %in% c("Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
+        select(country, year, net_energy_imports_as_share_of_tes)
+
+# note they arent net importers of 
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*tes_as_share_of_overall_tes")) %>%
+        select(-tes_as_share_of_overall_tes_sum) %>%
+        arrange(natural_gas_tes_as_share_of_overall_tes) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        group_by(var) %>% skim(value)
+
+# check negative tes_as_share_of_overall_tes
+# note they are net exporters of the energy type, so fuel-TES is negative, which as a share of overall TES is negative
+# ggplot will drop these 9 negative values/energy types from stacked chart since there is no way to show negative in stack
+# i will just footnote they are not depicted in chart
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*tes_as_share_of_overall_tes")) %>%
+        select(-tes_as_share_of_overall_tes_sum) %>%
+        arrange(natural_gas_tes_as_share_of_overall_tes) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        filter(value < 0)
+
+iea %>% glimpse()
+iea %>% select(country, year, contains("tes_as_share_of_overall_tes"))
+iea %>% filter(year == 2018, country == "Albania") %>% select(TES_electricity, TES_total)
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*tes_as_share_of_overall_tes")) %>%
+        select(-tes_as_share_of_overall_tes_sum) %>%
+        arrange(natural_gas_tes_as_share_of_overall_tes) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "natural_gas_tes_as_share_of_overall_tes" ~ "Natural gas",
+                               var == "coal_tes_as_share_of_overall_tes" ~ "Coal",
+                               var == "crude_oil_tes_as_share_of_overall_tes" ~ "Crude oil",
+                               var == "oil_products_tes_as_share_of_overall_tes" ~ "Oil products",
+                               var == "electricity_tes_as_share_of_overall_tes" ~ "Electricity",
+                               var == "biofuels_and_waste_tes_as_share_of_overall_tes" ~ "Biofuels and waste",
+                               var == "heat_tes_as_share_of_overall_tes" ~ "Heat",
+                               var == "hydro_tes_as_share_of_overall_tes" ~ "Hydro",
+                               var == "nuclear_tes_as_share_of_overall_tes" ~ "Nuclear",
+                               var == "wind_solar_etc_tes_as_share_of_overall_tes" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = value, 
+                             fill = factor(color_bin, 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        geom_bar(position = "fill", stat = "identity", width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Primary energy supply as a share\nof total primary energy supply, by ktoe", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_tes_as_share_of_overall_tes_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_tes_as_share_of_overall_tes_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_tes_as_share_of_overall_tes_stacked_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_production_as_share_of_overall_production_stacked_bar_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+
+# no one pruduces oil products
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*production_as_share_of_overall_production")) %>%
+        select(-production_as_share_of_overall_production_sum) %>%
+        arrange(natural_gas_production_as_share_of_overall_production) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        group_by(var) %>% skim(value)
+
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*production_as_share_of_overall_production")) %>%
+        filter(nuclear_production_as_share_of_overall_production > 0) %>% 
+        select(country, year, nuclear_production_as_share_of_overall_production)
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*production_as_share_of_overall_production")) %>%
+        select(-production_as_share_of_overall_production_sum) %>%
+        arrange(natural_gas_production_as_share_of_overall_production) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "natural_gas_production_as_share_of_overall_production" ~ "Natural gas",
+                               var == "coal_production_as_share_of_overall_production" ~ "Coal",
+                               var == "crude_oil_production_as_share_of_overall_production" ~ "Crude oil",
+                               var == "oil_products_production_as_share_of_overall_production" ~ "Oil products",
+                               var == "electricity_production_as_share_of_overall_production" ~ "Electricity",
+                               var == "biofuels_and_waste_production_as_share_of_overall_production" ~ "Biofuels and waste",
+                               var == "heat_production_as_share_of_overall_production" ~ "Heat",
+                               var == "hydro_production_as_share_of_overall_production" ~ "Hydro",
+                               var == "nuclear_production_as_share_of_overall_production" ~ "Nuclear",
+                               var == "wind_solar_etc_production_as_share_of_overall_production" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_as_share_of_overall_production_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = value, 
+                             fill = factor(color_bin, 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        geom_bar(position = "fill", stat = "identity", width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Energy production as a share\nof total energy production, by ktoe", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_production_as_share_of_overall_production_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_as_share_of_overall_production_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_as_share_of_overall_production_stacked_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_tfc_as_share_of_overall_tfc_stacked_bar_chart ####
+
+# check filter
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check raw data
+
+# nuclear and hydro are not final consumption
+iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*tfc_as_share_of_overall_tfc")) %>%
+        select(-tfc_as_share_of_overall_tfc_sum) %>%
+        arrange(natural_gas_tfc_as_share_of_overall_tfc) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        group_by(var) %>% skim(value)
+
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
+               year == 2018) %>% 
+        select(country, year, mcp_grouping, matches("^.*tfc_as_share_of_overall_tfc")) %>%
+        select(-tfc_as_share_of_overall_tfc_sum) %>%
+        arrange(natural_gas_tfc_as_share_of_overall_tfc) %>%
+        mutate(x_axis_ordering_index = row_number()) %>%
+        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        mutate(var = case_when(var == "natural_gas_tfc_as_share_of_overall_tfc" ~ "Natural gas",
+                               var == "coal_tfc_as_share_of_overall_tfc" ~ "Coal",
+                               var == "crude_oil_tfc_as_share_of_overall_tfc" ~ "Crude oil",
+                               var == "oil_products_tfc_as_share_of_overall_tfc" ~ "Oil products",
+                               var == "electricity_tfc_as_share_of_overall_tfc" ~ "Electricity",
+                               var == "biofuels_and_waste_tfc_as_share_of_overall_tfc" ~ "Biofuels and waste",
+                               var == "heat_tfc_as_share_of_overall_tfc" ~ "Heat",
+                               var == "hydro_tfc_as_share_of_overall_tfc" ~ "Hydro",
+                               var == "nuclear_tfc_as_share_of_overall_tfc" ~ "Nuclear",
+                               var == "wind_solar_etc_tfc_as_share_of_overall_tfc" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_tfc_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = value, 
+                             fill = factor(color_bin, 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        geom_bar(position = "fill", stat = "identity", width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Energy final consumption as a share\nof total final consumption, by ktoe", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_tfc_as_share_of_overall_tfc_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_tfc_as_share_of_overall_tfc_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc - will manually crop map in word doc 
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_tfc_as_share_of_overall_tfc_stacked_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
