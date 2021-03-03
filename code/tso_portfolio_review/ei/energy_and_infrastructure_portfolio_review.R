@@ -10,7 +10,8 @@ library(devEMF)
 library(ggrepel)
 library(rvest)
 library(scales)
-
+library(testthat)
+library(patchwork)
 
 
 
@@ -287,6 +288,20 @@ ee_country_crosswalk %>% filter(!is.na(mcp_grouping), mcp_grouping != "EU-15") %
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write final electricity data ####
+# data %>% write_csv(path = "data/world_bank_doing_business/electricity_data_20201201.csv")
+data <- read_csv(file = "data/world_bank_doing_business/electricity_data_20201201.csv")
+
+# inspect
+data
+data %>% glimpse()
+data %>% nrow() # 204
+data %>% ncol() # 17
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -332,16 +347,16 @@ electricity_by_mcp_grouping_line_chart <- chart_data %>%
         geom_point(size = 4) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Balkans"), 
                 mapping = aes(x = year + 0.15, y = getting_electricity_score - 1, label = color_bin), 
-                fontface = "bold", hjust = 0) + 
+                fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Eurasia"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score + 2, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "E&E graduates"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
-                  fontface = "bold", hjust = 0) +  
+                  fontface = "bold", hjust = 0, family = "Calibri") +  
         geom_text(data = chart_data %>% filter(year == max(year), country == "CARs"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score - 1.5, label = color_bin), 
-                  fontface = "bold", hjust = 0) +  
+                  fontface = "bold", hjust = 0, family = "Calibri") +  
         scale_color_manual(values = chart_data_color_list, guide = FALSE) +
         scale_x_continuous(breaks = seq(from = 2014, to = 2019, by = 1)) +
         # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(0, 105), expand = c(0, 0)) +
@@ -407,7 +422,7 @@ emf(file = filename)
 print(electricity_by_mcp_grouping_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_by_mcp_grouping_line_chart.docx")
@@ -470,19 +485,19 @@ electricity_balkans_countries_line_chart <- chart_data %>%
         geom_point(size = 4) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score - 2.5, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score - .5, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score + 1.5, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score + 1.5, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score - .5, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         scale_color_manual(values = chart_data_color_list, guide = FALSE,
                            labels = c("Albania", "BiH", "Kosovo", 
                                       "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
@@ -552,7 +567,7 @@ emf(file = filename)
 print(electricity_balkans_countries_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_balkans_countries_line_chart.docx")
@@ -617,25 +632,25 @@ electricity_eurasia_countries_line_chart <- chart_data %>%
         geom_point(size = 4) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score + 1, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
                   fontface = "bold", hjust = 0) + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score - 1, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "Russia"), 
                   mapping = aes(x = year + 0.15, y = getting_electricity_score, label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         scale_color_manual(values = chart_data_color_list, guide = FALSE,
                            labels = c("Armenia", "Azerbaijan", "Belarus",
                                       "Georgia", "Moldova", "Ukraine", "Russia")) +
@@ -705,7 +720,7 @@ emf(file = filename)
 print(electricity_eurasia_countries_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_eurasia_countries_line_chart.docx")
@@ -763,24 +778,33 @@ data %>% filter(mcp_grouping %in% c("E&E Eurasia"), mcp_grouping_aggregate_flag 
 
 # check filter
 data %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2020) %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+               year == 2019) %>% 
         count(mcp_grouping, country) %>% print(n = nrow(.))
 
+# inspect data
+data %>% glimpse()
+data %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+               year == 2019) 
+
 # check raw data
-db_raw %>% filter(Economy %in% c("United States", "Russian Federation", "Belarus"), `DB Year` == 2020) %>%
+db_raw %>% filter(Economy %in% c("Belarus"), `DB Year` == 2020) %>%
         select(Economy, `Score-Getting electricity (DB16-20 methodology)`)
+
+
+#/////////////////////////
+
 
 # add color_bin and color
 chart_data <- data %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2020) %>%
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+               year == 2019) %>% 
         mutate(color_bin = mcp_grouping,
                color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
                                  color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
                                  color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
-                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
-                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
-                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -796,15 +820,15 @@ electricity_by_country_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = getting_electricity_score), 
                              y = getting_electricity_score, 
                              fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+                                                                 "CARs")))) + 
         geom_col(width = .8) + 
         scale_fill_manual(values = chart_data_color_list) +
         scale_x_discrete(expand = c(0, 0)) +
         scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(0, 105), expand = c(0, 0)) +
-        labs(x = NULL, y = "Getting Electricity Index\n(higher = easier access)", 
+        labs(x = NULL, y = "Getting Electricity Index", 
              title = NULL,
              caption = NULL, fill = "") +
-        coord_fixed(ratio = 1/8, clip = "off") +
+        coord_fixed(ratio = 1/11, clip = "off") +
         theme_bw() +
         theme(
                 # plot.background = element_rect(fill = "blue"),
@@ -824,28 +848,29 @@ electricity_by_country_bar_chart <- chart_data %>%
                 # axis.ticks.x = element_blank(),
                 # axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
                 axis.line.y.left = element_blank(),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 0, r = 13, b = 0, l = 0)),
-                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                plot.title = element_text(size = 9, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
                 legend.position = "bottom",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
-                                           hjust = .5, color = "#333333")
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333"),
+                legend.box.margin=margin(-10,-10,-10,-10)
                 # legend.spacing.y = unit(5.5, "cm"),
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
         ) + 
-        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
 
 # inspect
 electricity_by_country_bar_chart
@@ -860,7 +885,7 @@ emf(file = filename)
 print(electricity_by_country_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_by_country_bar_chart.docx")
@@ -913,7 +938,7 @@ electricity_by_group_scatterplot <- chart_data %>%
                                                                   "CARs", "Russia", "EU-15", "U.S.")))) + 
         geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
         geom_point(size = 6) + 
-        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25) +
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25, family = "Calibri") +
         scale_color_manual(values = chart_data_color_list) +
         # scale_x_discrete(expand = c(0, 0)) +
         # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
@@ -983,7 +1008,7 @@ emf(file = filename)
 print(electricity_by_group_scatterplot)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_by_group_scatterplot.docx")
@@ -1036,7 +1061,7 @@ electricity_by_country_scatterplot <- chart_data %>%
                                                                   "CARs", "Russia", "EU-15", "U.S.")))) + 
         geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
         geom_point(size = 6) + 
-        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25) +
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25, family = "Calibri") +
         scale_color_manual(values = chart_data_color_list) +
         # scale_x_discrete(expand = c(0, 0)) +
         # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
@@ -1106,7 +1131,7 @@ emf(file = filename)
 print(electricity_by_country_scatterplot)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_by_country_scatterplot.docx")
@@ -1229,7 +1254,7 @@ emf(file = filename)
 print(electricity_sub_indicator_by_group_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_sub_indicator_by_group_bar_chart.docx")
@@ -1296,7 +1321,7 @@ electricity_sub_indicator_by_country_jitter_plot <- chart_data %>%
                              label = iso_3_alpha)) + 
         # geom_sina(maxwidth = .5, size = 4) +
         geom_jitter(size = 4, position = jitter_positions) +
-        geom_text_repel(position = jitter_positions, point.padding = .1, size = 3, fontface = "bold") +
+        geom_text_repel(position = jitter_positions, point.padding = .1, size = 3, fontface = "bold", family = "Calibri") +
         scale_size(guide = "none") +
         scale_color_manual(values = chart_data_color_list) +
         scale_x_discrete(expand = c(-1.7, 1.7)) +
@@ -1360,15 +1385,159 @@ emf(file = filename)
 print(electricity_sub_indicator_by_country_jitter_plot)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_sub_indicator_by_country_jitter_plot.docx")
 
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
 
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
+
+# create electricity_sub_indicator_facet_line_chart ####
+
+# inspect 
+data %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                        (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, electricity_procedures_score, electricity_time_score,
+               electricity_cost_score, electricity_reliability_score) %>% glimpse()
+
+
+# inspect chart
+data %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                        (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, electricity_procedures_score, electricity_time_score,
+               electricity_cost_score, electricity_reliability_score) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        mutate(var = case_when(var == "electricity_procedures_score" ~ "Number of procedures\nto access\nelectricity",
+                               var == "electricity_time_score" ~ "Number of days\nto access\nelectricity",
+                               var == "electricity_cost_score" ~ "Cost of\naccess to\nelectricity",
+                               var == "electricity_reliability_score" ~ "Reliability of supply\nand transparencey\nof tariffs")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- data %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                      (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, electricity_procedures_score, electricity_time_score,
+               electricity_cost_score, electricity_reliability_score) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        mutate(var = case_when(var == "electricity_procedures_score" ~ "   Number of procedures\nto access\nelectricity",
+                               var == "electricity_time_score" ~ "Number of days\nto access\nelectricity",
+                               var == "electricity_cost_score" ~ "Cost of\naccess to\nelectricity",
+                               var == "electricity_reliability_score" ~ "Reliability of supply\nand transparencey\nof tariffs")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Cost of\naccess to\nelectricity" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Number of days\nto access\nelectricity" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "   Number of procedures\nto access\nelectricity" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Reliability of supply\nand transparencey\nof tariffs" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+electricity_sub_indicator_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Reliability of supply\nand transparencey\nof tariffs",
+                                                                 "   Number of procedures\nto access\nelectricity",
+                                                                 "Number of days\nto access\nelectricity",
+                                                                 "Cost of\naccess to\nelectricity")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2014, to = 2019, by = 2), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 100, by = 20), 
+                           limits = c(0, 100), 
+                           expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        labs(x = NULL, y = "Sub-indicator score", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 1/25, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333"),
+                # legend.spacing.x = unit(1.0, 'cm')
+                # legend.spacing.y = unit(5.5, "cm")
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+                legend.key.height = unit(2,"line")
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+electricity_sub_indicator_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(electricity_sub_indicator_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/electricity_sub_indicator_facet_line_chart.docx")
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1477,11 +1646,610 @@ emf(file = filename)
 print(electricity_reliability_and_tariff_transparency_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/electricity_reliability_and_tariff_transparency_bar_chart.docx")
 
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create getting_electricity_score_balkans_patch_line_chart ####
+
+# inspect
+data %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, getting_electricity_score) 
+data %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, getting_electricity_score) %>% print(n = nrow(.))
+data %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, getting_electricity_score) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = getting_electricity_score)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% filter(country == "Albania")
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- data %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, getting_electricity_score) %>% 
+        mutate(values = getting_electricity_score) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Getting Electricity Index"
+
+
+#/////////////////////
+
+
+# create chart
+getting_electricity_score_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        geom_line(size = 1) +
+        geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values + 2, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(40, 100), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2014, to = 2019, by = 2)) +
+        labs(x = NULL, y = "Getting Electricity Index\n(higher = easier access)", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 40, ymax = 100, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 50, yend = 50), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 60, yend = 60), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 70, yend = 70), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 80, yend = 80), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 90, yend = 90), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 40, yend = 40), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+getting_electricity_score_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create getting_electricity_score_eurasia_patch_line_chart ####
+
+# inspect
+data %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, getting_electricity_score) %>% 
+        print(n = nrow(.))
+data %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, getting_electricity_score) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = getting_electricity_score)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(getting_electricity_score)) %>%
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- data %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, getting_electricity_score) %>% 
+        mutate(values = getting_electricity_score) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Getting Electricity Index"
+
+
+#/////////////////////
+
+
+# create chart
+getting_electricity_score_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(40, 100), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2014, to = 2019, by = 2)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 40, ymax = 100, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 50, yend = 50), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 60, yend = 60), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 70, yend = 70), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 80, yend = 80), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 90, yend = 90), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 40, yend = 40), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+getting_electricity_score_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create getting_electricity_score_mcp_grouping_patch_line_chart ####
+
+# inspect
+data %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                 "U.S.", "Russia", "EU-15"))) %>%
+        select(mcp_grouping, country, year, getting_electricity_score) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(getting_electricity_score_avg = mean(getting_electricity_score)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+data %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                 "U.S.", "Russia", "EU-15"))) %>%
+        select(mcp_grouping, country, year, getting_electricity_score) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(getting_electricity_score_avg = mean(getting_electricity_score)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = getting_electricity_score_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- data %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                             "U.S.", "Russia", "EU-15"))) %>%
+        select(mcp_grouping, country, year, getting_electricity_score) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(getting_electricity_score_avg = mean(getting_electricity_score)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = getting_electricity_score_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Getting Electricity Index"
+
+
+#////////////////////////
+
+
+getting_electricity_score_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 40, to = 100, by = 10), limits = c(40, 100), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2014, to = 2019, by = 2)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 40, ymax = 100, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 50, yend = 50), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 60, yend = 60), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 70, yend = 70), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 80, yend = 80), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 90, yend = 90), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 40, yend = 40), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+getting_electricity_score_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for getting_electricity_score_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+getting_electricity_score_patch_line_chart <- wrap_plots(plot_spacer(),
+                                                         getting_electricity_score_balkans_patch_line_chart,
+                                                         getting_electricity_score_eurasia_patch_line_chart,
+                                                         getting_electricity_score_mcp_grouping_patch_line_chart, 
+                                                         plot_spacer()) +
+        plot_layout(design = layout) 
+# getting_electricity_score_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(getting_electricity_score_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/getting_electricity_score_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
 
 #////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1528,6 +2296,7 @@ read_docx() %>%
 # eg potential tradeoff between specificity and accuracy wrt 4 vs 6 digit HS codes
 # also some countries use ANS parnter_code for undeclared countries 
 # eg see germany natural gas imports are mostly coded ANS...
+# note that values are in current US dollars (per Atlas data dictionary)
 # note merchandise imports are imports - reexports: https://stats.oecd.org/glossary/detail.asp?ID=6174
 # https://www.abs.gov.au/AUSSTATS/abs@.nsf/DSSbyCollectionid/AF6FEE680BE85CB9CA257286007EDEAD?opendocument#:~:text=Merchandise%20imports%20are%20defined%20as,into%20Customs%20(bonded)%20warehouses.
 # https://comtrade.un.org/Data/
@@ -1542,6 +2311,10 @@ read_docx() %>%
 # energy use as share of gdp
 # https://data.worldbank.org/indicator/EG.USE.COMM.GD.PP.KD
 
+
+# CRS report on russian energy policy: 
+# https://www.everycrsreport.com/files/20100322_RL34261_81c2967fa98020653a1798e52320fa1a4ef73a10.pdf
+# title: Russian Energy Policy Toward Neighboring Countries
 
 # BP statistical review has consumption/production figures by fuel type by country by year, but nothing bilateral - like IEA
 # https://www.bp.com/en/global/corporate/energy-economics/statistical-review-of-world-energy.html
@@ -1578,6 +2351,7 @@ read_docx() %>%
 # atlas reports 2.4 bil, and it's set to be the exact same if russia/belarus is reporting as import/export
 # note atlas "about data" section states that country reporting at 6 digit HS level is less accurate than 4 digit level
 # on the atlas tree map explorer, they report at 4 digit level
+# note that values are in current US dollars per Atlas data dictionary
 # https://atlas.cid.harvard.edu/about-data
 # https://atlas.cid.harvard.edu/data-downloads
 # https://atlas.cid.harvard.edu/explore?country=186&product=undefined&year=2017&productClass=HS&target=Product&partner=undefined&startYear=undefined
@@ -2360,6 +3134,33 @@ atlas %>% group_by(country) %>%
         ungroup() %>%
         arrange(desc(ans_imports)) %>% print(n = 50)
 
+# check imports from ANS (unspecfied country)
+# note that georgian natural gas imports from ans are very high, while from russia equals zero
+# looking it up manually in atlas, they were importing natural gas from ans from only from 2008-2014, none before/after
+# so the ANS country/countries are significant and somehow related to the russian invasion
+# 2008 is when russia invaded georgia, though the 2010 CRS article linked below says russia continues to supply gas
+# in atlas manually, imports of gas from ANS of zero in 2008, 158m in 2009, steady for yearsto 300m in 2014, then zero after
+# in atlas manually, imports of gas from russia drop from 149 mil in 2007, to 69 mil in 2008, to 0 in 2009
+# in atlas manually, imports of gas from azerbaijan: 72 mil in 2007, 109m in 2008, 97m in 2009, 66m in 2010, 160m in 2014, 270m in 2018
+# https://www.everycrsreport.com/files/20100322_RL34261_81c2967fa98020653a1798e52320fa1a4ef73a10.pdf
+# reuters says in 2015 that 87% of georgian natural gas imports are then from azerbaijan
+# https://www.reuters.com/article/georgia-russia-gas/georgia-in-talks-with-russia-on-additional-gas-supplies-idUSL8N12R2TQ20151027
+# note there is a pipelin from russia specifically to the breakaway south ossetia
+# https://www.reuters.com/article/russia-georgia-gazprom/russia-to-build-gas-pipeline-to-georgian-region-idUSLH12833120081117
+# https://www.gfsis.org/blog/view/1134
+# iea report on georgia: https://www.iea.org/reports/georgia-2020
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>%
+        filter(country == "Georgia") %>% 
+        # filter(fuel_type == "Natural gas") %>%
+        # arrange(desc(ans_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_adj,
+               ans_fuel_type_import_adj,
+               global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+               ans_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>% print(n = 30)
+
 
 #///////////////////////////
 
@@ -3009,6 +3810,10 @@ atlas %>%  filter(country == "Moldova") %>%
 # note it will have NA for measurement vars not being used in analysis
 
 
+# note that i ended up moving away from this approach, to just using group_by() %>% summarize() instead
+# in the code to create the charts. keeping the data at the country level feels tidier and more transparent
+
+
 # get grouping_vars 
 grouping_vars <- atlas %>% select(mcp_grouping, year, fuel_type) %>% names()
 grouping_vars
@@ -3307,6 +4112,526 @@ iea %>% filter(country == "E&E Eurasia") %>%
         select(-c(Imports_coal, Imports_crude_oil, Imports_oil_products, Imports_natural_gas, TES_total))
 
 
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add gdp_ppp data to atlas ####
+
+# https://data.worldbank.org/indicator/NY.GDP.MKTP.PP.KD
+# note that this data is in constant 2017 PPP international dollars, which removes exchange rate and price level variation
+# gdp_ppp will be used to create gdp_ppp_per_tes variable 
+# oecd recommends gdp at constant PPP (instead of GDP at current PPP) for comparisons across countries AND over time
+# http://www.oecd.org/sdd/prices-ppp/1961296.pdf
+# https://datahelpdesk.worldbank.org/knowledgebase/articles/114942-what-is-the-difference-between-current-and-constan
+# https://data.worldbank.org/indicator/NY.GDP.MKTP.PP.CD 
+
+# note Atlas/COMTRADE is in current USD - see Atlas data dictionary
+# note that gdp is commonly reported in current dollars, instead of constant inflation-adjusted or PPP
+# see fred: https://fred.stlouisfed.org/graph/?id=MKTgdp_pppDEA646NWDB
+# https://fred.stlouisfed.org/graph/?id=NYgdp_pppPCAPKDDEU
+# https://fred.stlouisfed.org/tags/series?t=gdp_ppp%3Bgermany
+
+# note that EIA refers to GDP per ktoe and kgoe per capita broadly as measures of energy intensity
+# https://www.eia.gov/energyexplained/use-of-energy/
+# "Along with per capita energy consumption, another measure of the intensity of energy consumption is how 
+# efficiently the economy uses energy to produce every dollar of Gross Domestic Product (GDP)"
+
+# read in gdp_ppp
+gdp_ppp <- read_excel(path = "data/world_bank_gdp/API_NY.GDP.MKTP.PP.KD_DS2_en_excel_v2_1930849.xls",
+                  sheet = "Data")
+gdp_ppp
+gdp_ppp %>% glimpse()
+
+# clean gdp_ppp
+gdp_ppp <- gdp_ppp %>% rename(country = "Country Name") %>%
+        select(-c("Country Code", "Indicator Name", "Indicator Code")) %>%
+        pivot_longer(cols = -country, names_to = "year", values_to = "gdp_ppp") %>%
+        mutate(year = as.numeric(year),
+                country = case_when(country == "Czech Republic" ~ "Czechia",
+                                   country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                   country == "Russian Federation" ~ "Russia",
+                                   country == "Slovak Republic" ~ "Slovakia",
+                                   TRUE ~ country))
+
+
+#//////////////////////
+
+
+# inspect
+gdp_ppp
+gdp_ppp %>% glimpse()
+gdp_ppp %>% left_join(ee_country_crosswalk, ., by = "country") %>% filter(year != 2020) %>% skim(gdp_ppp)
+gdp_ppp %>% anti_join(ee_country_crosswalk %>% filter(!is.na(ee_status)), ., by = "country")
+gdp_ppp %>% filter(str_detect(string = country, pattern = regex("^Slov"))) %>% distinct(country)
+gdp_ppp %>% left_join(ee_country_crosswalk, ., by = "country") %>% 
+        filter(!is.na(ee_status),
+               year > 2005, year != 2020) %>% skim(gdp_ppp)
+gdp_ppp %>% left_join(ee_country_crosswalk, ., by = "country") %>% 
+        filter(!is.na(ee_status),
+               year > 2005, year != 2020, is.na(gdp_ppp)) %>% count(country, year)
+
+
+#//////////////////////
+
+
+# add gdp_ppp and gdp_ppp_per_tes to atlas 
+atlas %>% dim() # 1240, 45
+atlas <- gdp_ppp %>% mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH", 
+                                            country == "North Macedonia" ~ "N. Macedonia",
+                                            country == "United States" ~ "U.S.",
+                                            TRUE ~ country)) %>%
+        left_join(atlas, ., by = c("country", "year")) %>%
+        mutate(gdp_ppp_per_tes = gdp_ppp / TES_total)
+
+
+#///////////////////////
+
+
+# inspect
+# note that i don't worry about the mcp_grouping averages, since mcp_groupings as their own row is no longer used
+# instead the mcp_grouping averages will be calculated from the country level data w/ group_by/summarize for each chart
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 47
+
+# check gdp_ppp
+atlas %>% skim(gdp_ppp)
+atlas %>% filter(is.na(gdp_ppp)) %>% select(country, year, gdp_ppp) %>% count(country)
+
+# check gdp_ppp_per_tes
+# note that as expected the mcp_grouping have NA gdp_ppp_per_tes because they have NA gdp_ppp
+atlas %>% skim(gdp_ppp_per_tes)
+atlas %>% filter(is.na(gdp_ppp_per_tes)) %>% select(country, year, TES_total, gdp_ppp, gdp_ppp_per_tes)
+atlas %>% filter(is.na(gdp_ppp_per_tes)) %>% count(country)
+atlas %>% ggplot(data = ., mapping = aes(x = year, y = gdp_ppp_per_tes)) + geom_line() + facet_wrap(facets = "country")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add gdp_current to atlas ####
+
+# note Atlas/COMTRADE is in current USD - see Atlas data dictionary
+# note that gdp is commonly reported in current dollars, instead of constant inflation-adjusted or PPP
+# see fred: https://fred.stlouisfed.org/graph/?id=MKTgdp_pppDEA646NWDB
+# https://fred.stlouisfed.org/graph/?id=NYgdp_pppPCAPKDDEU
+# https://fred.stlouisfed.org/tags/series?t=gdp_ppp%3Bgermany
+
+# note that EIA refers to GDP per ktoe and kgoe per capita broadly as measures of energy intensity
+# https://www.eia.gov/energyexplained/use-of-energy/
+# "Along with per capita energy consumption, another measure of the intensity of energy consumption is how 
+# efficiently the economy uses energy to produce every dollar of Gross Domestic Product (GDP)"
+
+# read in gdp_current
+gdp_current <- read_excel(path = "data/world_bank_gdp/API_NY.GDP.MKTP.CD_DS2_en_excel_v2_1926809.xls",
+                      sheet = "Data")
+gdp_current
+gdp_current %>% glimpse()
+
+# clean gdp_current
+gdp_current <- gdp_current %>% rename(country = "Country Name") %>%
+        select(-c("Country Code", "Indicator Name", "Indicator Code")) %>%
+        pivot_longer(cols = -country, names_to = "year", values_to = "gdp_current") %>%
+        mutate(year = as.numeric(year),
+               country = case_when(country == "Czech Republic" ~ "Czechia",
+                                   country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                   country == "Russian Federation" ~ "Russia",
+                                   country == "Slovak Republic" ~ "Slovakia",
+                                   TRUE ~ country))
+
+
+#//////////////////////
+
+
+# inspect
+gdp_current
+gdp_current %>% glimpse()
+gdp_current %>% left_join(ee_country_crosswalk, ., by = "country") %>% filter(year != 2020) %>% skim(gdp_current)
+gdp_current %>% anti_join(ee_country_crosswalk %>% filter(!is.na(ee_status)), ., by = "country")
+gdp_current %>% filter(str_detect(string = country, pattern = regex("^Slov"))) %>% distinct(country)
+gdp_current %>% left_join(ee_country_crosswalk, ., by = "country") %>% 
+        filter(!is.na(ee_status),
+               year > 2005, year != 2020) %>% skim(gdp_current)
+gdp_current %>% left_join(ee_country_crosswalk, ., by = "country") %>% 
+        filter(!is.na(ee_status),
+               year > 2005, year != 2020, is.na(gdp_current)) %>% count(country, year)
+
+
+#//////////////////////
+
+
+# add gdp_current and gdp_current_per_tes to atlas 
+atlas %>% dim() # 1240, 47
+atlas <- gdp_current %>% mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH", 
+                                            country == "North Macedonia" ~ "N. Macedonia",
+                                            country == "United States" ~ "U.S.",
+                                            TRUE ~ country)) %>%
+        left_join(atlas, ., by = c("country", "year")) %>%
+        mutate(global_fossil_import_as_share_of_gdp_current = global_fossil_import_sum / gdp_current)
+
+
+#///////////////////////
+
+
+# inspect
+# note that i don't worry about the mcp_grouping averages, since mcp_groupings as their own row is no longer used
+# instead the mcp_grouping averages will be calculated from the country level data w/ group_by/summarize for each chart
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 49
+
+# check gdp_current
+atlas %>% skim(gdp_current)
+atlas %>% filter(is.na(gdp_current)) %>% select(country, year, gdp_current) %>% count(country)
+
+# check global_fossil_import_as_share_of_gdp_current
+# note that as expected the mcp_grouping have NA global_fossil_import_as_share_of_gdp_current because they have NA gdp_current
+atlas %>% skim(global_fossil_import_as_share_of_gdp_current)
+atlas %>% filter(is.na(global_fossil_import_as_share_of_gdp_current)) %>% 
+        select(country, year, global_fossil_import_sum, gdp_current, global_fossil_import_as_share_of_gdp_current)
+atlas %>% filter(is.na(global_fossil_import_as_share_of_gdp_current)) %>% count(country)
+atlas %>% ggplot(data = ., mapping = aes(x = year, y = global_fossil_import_as_share_of_gdp_current)) + 
+        geom_line() + facet_wrap(facets = "country")
+
+# note latvia has a spike in global_fossil_import_as_share_of_gdp_current in 2014
+# this is correct when manually checking atlas website
+# https://atlas.cid.harvard.edu/explore?country=132&product=undefined&year=2014&tradeDirection=import&productClass=HS&target=Product&partner=undefined&startYear=undefined
+# and world bank shows latvia has high imports as share of gdp (~ 60%)
+# https://wits.worldbank.org/CountryProfile/en/LVA#:~:text=Latvia%20All%20Products%20Exports%20and%20Imports&text=Latvia%20exports%20of%20goods%20and,percentage%20of%20GDP%20is%2061.49%25.
+atlas %>% filter(country == "Latvia") %>% 
+        select(country, year, fuel_type, global_fossil_import_sum, gdp_current, 
+               global_fossil_import_as_share_of_gdp_current) %>% group_by(country, year) %>% 
+        slice(1) %>% ungroup()
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add population data to atlas ####
+
+# note that population counts all residents, mid-year estimate (see indicator tab on spreadsheet)
+# https://data.worldbank.org/indicator/SP.POP.TOTL
+
+population <- read_excel(path = "data/world_bank_population/API_SP.POP.TOTL_DS2_en_excel_v2_1926530.xls",
+                  sheet = "Data")
+population
+population %>% glimpse()
+
+# clean population
+population <- population %>% rename(country = "Country Name") %>%
+        select(-c("Country Code", "Indicator Name", "Indicator Code")) %>%
+        pivot_longer(cols = -country, names_to = "year", values_to = "population") %>%
+        mutate(year = as.numeric(year),
+               country = case_when(country == "Czech Republic" ~ "Czechia",
+                                   country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                   country == "Russian Federation" ~ "Russia",
+                                   country == "Slovak Republic" ~ "Slovakia",
+                                   TRUE ~ country))
+
+
+#//////////////////////
+
+
+# inspect
+population
+population %>% glimpse()
+population %>% anti_join(ee_country_crosswalk %>% filter(!is.na(ee_status)), ., by = "country")
+
+
+#//////////////////////
+
+
+# add population to atlas
+
+
+# note that units of ktoe / population have lots of decimals, so will use kg per capita
+# world bank also used kg per capita in discontinued series
+# note that 1 ktoe = 1 mil kgoe; 
+# https://data.worldbank.org/indicator/EG.USE.PCAP.KG.OE?view=chart
+# https://en.wikipedia.org/wiki/Tonne
+# https://metric-calculator.com/convert-kilogram-to-metric-kiloton.htm#:~:text=1%20kilogram%20(kg)%20%3D%200.000001,Weight%20used%20in%20Metric%20system.
+# http://www.kylesconverter.com/mass/kilograms-to-kilotonne
+atlas <- population %>% mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH", 
+                                         country == "North Macedonia" ~ "N. Macedonia",
+                                         country == "United States" ~ "U.S.",
+                                         TRUE ~ country)) %>%
+        left_join(atlas, ., by = c("country", "year")) %>%
+        mutate(tes_kgoe_per_capita = (TES_total * 1000000)  / population)
+
+
+#//////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 51
+
+# note the tes_kgoe_per_capita matches pretty close to world_bank's 2014 discontinued series, though
+# there are differences due to updates etc
+atlas %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), year == 2014) %>% 
+                 distinct(country, year, TES_total, population, tes_kgoe_per_capita)
+
+
+# iea energy atlas website has a toe per capita in GUI dashboard: http://energyatlas.iea.org/#!/tellmap/-297203538/4
+# confirm that belarus for 2018 is 2.8 tes per capita (they adjusted units), which is shown as 2843 kgoe per capita
+atlas %>% filter(country == "Belarus", year == 2018) %>% select(country, year, population, TES_total, tes_kgoe_per_capita)
+
+
+# inspect tes_kgoe_per_capita
+# note that as expected the mcp_grouping have NA global_fossil_import_as_share_of_gdp because they have NA gdp
+atlas %>% skim(tes_kgoe_per_capita)
+atlas %>% filter(is.na(tes_kgoe_per_capita)) %>% 
+        select(country, year, TES_total, population, tes_kgoe_per_capita)
+atlas %>% filter(is.na(tes_kgoe_per_capita)) %>% count(country)
+atlas %>% ggplot(data = ., mapping = aes(x = year, y = tes_kgoe_per_capita)) + 
+        geom_line() + facet_wrap(facets = "country")
+
+atlas %>% filter(country %in% c("Tajikistan", "Kazakhstan", "Azerbaijan"), year == 2018) %>% 
+                         distinct(country, year, TES_total, population, tes_kgoe_per_capita)
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add iea_natural_gas to atlas ####
+iea_natural_gas <- read_csv(file = "data/iea/iea_natural_gas_20210226.csv")
+
+# inspect
+iea_natural_gas
+iea_natural_gas %>% glimpse()
+iea_natural_gas %>% nrow() # 450
+iea_natural_gas %>% ncol() # 8
+
+# note that iea_natural_gas is one record per country/year
+# atlas is four records per country/year, because of 4 fuel_types
+iea_natural_gas %>% count(country) %>% skim(n)
+iea_natural_gas %>% count(country, year) %>% skim(n)
+atlas %>% count(country, year) %>% skim(n)
+atlas %>% count(country, year, fuel_type) %>% skim(n)
+
+# check country names
+# note that iea_natural_gas has EU-15 countries that atlas does not, 
+# but that's fine since the analysis doesn't calculate russia shares for EU countries 
+# in part due to signifant data quality issues with how EU reports import origins (see germany very large share unspecified)
+iea_natural_gas %>% distinct(country) %>% anti_join(., atlas %>% distinct(country), by = "country")
+iea_natural_gas %>% distinct(country) %>% anti_join(atlas %>% distinct(country), ., by = "country")
+
+
+#/////////////////////////
+
+
+# join iea_natural_gas to atlas
+# note will also change NaN values in russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj to 0
+# these NaN values are due to 0 / 0 errors, because the country had zero imports from russia and zero imports in total 
+# see inspection above
+atlas <- iea_natural_gas %>% select(country, year, matches("^natural_gas_ktoe")) %>%
+        left_join(atlas, ., by = c("country", "year")) 
+
+
+#/////////////////////////
+
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 54
+
+
+# inspect before creating/updating the russia share variables in the code below
+
+# note there are 44 records with zero values for natural_gas_ktoe_imports_Russia and natural_gas_ktoe_imports_total
+# after dropping kosovo and denmark which are not included in atlas data
+# since these will get NaN values for russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas
+# i convert the NA values to zero in the join code below
+iea_natural_gas %>% filter(natural_gas_ktoe_imports_total == 0, natural_gas_ktoe_imports_Russia == 0) %>% 
+        # distinct(country)
+        filter(!(country %in% c("Kosovo", "Denmark"))) %>%
+        select(country, year, natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total)
+
+
+# note will also change the 61 NaN values in russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj to 0
+# as well as the new russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas variable
+# these NaN values are due to 0 / 0 errors, because the country had zero imports from russia and zero imports in total
+atlas %>% skim(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)
+atlas %>% filter(is.na(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+        select(country, year, fuel_type, russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>% 
+        skim(russia_fuel_type_import_adj, global_fuel_type_import_sum_adj)
+atlas %>% skim(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas)
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+# add russia share variables ####
+atlas <- atlas %>% mutate(natural_gas_ktoe_imports_Russia_as_share_of_total = natural_gas_ktoe_imports_Russia / 
+                         natural_gas_ktoe_imports_total,
+                 natural_gas_ktoe_imports_not_specified_as_share_of_total = natural_gas_ktoe_imports_not_specified / 
+                         natural_gas_ktoe_imports_total,
+                 russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = case_when(
+                         is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                         TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+                 russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas = case_when(
+                         fuel_type == "Natural gas" ~ natural_gas_ktoe_imports_Russia_as_share_of_total,
+                         TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+                 russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas = case_when(
+                         is.na(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas) ~ 0,
+                         TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas), 
+                estimated_russia_fuel_type_imports_as_share_of_tes = 
+                         russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                         fuel_type_imports_as_share_of_tes,
+                estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas = 
+                        russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas *
+                        fuel_type_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% 
+        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes),
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas = sum(
+                       estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas)) %>%
+        ungroup()
+
+
+#//////////////////////
+        
+
+# inspect
+atlas
+atlas %>% glimpse()
+atlas %>% nrow() # 1240
+atlas %>% ncol() # 61
+
+# inspect new variables 
+atlas %>% skim(natural_gas_ktoe_imports_Russia_as_share_of_total, 
+               natural_gas_ktoe_imports_not_specified_as_share_of_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               estimated_russia_fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+# inspect records with NA for natural_gas_ktoe_imports_Russia_as_share_of_total 
+# note that about half have NA value for natural_gas_ktoe_imports_Russia/total
+# the other half have zero values for natural_gas_ktoe_imports_Russia/total
+atlas %>% filter(is.na(natural_gas_ktoe_imports_Russia_as_share_of_total)) %>%
+        select(country, year, fuel_type, 
+               natural_gas_ktoe_imports_Russia,
+               natural_gas_ktoe_imports_total,
+               natural_gas_ktoe_imports_Russia_as_share_of_total) %>%
+        skim(natural_gas_ktoe_imports_Russia,
+             natural_gas_ktoe_imports_total,
+             natural_gas_ktoe_imports_Russia_as_share_of_total)
+
+# inspect 160 records with NA values for natural_gas_ktoe_imports_Russia/total
+# note they are all the mcp_groupings, which is expected because iea_natural_gas is only at country-level
+atlas %>% filter(is.na(natural_gas_ktoe_imports_Russia) | is.na(natural_gas_ktoe_imports_total)) %>%
+        select(country, year, fuel_type, 
+               natural_gas_ktoe_imports_Russia,
+               natural_gas_ktoe_imports_total,
+               natural_gas_ktoe_imports_Russia_as_share_of_total) %>% count(country)
+
+# inspect calculation of russia shares       
+atlas %>% select(country, 
+                 # year, 
+                 # fuel_type, 
+               fuel_type_imports_as_share_of_tes,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               estimated_russia_fuel_type_imports_as_share_of_tes,
+               estimated_russia_fossil_imports_as_share_of_tes,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        filter(country == "Armenia") %>%
+        identity()
+
+
+#//////////////////////
+
+
+# inspect estimated_russia_fuel_type_imports_as_share_of_tes
+
+# note the diff_estimated_russia_fuel_type_imports_as_share_of_tes is very minimal, 
+# it's almost always btw 5 to -10 pct pts diff, with hungary basically the only country greater than abs(10 pct pts)
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 fuel_type == "Natural gas") %>%
+        select(country, year, fuel_type,
+                 estimated_russia_fuel_type_imports_as_share_of_tes,
+                 estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        mutate(diff_estimated_russia_fuel_type_imports_as_share_of_tes = estimated_russia_fuel_type_imports_as_share_of_tes -
+                       estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        # arrange(diff_estimated_russia_fuel_type_imports_as_share_of_tes) %>% print(n = 100)
+        # arrange(desc(diff_estimated_russia_fuel_type_imports_as_share_of_tes)) %>% print(n = 100)
+        # skim(diff_estimated_russia_fuel_type_imports_as_share_of_tes)
+        ggplot(data = ., mapping = aes(x = year, y = diff_estimated_russia_fuel_type_imports_as_share_of_tes,
+                                       color = country)) + geom_line()
+
+# compare estimated_russia_fuel_type_imports_as_share_of_tes/w_iea_nat_gas for E&E countries over time
+# note that some countries have very high overlap, which is because the russia share is very close to 0% or 100% (see below)
+# note also that armenia, which does not have extreme 0 or 100% russia share, still tracks pretty closely, which is validating
+# 3) note that georgia still has some conflicting discontinuites between atlas and iea russia shares (also unspecified)
+# these are inspected in detail in the iea section where iea_natural_gas was created
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia"),
+               fuel_type == "Natural gas") %>%
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        pivot_longer(cols = -c(country, year, fuel_type), names_to = "var", values_to = "values") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() +
+        facet_wrap(facets = vars(country))
+
+# inspect estimated_russia_fuel_type_imports_as_share_of_tes/w_iea_nat_gas very high overlap 
+# also armenia, which doesn't have high overlap, but still tracks well, despite being further from 0/100% extremes
+atlas %>% filter(country %in% c("Moldova", "Belarus", "Albania", "Serbia", "N. Macedonia", "Azerbaijan", "Armenia"),
+                 fuel_type == "Natural gas") %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               estimated_russia_fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        mutate(diff_estimated_russia_fuel_type_imports_as_share_of_tes = estimated_russia_fuel_type_imports_as_share_of_tes -
+                       estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        print(n = nrow(.))
+
+# note that the reason for the perfect overlap is cases where the russia share is the same, either very close to 100% or 0%
+atlas %>% filter(country %in% c("Moldova", "Belarus", "Albania", "Serbia", "N. Macedonia", "Azerbaijan"),
+                 fuel_type == "Natural gas") %>%
+        select(country, year, natural_gas_ktoe_imports_Russia,
+               natural_gas_ktoe_imports_total,
+               natural_gas_ktoe_imports_Russia_as_share_of_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas) %>%
+        # skim()
+        print(n = nrow(.))
+
+
+#////////////////
+
+
+# inspect estimated_russia_fossil_imports_as_share_of_tes
+# as expected, this chart looks the same as for diff_estimated_russia_fuel_type_imports_as_share_of_tes
+# because the only change in the fossil shares is for natural gas, so that same fuel_type natural gas change will show up
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 fuel_type == "Natural gas") %>%
+        select(country, year, fuel_type,
+               estimated_russia_fossil_imports_as_share_of_tes,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        mutate(diff_estimated_russia_fossil_imports_as_share_of_tes = 
+                       estimated_russia_fossil_imports_as_share_of_tes -
+                       estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        # arrange(diff_estimated_russia_fossil_imports_as_share_of_tes) %>% print(n = 100)
+        # arrange(desc(diff_estimated_russia_fossil_imports_as_share_of_tes)) %>% print(n = 100)
+        # skim(diff_estimated_russia_fossil_imports_as_share_of_tes)
+        ggplot(data = ., mapping = aes(x = year, y = diff_estimated_russia_fossil_imports_as_share_of_tes,
+                                       color = country)) + geom_line()
+        
+
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -3318,7 +4643,7 @@ atlas <- read_csv(file = "data/atlas_un_comtrade_trade_flows/atlas_20201218.csv"
 atlas
 atlas %>% glimpse()
 atlas %>% nrow() # 1240
-atlas %>% ncol() # 45
+atlas %>% ncol() # 61
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3496,7 +4821,7 @@ emf(file = filename)
 print(atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/atlas_share_of_energy_imports_from_russia_by_country_grouped_bar_chart.docx")
@@ -3603,7 +4928,7 @@ emf(file = filename)
 print(atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/atlas_share_of_energy_imports_from_russia_by_mcp_grouping_grouped_bar_chart.docx")
@@ -3669,19 +4994,19 @@ atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart <- chart_data 
         geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Balkans"), 
                   mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum + .02, 
                                 label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "E&E Eurasia"), 
                   mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
                                 label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "E&E graduates"), 
                   mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
                                 label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         geom_text(data = chart_data %>% filter(year == max(year), country == "CARs"), 
                   mapping = aes(x = year + .2, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum + .05, 
                                 label = color_bin), 
-                  fontface = "bold", hjust = 0) + 
+                  fontface = "bold", hjust = 0, family = "Calibri") + 
         scale_color_manual(values = chart_data_color_list, guide = FALSE,
                            labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
         scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
@@ -3750,15 +5075,180 @@ emf(file = filename)
 print(atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/atlas_share_of_fossil_imports_from_russia_mcp_grouping_line_chart.docx")
 
 
-#////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create fossil_imports_by_type_from_russia_as_share_of_fossil_type_imports_facet_line_chart ####
+
+# note this chart was excluded because it has a lot of noise variation and would likely be confusing
+# showing 100% of imports of some fuel types from russia, but only because the country imports very low amounts occasionally
+
+
+# inspect na values
+atlas %>% filter(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>% 
+        select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)
+atlas %>% filter(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>% 
+        count(country, fuel_type)
+
+# inspect
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia"),
+                 country == "Armenia", year %in% c(2011, 2017)) %>% 
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)
+
+
+# inspect chart
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
+        rename(var = fuel_type,
+               values = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
+        rename(var = fuel_type,
+               values = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+fossil_imports_by_type_from_russia_as_share_of_fossil_type_imports_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Oil products",
+                                                                 "Crude oil",
+                                                                 "Coal",
+                                                                 "Natural gas")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.x = unit(1.0, 'cm')
+                # legend.spacing.y = unit(5.5, "cm")
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+                # legend.key.height = unit(2,"line")
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+fossil_imports_by_type_from_russia_as_share_of_fossil_type_imports_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(fossil_imports_by_type_from_russia_as_share_of_fossil_type_imports_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/fossil_imports_by_type_from_russia_as_share_of_fossil_type_imports_facet_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 # create atlas_fossil_country_scatter_plot ####
@@ -3837,7 +5327,7 @@ atlas_fossil_country_scatter_plot <- chart_data %>%
                              color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates")))) + 
         geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
         geom_point(size = 6) + 
-        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25) +
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25, family = "Calibri") +
         scale_color_manual(values = chart_data_color_list) +
         # scale_fill_manual(values = chart_data_color_list) +
         # scale_x_discrete(expand = c(0, 0)) +
@@ -3910,7 +5400,7 @@ emf(file = filename)
 print(atlas_fossil_country_scatter_plot)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/atlas_fossil_country_scatter_plot.docx")
@@ -3923,59 +5413,169 @@ read_docx() %>%
 
 # create atlas_fossil_country_bubble_chart ####
 
-# check filter
-atlas %>% select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+# inspect 
+
+# note that some countries have NaN values because of zero russian imports and zero global imports
+# and when these two zeros are divided to get russia share of imports it gives NaN
+
+# also note that moldova will need to be dropped, because atlas has bad data for fossil imports from russia in dollars
+# and we need imports from russia in dollar terms to get russia_fossil_imports_as_share_of_gdp_current for bubble size
+# we are only able to calculate moldova's estimated_russia_fuel_type_imports_as_share_of_tes in other charts by using
+# workaround of plugging in russia_fuel_type_import_as_share_of_global_fuel_type_import manually from moldova gov docs
+atlas %>% 
+        filter(country == "Kyrgyzstan") %>%
+        select(year, fuel_type, 
+                 russia_fuel_type_import_adj, 
+               global_fuel_type_import_sum_adj, 
+                 russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                 russia_fossil_import_sum, 
+               global_fossil_import_sum,
                  russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-                 russia_fuel_type_import_as_share_of_global_import_value_sum_adj,
-                 russia_fossil_import_sum_as_share_of_global_import_value_sum,
-                 net_fuel_type_imports_as_share_of_tes, 
-                 net_fossil_imports_as_share_of_tes)
+               gdp_current,
+               russia_fossil_imports_as_share_of_gdp_current = russia_fossil_import_sum / gdp_current)
 
-atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
-                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
-        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-               russia_fossil_import_sum_as_share_of_global_import_value_sum,
-               net_fossil_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% slice(1) %>% ungroup()
 
-atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
-                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
-        select(country, year,location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-               russia_fossil_import_sum_as_share_of_global_import_value_sum,
-               net_fossil_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% slice(1) %>% ungroup() %>% count(country)
+# inspect final variables
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+                 country != "Moldova") %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+                estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes,
+               russia_fossil_imports_as_share_of_gdp_current = russia_fossil_import_sum / gdp_current) %>%
+        group_by(country, year) %>% 
+        mutate(fossil_imports_as_share_of_tes = sum(fuel_type_imports_as_share_of_tes)) %>%
+        # slice(1) %>%
+        ungroup() %>%
+        # filter(year == 2018, country == "Kyrgyzstan") %>%
+        select(country, year, fuel_type, 
+               russia_fossil_imports_as_share_of_gdp_current,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               fuel_type_imports_as_share_of_tes, 
+               fossil_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes) 
 
-atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
-                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
-        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-               russia_fossil_import_sum_as_share_of_global_import_value_sum,
-               net_fossil_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% slice(1) %>% ungroup() %>% 
-        filter(country %in% c("E&E graduates"))
+                 
+# inspect russia_fossil_imports_as_share_of_gdp_current
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+                 country != "Moldova") %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes,
+               russia_fossil_imports_as_share_of_gdp_current = russia_fossil_import_sum / gdp_current) %>%
+        group_by(country, year) %>% 
+        mutate(fossil_imports_as_share_of_tes = sum(fuel_type_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(country, year, fuel_type,
+               russia_fossil_import_sum,
+               gdp_current,
+               russia_fossil_imports_as_share_of_gdp_current) %>% 
+        # skim(russia_fossil_imports_as_share_of_gdp_current)
+        # filter(country == "Armenia")
+        filter(year == 2018) %>% arrange(desc(russia_fossil_imports_as_share_of_gdp_current)) %>% 
+        print(n = nrow(.))
 
-atlas %>% filter(!country %in% c("E&E Balkans", "E&E Eurasia"),
-                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") | country %in% c("E&E graduates")) %>%
-        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-               russia_fossil_import_sum_as_share_of_global_import_value_sum,
-               net_fossil_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% slice(1) %>% ungroup()
+# inspect chart of russia_fossil_imports_as_share_of_gdp_current
+# note that latvia is the country with the big spike in 2014 - not sure why, but bar chart will only show 2018, can ignore
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+                 country != "Moldova") %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes,
+               russia_fossil_imports_as_share_of_gdp_current = russia_fossil_import_sum / gdp_current) %>%
+        group_by(country, year) %>% 
+        mutate(fossil_imports_as_share_of_tes = sum(fuel_type_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(country, year, fuel_type,
+               russia_fossil_import_sum,
+               gdp_current,
+               russia_fossil_imports_as_share_of_gdp_current) %>%
+        # filter(russia_fossil_imports_as_share_of_gdp_current == max(russia_fossil_imports_as_share_of_gdp_current))
+        ggplot(data = ., mapping = aes(x = year, y = russia_fossil_imports_as_share_of_gdp_current, color = country)) + 
+        geom_line()
+
+# check imports from ANS (unspecfied country)
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>%
+        arrange(desc(ans_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
+        select(country, year, fuel_type,
+               russia_fuel_type_import_adj,
+               ans_fuel_type_import_adj,
+               global_fuel_type_import_sum_adj,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+               ans_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>% print(n = 20)
+
+# inspect final chart
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+                 year == 2018, country != "Moldova") %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes,
+               russia_fossil_imports_as_share_of_gdp_current = russia_fossil_import_sum / gdp_current) %>%
+        group_by(country, year) %>% 
+        mutate(fossil_imports_as_share_of_tes = sum(fuel_type_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(mcp_grouping, country, year, fuel_type, 
+               russia_fossil_imports_as_share_of_gdp_current,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               fossil_imports_as_share_of_tes) %>%
+        ggplot(data = ., mapping = aes(x = fossil_imports_as_share_of_tes,
+                                       y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                       size = russia_fossil_imports_as_share_of_gdp_current,
+                                       color = country)) + 
+                geom_point()
+
+# inspect for report
+chart_data %>% glimpse()
+chart_data %>% filter(country %in% c("N. Macedonia", "Azerbaijan", "Belarus"))
+
+
+#/////////////////////////
+
 
 # add color_bin and color
 # note need to drop moldova, bc it has no accurate imports in dollars, so doesn't have share of global imports for bubble size
-chart_data <- atlas %>% 
-        filter(!country %in% c("E&E Balkans", "E&E Eurasia", "Azerbaijan", "E&E graduates"),
-               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates"),
-               country != "Moldova",
-               year == 2018) %>%
-        select(country, location_code, year, mcp_grouping, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-               russia_fossil_import_sum_as_share_of_global_import_value_sum,
-               net_fossil_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+chart_data <- atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+                               year == 2018, country != "Moldova") %>%
+        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+               estimated_russia_fuel_type_imports_as_share_of_tes = 
+                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+                       fuel_type_imports_as_share_of_tes,
+               russia_fossil_imports_as_share_of_gdp_current = russia_fossil_import_sum / gdp_current) %>%
+        group_by(country, year) %>% 
+        mutate(fossil_imports_as_share_of_tes = sum(fuel_type_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(mcp_grouping, country, location_code, year, 
+               russia_fossil_imports_as_share_of_gdp_current,
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               fossil_imports_as_share_of_tes) %>%
         mutate(color_bin = mcp_grouping,
                color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
                                  color_bin == "E&E Eurasia" ~ color_palette %>% slice(3) %>% pull(hex),
-                                 color_bin == "E&E graduates" ~ color_palette %>% slice(5) %>% pull(hex)
-                                 # color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(7) %>% pull(hex)
                                  # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
                                  # color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
                                  # color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex))
@@ -3986,44 +5586,82 @@ chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
 names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
 chart_data_color_list
 
+# create bubble_size values based on min/max values of variable
+chart_data %>% skim(russia_fossil_imports_as_share_of_gdp_current)
+bubble_size_small <- .005
+bubble_size_medium <- .05
+bubble_size_large <- .15
+
 
 #/////////////////////
 
 
 # create chart
 atlas_fossil_country_bubble_chart <- chart_data %>% 
-        ggplot(data = ., aes(x = net_fossil_imports_as_share_of_tes, 
+        ggplot(data = ., aes(x = fossil_imports_as_share_of_tes, 
                              y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
-                             size = russia_fossil_import_sum_as_share_of_global_import_value_sum,
-                             label = location_code,
-                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates")))) + 
+                             size = russia_fossil_imports_as_share_of_gdp_current,
+                             label = country,
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))),
+               shape = 21) + 
         # geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
         geom_point(alpha = .5) + 
-        scale_size(range = c(5, 20), breaks = c(.01, .1, .2), labels = percent_format(accuracy = 1)) +
-        geom_text_repel(fontface = "bold", point.padding = .3, size = 3.25, segment.alpha = 0) +
-        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        scale_size(range = c(5, 20), breaks = c(.01, .1, .2), labels = percent_format(accuracy = 1), guide = FALSE) +
+        geom_text_repel(fontface = "bold", point.padding = .3, size = 2.5, segment.alpha = 0, show.legend = FALSE, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list) +
+        # note that legend bubble seems to require a tbl input to data, because if x/y args etc are directly entered
+        # without a tbl, the circle drawn appears to have noticeably jagged edges??
+        geom_point(data = tibble(x = 1.6, y = .08, size = bubble_size_large),
+                   inherit.aes = FALSE,
+                   mapping = aes(x = x, y = y, size = size), color = "#333333", fill = NA, shape = 21) +
+        geom_point(data = tibble(x = 1.6, y = .05, size = bubble_size_medium),
+                   inherit.aes = FALSE,
+                   mapping = aes(x = x, y = y, size = size), color = "#333333", fill = NA, shape = 21) +
+        # geom_point(data = tibble(x = 1.6, y = .03, size = bubble_size_small),
+        #            inherit.aes = FALSE,
+        #            mapping = aes(x = x, y = y, size = size), color = "#333333", fill = NA, shape = 21) +
+        geom_point(data = tibble(x = 1.6, y = .02, size = bubble_size_small),
+                   inherit.aes = FALSE,
+                   mapping = aes(x = x, y = y, size = size), color = "#333333", fill = NA, shape = 21) +
+        geom_text(data = tibble(label = "Fossil fuel imports from Russia\nas a share of GDP",
+                                x = 1.6, y = .33),
+                  mapping = aes(x = x, y = y, label = label),
+                  fontface = "plain", hjust = .5, size = 2.9, color = "#333333", family = "Calibri") +
+        geom_text(data = tibble(label = " 15%",
+                                x = 1.6, y = .22),
+                  mapping = aes(x = x, y = y, label = label),
+                  fontface = "plain", hjust = .5, size = 2.9, color = "#333333", family = "Calibri") +
+        geom_text(data = tibble(label = " 5%",
+                                x = 1.6, y = .15),
+                  mapping = aes(x = x, y = y, label = label),
+                  fontface = "plain", hjust = .5, size = 2.9, color = "#333333", family = "Calibri") +
+        geom_text(data = tibble(label = " 0.5%",
+                                x = 1.6, y = .09),
+                  mapping = aes(x = x, y = y, label = label),
+                  fontface = "plain", hjust = .5, size = 2.9, color = "#333333", family = "Calibri") +
+        # scale_shape_manual(values = chart_data_shape_list) +
         # scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
         #                       labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
         # scale_fill_manual(values = chart_data_color_list) +
         # scale_x_discrete(expand = c(0, 0)) +
         # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
         # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
-        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(-.05, 1), expand = c(0, 0),
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .25), limits = c(-.05, 1.1), expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        scale_x_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1.1), expand = c(0, 0),
+        scale_x_continuous(breaks = seq(from = 0, to = 1.75, by = .25), limits = c(-.05, 1.75), expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = "Net fossil fuel imports\nas a share of total primary energy use, by ktoe", 
+        labs(x = "Fossil fuel imports from all countries\nas a share of total primary energy use, by ktoe", 
              y = "Fossil fuel imports from Russia\nas a share of\ntotal fossil fuel imports, by value", 
-             title = NULL, size = "   Fossil fuel imports\n        from Russia\n        as a share of\ntotal imports, by value",
+             title = NULL, size = "   Fossil fuel imports\n        from Russia\n        as a share of GDP",
              caption = NULL, color = "") +
         # coord_fixed(ratio = 1/2, clip = "off") +
-        coord_fixed(ratio = 1/1.5, clip = "off") +
+        coord_fixed(ratio = 1/1.2, clip = "off") +
         # coord_flip() + 
         theme_bw() +
         theme(
                 # plot.background = element_rect(fill = "blue"),
-                plot.margin = unit(c(0, 5, 0, 0), "mm"),
-                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                plot.margin = unit(c(0, 8, 0, 2), "mm"),
+                plot.caption = element_text(hjust = 0, size = 9, face = "plain", family = "Calibri", 
                                             color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
                 # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
                 panel.grid.minor = element_blank(),
@@ -4038,27 +5676,28 @@ atlas_fossil_country_bubble_chart <- chart_data %>%
                 # axis.ticks.x = element_blank(),
                 axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 5, r = 0, b = 0, l = 0)),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
                 axis.line.y.left = element_line(color = "#333333"),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 13, r = 0, b = -5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 0, r = 13, b = 0, l = 0)),
-                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                plot.title = element_text(size = 9, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
-                legend.position = "right",
+                legend.position = "bottom",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333", hjust = 0),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333", hjust = 0),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                            hjust = .5, color = "#333333")
                 # legend.spacing.y = unit(5.5, "cm"),
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
-        ) 
+        ) +
+        guides(color = guide_legend(override.aes = list(size = 5)))
         # guides(color = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
 
 
@@ -4075,11 +5714,10 @@ emf(file = filename)
 print(atlas_fossil_country_bubble_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/atlas_fossil_country_bubble_chart.docx")
-
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -4150,7 +5788,7 @@ atlas_fossil_mcp_grouping_line_scatter_plot <- chart_data %>%
                              color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates")))) + 
         # geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
         geom_point(size = 1, alpha = 1) + 
-        geom_text_repel(fontface = "bold", point.padding = .02, size = 3.25, segment.alpha = 0) +
+        geom_text_repel(fontface = "bold", point.padding = .02, size = 3.25, segment.alpha = 0, family = "Calibri") +
         geom_segment(data = chart_data %>% filter(mcp_grouping == "E&E Balkans"),
                 mapping = aes(x = net_fossil_imports_as_share_of_tes,
                               y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
@@ -4253,7 +5891,7 @@ emf(file = filename)
 print(atlas_fossil_mcp_grouping_line_scatter_plot)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/atlas_fossil_mcp_grouping_line_scatter_plot.docx")
@@ -4264,178 +5902,31 @@ read_docx() %>%
 #/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart ####
+# create atlas_fossil_country_faceted_line_scatter_plot ####
 
-# at ron's request, this chart uses russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
-# which is measured by value, to stand-in for russia's share of net_fuel_type_imports_as_share_of_tes,
-# which is measured by ktoe. this is a rough approximation, since the calculation will be biased
-# if prices per ktoe vary across import partners for a given fuel
-# but the decision was that the usefulness of a tidy estimate outweighed the risk of bias 
-# (see 12/8/2020 email thread w/ ron for more detail)
+# check filter
+atlas %>% select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+                 russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                 russia_fuel_type_import_as_share_of_global_import_value_sum_adj,
+                 russia_fossil_import_sum_as_share_of_global_import_value_sum,
+                 net_fuel_type_imports_as_share_of_tes, 
+                 net_fossil_imports_as_share_of_tes)
 
-# adjusted data with shares
-atlas %>% filter(country == "Moldova", year == 2018) %>%
-        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
-                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
-               estimated_russia_fuel_type_imports_as_share_of_tes = 
-                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
-                       fuel_type_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% 
-        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
-        ungroup() %>%
-        select(fuel_type,
-               russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-               fuel_type_imports_as_share_of_tes,
-               estimated_russia_fuel_type_imports_as_share_of_tes,
-               estimated_russia_fossil_imports_as_share_of_tes)
+atlas %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") & !(country %in% c("E&E Balkans", "E&E Eurasia"))) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup()
 
-# adjusted and unadjusted data
-atlas %>% filter(country == "Moldova", year == 2018) %>%
-        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
-                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
-               estimated_russia_fuel_type_imports_as_share_of_tes = 
-                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
-                       fuel_type_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% 
-        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
-        ungroup() %>%
-        select(fuel_type,
-               russia_fuel_type_import, global_fuel_type_import_sum,
-               russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-               fuel_type_imports_as_share_of_tes)
-
-
-
-# inspect relevant variables
-# note that calculating estimated_russia_pct_of_net_fossil_imports_as_share_of_tes at the fuel-type level
-# is problematic because of irregularities between atlas and iea
-# for instance, moldova in 2018 shows 0 natural gas imports, but atlas shows imports from russia and other global partners
-# but as shown below, this method is preferable to just taking high level russia share of fossil imports times
-# net imports of fossil as share of tes, because the fuel-type calculation only assumes same price per ktoe across partners
-# but not the extra implausible assumption of same price per ktoe across fuel-types
-# atlas_6digit_raw %>% filter(location_code == "MDA", year == 2018,
-#                             str_detect(string = hs_product_code, pattern = regex("^271111|^271121")))
-# 
-# atlas %>% filter(country == "Moldova", year == 2018) %>%
-#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
-#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
-#         select(fuel_type, russia_fuel_type_import, global_fuel_type_import_sum,
-#                russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
-#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum)
-# 
-# atlas %>% filter(country == "Moldova", year == 2018) %>%
-#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
-#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
-#         select(fuel_type, 
-#                russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
-#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-#                net_fuel_type_imports_as_share_of_tes,
-#                net_fossil_imports_as_share_of_tes)
-# 
-# # inspect limited selection of relevant variables
-# atlas %>% filter(country == "Belarus", year == 2018) %>%
-#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
-#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
-#         select(country, year, fuel_type,
-#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-#                net_fuel_type_imports_as_share_of_tes) %>%
-#         mutate(estimated_russia_pct_of_net_fuel_type_imports_as_share_of_tes =
-#                        russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
-#                        net_fuel_type_imports_as_share_of_tes) %>%
-#         group_by(country, year) %>%
-#         mutate(estimated_russia_pct_of_net_fossil_imports_as_share_of_tes =
-#                        sum(estimated_russia_pct_of_net_fuel_type_imports_as_share_of_tes)) %>%
-#         ungroup()
-
-
-# alternative is to just make the approximation using rolled up russia_fossil_import_sum_as_share_of_global_fossil_import_sum *
-# net_fossil_imports_as_share_of_tes
-# but this measure actually has more bias, because it lumps different fuel types by value
-# and assumes russia has the same share in ktoe terms - this assumes same price across countries AND fuel types
-# whereas the prior method converting value to ktoe as the fuel-type level has the more limited and reasonable sounding
-# assumption that all country's have same price per ktoe for the given fuel type, but doesn't require the extra assumption
-# of same price per ktoe across fuel types
-# atlas %>% filter(country == "Moldova", year == 2018) %>% 
-#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
-#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
-#         select(fuel_type, russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
-#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
-#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-#                net_energy_imports_as_share_of_tes, net_fuel_type_imports_as_share_of_tes,
-#                net_fossil_imports_as_share_of_tes)
-# 
-# atlas %>% filter(country == "Moldova", year == 2018) %>% 
-#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
-#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
-#         mutate(estimated_russia_pct_of_net_fossil_imports_as_share_of_tes = 
-#                        russia_fossil_import_sum_as_share_of_global_fossil_import_sum * net_fossil_imports_as_share_of_tes) %>%
-#         group_by(country, year) %>% slice(1) %>%
-#         ungroup() %>%
-#         select(country, year, fuel_type, 
-#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-#                net_fossil_imports_as_share_of_tes,
-#                estimated_russia_pct_of_net_fossil_imports_as_share_of_tes)
-# 
-# atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
-#                  mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
-#                  year %in% c(2015, 2018)) %>%
-#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj = 
-#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj)) %>%
-#         mutate(estimated_russia_pct_of_net_fossil_imports_as_share_of_tes = 
-#                        russia_fossil_import_sum_as_share_of_global_fossil_import_sum * net_fossil_imports_as_share_of_tes) %>%
-#         group_by(country, year) %>% slice(1) %>%
-#         ungroup() %>%
-#         select(country, year, fuel_type, 
-#                russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
-#                net_fossil_imports_as_share_of_tes,
-#                estimated_russia_pct_of_net_fossil_imports_as_share_of_tes) 
-
-
-
-
-# inspect filter for countries
-atlas %>% 
-        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
-               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
-               year %in% c(2015, 2018)) %>%
-        count(mcp_grouping, country)
 
 # add color_bin and color
-chart_data <- atlas %>% 
-        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
-               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
-               year %in% c(2015, 2018)) %>%
-        mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
-                       case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
-                                 TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
-               estimated_russia_fuel_type_imports_as_share_of_tes = 
-                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
-                       fuel_type_imports_as_share_of_tes) %>%
-        group_by(country, year) %>% 
-        mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
-        slice(1) %>%
-        ungroup() %>%
-        group_by(year) %>% arrange(desc(estimated_russia_fossil_imports_as_share_of_tes)) %>%
-        mutate(estimate_index = row_number()) %>%
-        ungroup() %>%
-        mutate(estimate_index_2018 = case_when(year == 2018 ~ estimate_index, TRUE ~ int(0))) %>%
-        select(country, year, location_code, fuel_type,
-               estimated_russia_fossil_imports_as_share_of_tes, estimate_index, estimate_index_2018) %>%
-        mutate(color_bin = as.character(year),
-               color = case_when(color_bin == "2015" ~ color_palette %>% slice(1) %>% pull(hex),
-                                 color_bin == "2018" ~ color_palette %>% slice(4) %>% pull(hex)))
+chart_data <- atlas %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia") & !(country %in% c("E&E Balkans", "E&E Eurasia"))) %>%
+        select(country, year, location_code, russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+               russia_fossil_import_sum_as_share_of_global_import_value_sum,
+               net_fossil_imports_as_share_of_tes) %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+        mutate(color_bin = country,
+               color = color_palette %>% slice(1) %>% pull(hex))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -4447,27 +5938,1498 @@ chart_data_color_list
 
 
 # create chart
-atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart <- chart_data %>% 
-        ggplot(data = ., aes(x = factor(country, levels = chart_data %>% arrange(estimate_index_2018) %>%
-                                                filter(estimate_index_2018 > 0) %>% pull(country)), 
-                             y = estimated_russia_fossil_imports_as_share_of_tes, 
-                             fill = factor(color_bin, levels = c("2015", "2018")))) + 
-        geom_bar(stat = "identity", position = position_dodge(width = .7), width = .7) + 
-        scale_fill_manual(values = chart_data_color_list) +
-        scale_x_discrete(expand = c(0, 0)) +
-        scale_y_continuous(breaks = seq(from = 0, to = 1.6, by = .20), 
-                           limits = c(0, 1.6), 
-                           expand = c(0, 0),
+atlas_fossil_country_faceted_line_scatter_plot <- chart_data %>% 
+        ggplot(data = ., aes(x = net_fossil_imports_as_share_of_tes, 
+                             y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum, 
+                             label = year,
+                             color = factor(color_bin, levels = c("Albania", "Armenia", "Azerbaijan", "Belarus",
+                                                                  "BiH", "Georgia", "Moldova", "N. Macedonia",
+                                                                  "Serbia", "Ukraine")))) + 
+        # geom_abline(intercept = 0, slope = 1, color = "#DDDDDD") +
+        facet_wrap(facets = vars(country), nrow = 2, ncol = 5) +
+        geom_point(size = 1, alpha = 1) + 
+        geom_text_repel(data = chart_data %>% filter(year == max(year) | year == min(year)),
+                        mapping = aes(label = year), fontface = "bold", point.padding = .02, 
+                        size = 3.25, segment.alpha = 0, family = "Calibri") +
+        geom_segment(data = chart_data %>% filter(country == "Albania"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Albania") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Albania") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.1, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "BiH"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "BiH") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "BiH") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "N. Macedonia"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "N. Macedonia") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "N. Macedonia") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.1, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Serbia"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Serbia") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Serbia") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Ukraine"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Ukraine") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Ukraine") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Moldova"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Moldova") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Moldova") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Belarus"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Belarus") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Belarus") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Armenia"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Armenia") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Armenia") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Azerbaijan"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Azerbaijan") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Azerbaijan") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        geom_segment(data = chart_data %>% filter(country == "Georgia"),
+                     mapping = aes(x = net_fossil_imports_as_share_of_tes,
+                                   y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum,
+                                   xend = c(chart_data %>% filter(country == "Georgia") %>% slice(-1) %>% 
+                                                    pull(net_fossil_imports_as_share_of_tes), NA), 
+                                   yend = c(chart_data %>% filter(country == "Georgia") %>% slice(-1) %>%
+                                                    pull(russia_fossil_import_sum_as_share_of_global_fossil_import_sum), NA))
+                     # arrow = arrow(length = unit(0.2, "cm"))
+        ) +
+        # annotate(geom = "text", x = .5, y = .35, label = "E&E graduates", color = "#BDBDBD", fontface = "bold") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE) +
+        # scale_fill_manual(values = chart_data_color_list) +
+        # scale_x_discrete(expand = c(0, 0)) +
+        # scale_y_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        # scale_x_continuous(breaks = seq(from = 0, to = 100, by = 10), limits = c(-10, 110), expand = c(-.05, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(-.01, 1.01), expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = NULL, y = "Est. fossil fuel imports from Russia\nas a share of\ntotal primary energy use", 
+        scale_x_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(-.01, 1.01), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = "Net fossil fuel imports\nas a share of total primary energy use, by ktoe", 
+             y = "Fossil fuel imports from Russia\nas a share of total fossil fuel imports, by value", 
              title = NULL,
-             caption = NULL, fill = "") +
-        coord_fixed(ratio = 2/1, clip = "off") +
+             caption = NULL, color = "") +
+        # coord_fixed(ratio = 1/2, clip = "off") +
+        coord_fixed(ratio = 1 / 1, clip = "off") +
+        # coord_flip() + 
         theme_bw() +
         theme(
                 # plot.background = element_rect(fill = "blue"),
-                plot.margin = unit(c(0, 0, 0, 5), "mm"),
+                plot.margin = unit(c(0, 5, 0, 0), "mm"),
                 plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#000000", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_blank(),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                # axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0)),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_line(color = "#333333"),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = -5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 18, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+# inspect
+atlas_fossil_country_faceted_line_scatter_plot
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_fossil_country_faceted_line_scatter_plot)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_fossil_country_faceted_line_scatter_plott.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# # old: atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_country_grouped_bar_chart ####
+# 
+# # note this chart is no longer used/current
+# 
+# # note this chart was used for the energy portfolio review, but was not used for the subsequent energy report
+# # instead, for the energy report i used fossil_imports_by_type_from_russia_as_share_of_tes_stacked_bar_chart below
+# 
+# # at ron's request, this chart uses russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj, 
+# # which is measured by value, to stand-in for russia's share of net_fuel_type_imports_as_share_of_tes,
+# # which is measured by ktoe. this is a rough approximation, since the calculation will be biased
+# # if prices per ktoe vary across import partners for a given fuel
+# # but the decision was that the usefulness of a tidy estimate outweighed the risk of bias 
+# # (see 12/8/2020 email thread w/ ron for more detail)
+# 
+# # adjusted data with shares
+# atlas %>% filter(country == "Moldova", year == 2018) %>%
+#         select(fuel_type,
+#                # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+#                # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+#                # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+#                russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+#                fuel_type_imports_as_share_of_tes,
+#                estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+#                estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+# 
+# 
+# # inspect filter for countries
+# atlas %>% 
+#         filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+#                mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+#                year %in% c(2015, 2018)) %>%
+#         count(mcp_grouping, country)
+# 
+# 
+# #////////////////
+# 
+# 
+# # add color_bin and color
+# chart_data <- atlas %>% 
+#         filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+#                mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+#                year %in% c(2015, 2018)) %>%
+#         mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj =
+#                        case_when(is.nan(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) ~ 0,
+#                                  TRUE ~ russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj),
+#                estimated_russia_fuel_type_imports_as_share_of_tes = 
+#                        russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj *
+#                        fuel_type_imports_as_share_of_tes) %>%
+#         group_by(country, year) %>% 
+#         mutate(estimated_russia_fossil_imports_as_share_of_tes = sum(estimated_russia_fuel_type_imports_as_share_of_tes)) %>%
+#         slice(1) %>%
+#         ungroup() %>%
+#         group_by(year) %>% arrange(desc(estimated_russia_fossil_imports_as_share_of_tes)) %>%
+#         mutate(estimate_index = row_number()) %>%
+#         ungroup() %>%
+#         mutate(estimate_index_2018 = case_when(year == 2018 ~ estimate_index, TRUE ~ int(0))) %>%
+#         select(country, year, location_code, fuel_type,
+#                estimated_russia_fossil_imports_as_share_of_tes, estimate_index, estimate_index_2018) %>%
+#         mutate(color_bin = as.character(year),
+#                color = case_when(color_bin == "2015" ~ color_palette %>% slice(1) %>% pull(hex),
+#                                  color_bin == "2018" ~ color_palette %>% slice(4) %>% pull(hex)))
+# 
+# # create color_list for to pass to scale_color_manual
+# chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+# names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+# chart_data_color_list
+# 
+# 
+# #/////////////////////
+# 
+# 
+# # create chart
+# atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_country_grouped_bar_chart <- chart_data %>% 
+#         ggplot(data = ., aes(x = factor(country, levels = chart_data %>% arrange(estimate_index_2018) %>%
+#                                                 filter(estimate_index_2018 > 0) %>% pull(country)), 
+#                              y = estimated_russia_fossil_imports_as_share_of_tes, 
+#                              fill = factor(color_bin, levels = c("2015", "2018")))) + 
+#         geom_bar(stat = "identity", position = position_dodge(width = .7), width = .7) + 
+#         scale_fill_manual(values = chart_data_color_list) +
+#         scale_x_discrete(expand = c(0, 0)) +
+#         scale_y_continuous(breaks = seq(from = 0, to = 1.6, by = .20), 
+#                            limits = c(0, 1.6), 
+#                            expand = c(0, 0),
+#                            labels = percent_format(accuracy = 1)) +
+#         labs(x = NULL, y = "Est. fossil fuel imports from Russia\nas a share of\ntotal primary energy use", 
+#              title = NULL,
+#              caption = NULL, fill = "") +
+#         coord_fixed(ratio = 2/1, clip = "off") +
+#         theme_bw() +
+#         theme(
+#                 # plot.background = element_rect(fill = "blue"),
+#                 plot.margin = unit(c(0, 0, 0, 5), "mm"),
+#                 plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+#                                             color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+#                 # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+#                 panel.grid.minor = element_blank(),
+#                 panel.grid.major.x = element_blank(),
+#                 panel.grid.major.y = element_line(color = "#DDDDDD"),
+#                 # panel.grid.major.y = element_line(color = "#000000"),
+#                 panel.border = element_blank(),
+#                 # panel.grid = element_blank(),
+#                 # line = element_blank(),
+#                 # rect = element_blank(),
+#                 axis.ticks.y = element_blank(),
+#                 # axis.ticks.x = element_blank(),
+#                 # axis.ticks.length.y.left = unit(.2, "cm"),
+#                 axis.ticks.length.x.bottom = unit(.2, "cm"),
+#                 axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+#                                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+#                 # axis.text.x = element_blank(),
+#                 axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+#                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
+#                 axis.line.x.bottom = element_line(color = "#333333"),
+#                 axis.line.y.left = element_blank(),
+#                 axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+#                                             margin = margin(t = 13, r = 0, b = 5, l = 0)),
+#                 axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+#                                             margin = margin(t = 0, r = 13, b = 0, l = 0)),
+#                 plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+#                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+#                 legend.position = "bottom",
+#                 # legend.key.size = unit(2, "mm"), 
+#                 legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+#                 legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+#                                            hjust = .5, color = "#333333")
+#                 # legend.spacing.y = unit(5.5, "cm"),
+#                 # legend.key = element_rect(size = 5),
+#                 # legend.key.size = unit(2, 'lines')
+#         ) + 
+#         guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+# 
+# # inspect
+# atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_country_grouped_bar_chart
+# 
+# 
+# #//////////////////////////////////
+# 
+# 
+# # save chart as emf
+# filename <- tempfile(fileext = ".emf")
+# emf(file = filename)
+# print(atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_country_grouped_bar_chart)
+# dev.off()
+# 
+# # add emf to word doc  
+# read_docx() %>% 
+#         body_add_img(src = filename, width = 6, height = 6) %>% 
+#         print(target = "output/charts/atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_country_grouped_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_balkans_patch_line_chart ####
+
+
+# inspect 
+atlas %>% filter(country == "Moldova", year == 2018) %>%
+        select(country, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+# inspect filter for countries
+atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        count(mcp_grouping, country)
+
+# inspect eurasia
+atlas %>% 
+        filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        group_by(country, year) %>% 
+        slice(1) %>%
+        ungroup() %>% rename(values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        select(country, year, location_code, values) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+
+# inspect balkans
+# note that macedonia has a sharp spike - will need to inspect the cause
+atlas %>% 
+        filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        group_by(country, year) %>% 
+        slice(1) %>%
+        ungroup() %>% rename(values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        select(country, year, location_code, values) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+
+# inspect macedonia
+# note the fall in macedonia estimated_russia_fossil_imports_as_share_of_tes seems to be driven
+# by the fall in crude oil as a share of TES from 2010 - 2013 (~30% down to 2%), 
+# which comes from the relatively reliable IEA data
+# note though that the spike in macedonia estimated_russia_fossil_imports_as_share_of_tes seems to be driven
+# by an abrupt jump in the russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj for crude
+# from 0 in 2009 to 69% in 2010; 
+# russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj stays high from 2010 to 2013,
+# then drops back to 0 in 2014 (which is very odd), and then stays at zero
+# while odd though, and COMTRADE data is suspect, this oddness is mirrored in reliable IEA data
+# since in 2014 macedonia's imports of crude drop to zero and stay there too, so it may reflect a real shift
+atlas %>% filter(country == "N. Macedonia") %>%
+        select(country, year, fuel_type, location_code, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas, 
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        print(n = nrow(.))
+
+
+# inspect drop in bosnia estimated_russia_fossil_imports_as_share_of_tes in 2018 (16% down to 8%)
+# reason seems to be drop in crude oil imports from 13% of TES down to 4% of TES (from IEA)
+# as well as drop in russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj from 98% to 41%
+atlas %>% filter(country == "BiH") %>%
+        select(country, year, fuel_type, location_code, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas, 
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        print(n = nrow(.))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(values)) %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        
+        group_by(country, year) %>% 
+        mutate(values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(country, year, location_code, values) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Estimated fossil fuel imports from Russia as a share of total primary energy use in E&E Balkans"
+
+
+#/////////////////////
+
+
+# create chart
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        # geom_line(size = 1) + 
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values + .03, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.75, by = .25), limits = c(-.05, 1.8), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1.75, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .25, yend = .25), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .5, yend = .5), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .75, yend = .75), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1, yend = 1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.25, yend = 1.25), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.5, yend = 1.5), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.75, yend = 1.75), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_eurasia_patch_line_chart ####
+
+# inspect 
+atlas %>% filter(country == "Moldova", year == 2018) %>%
+        select(country, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+
+# inspect filter for countries
+atlas %>% 
+        filter(!(country %in% c("E&E Balkans", "E&E Eurasia")), 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        count(mcp_grouping, country)
+
+# inspect eurasia
+atlas %>% 
+        group_by(country, year) %>% 
+        mutate(values = estimated_russia_fossil_imports_as_share_of_tes) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(country, year, location_code, values) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+
+# inspect armenia
+# armenia's drop in 2010 from 56% to 44% is due to russian natural gas share dropping from 99% to 75%, 
+# this roughly coincides with iranian gas pipeline
+# https://en.wikipedia.org/wiki/Energy_in_Armenia#Natural_Gas
+# this is manually verifed in atlas explorer, where unadjusted gas imports from iran jump from 3 mil in 2009 to 56 mil in 2010
+# unadjusted gas imports from russia were 162 mil in 2010, on 218 mil gas imports globally; 
+# so in 2010 russia's unadjusted share of gas imports was 162 / 218 = 74%
+# but in 2009 russia's unadjusted share of gas was 170 / 174 = 98%
+atlas %>% filter(country == "Armenia") %>%
+        select(country, year, fuel_type, location_code, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas, 
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        print(n = nrow(.))
+
+
+# inspect ukraine, which had gradual decline from peak of 33% russia share in 2011, down to 10% in 2016
+# this was caused by decline in gas share of TES from 29% in 2011 down to 9% in 2016, as well as
+# decline in russia share of gas from 86% in 2011 down to 0% in 2016
+# drop in russia share is due to political natural gas stop: 
+# https://en.wikipedia.org/wiki/Russia%E2%80%93Ukraine_gas_disputes#November_2015_gas_supplies_stop
+atlas %>% filter(country == "Ukraine") %>%
+        select(country, year, fuel_type, location_code, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas, 
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        print(n = nrow(.))
+
+# inspect belarus, which drops from russia share 146% in 2009 down to 111% in 2010
+#  this is due to crude imports as share of tes falling from 81% to 54%
+# along with russia share for crude dropping from 100% to 78%
+# so russian crude as share of tes dropped from 81% to 42%
+# this fall was mitigated by gas as share of tes ticking up, with russia share of gas unchaged at 100%, but net effect was drop
+# not sure what broader reasons for drop was, but seems plausible enough
+atlas %>% filter(country == "Belarus") %>%
+        select(country, year, fuel_type, location_code, 
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas, 
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        print(n = nrow(.))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(values)) %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% 
+        filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        group_by(country, year) %>% 
+        mutate(values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(country, year, location_code, values) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Estimated fossil fuel imports from Russia as a share of total primary energy use in E&E Balkans"
+
+
+#/////////////////////
+
+
+# create chart
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) + 
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values + .05, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values + .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values + .05, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.75, by = .25), limits = c(-.05, 1.8), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1.75, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .25, yend = .25), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .5, yend = .5), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .75, yend = .75), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1, yend = 1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.25, yend = 1.25), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.5, yend = 1.5), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.75, yend = 1.75), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) +
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_mcp_grouping_patch_line_chart ####
+
+# inspect mcp_grouping averages
+inspect_tbl <- atlas %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+               !(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(country, mcp_grouping, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+inspect_tbl
+.0219 + .0047 + 0 + .0219 # .0483 (albania 2009 estimated_russia_fossil_imports_as_share_of_tes)
+
+inspect_tbl %>%
+        group_by(country, year) %>% slice(1) %>% ungroup() %>%
+        group_by(mcp_grouping, year) %>%
+        mutate(values = mean(estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)) %>% 
+        # slice(1) %>%
+        ungroup() %>% arrange(mcp_grouping, year, country)
+mean(c(.134, .569, .198, 0, .0000642)) # .18 (CARs 2009 avg estimated_russia_fossil_imports_as_share_of_tes aka values)
+
+
+# inspect for report
+chart_data %>% group_by(mcp_grouping) %>% summarize(mean = mean(values)) %>%
+        ungroup() %>% arrange(mean)
+
+
+#/////////////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+               !(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        group_by(country, year) %>%
+        slice(1) %>%
+        ungroup() %>%
+        select(mcp_grouping, country, year, location_code, estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        group_by(mcp_grouping, year) %>%
+        mutate(values = mean(estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)) %>% slice(1) %>%
+        ungroup() %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+
+#////////////////////////
+
+
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) + 
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values + .03, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.75, by = .25), limits = c(-.05, 1.8), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1.75, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .25, yend = .25), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .5, yend = .5), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .75, yend = .75), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1, yend = 1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.25, yend = 1.25), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.5, yend = 1.5), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1.75, yend = 1.75), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) +
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_patch_line_chart ####
+
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_patch_line_chart <- wrap_plots(plot_spacer(),
+                             atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_balkans_patch_line_chart,
+                             atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_eurasia_patch_line_chart,
+                             atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_mcp_grouping_patch_line_chart, 
+                             plot_spacer()) +
+        plot_layout(design = layout) 
+# atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create fossil_imports_by_type_from_russia_as_share_of_tes_facet_line_chart ####
+
+# inspect 
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia"),
+                 country == "Albania", year == 2018) %>% 
+        select(country, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+
+# inspect chart
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(var = fuel_type,
+               values = estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(var = fuel_type,
+               values = estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+fossil_imports_by_type_from_russia_as_share_of_tes_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Oil products",
+                                                                 "Crude oil",
+                                                                 "Coal",
+                                                                 "Natural gas")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.x = unit(1.0, 'cm')
+                # legend.spacing.y = unit(5.5, "cm")
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+                # legend.key.height = unit(2,"line")
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+fossil_imports_by_type_from_russia_as_share_of_tes_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(fossil_imports_by_type_from_russia_as_share_of_tes_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/fossil_imports_by_type_from_russia_as_share_of_tes_facet_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create fossil_imports_by_type_from_russia_as_share_of_tes_stacked_bar_chart ####
+
+# inspect 
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia"),
+                 country == "Albania", year == 2018) %>% 
+        select(country, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+
+# inspect chart
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia"),
+                 year == 2018) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(var = fuel_type,
+               values = estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia"),
+                               year == 2018) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(var = fuel_type,
+               values = estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# title
+title <- "Estimated fossil fuel imports from Russia by type, as a share of primary energy use (2018)"
+
+
+#/////////////////////
+
+
+# create chart
+fossil_imports_by_type_from_russia_as_share_of_tes_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = values, 
+                             fill = factor(color_bin, 
+                                           levels = c("Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        # geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.5, by = .25), 
+                           limits = c(0, 1.5), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 3/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+fossil_imports_by_type_from_russia_as_share_of_tes_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(fossil_imports_by_type_from_russia_as_share_of_tes_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/fossil_imports_by_type_from_russia_as_share_of_tes_stacked_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# fossil_imports_from_russia_as_share_of_tes_by_country_bar_chart ####
+
+# inspect underlying data
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>% 
+        select(country, year, fuel_type,
+               # russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
+               # natural_gas_ktoe_imports_Russia, natural_gas_ktoe_imports_total,
+               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj_w_iea_nat_gas,
+               fuel_type_imports_as_share_of_tes,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+# look at chart_data after calling distinct to drop mutiple fuel-type records, leaving only single obs for each country/year
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>% 
+        distinct(mcp_grouping, country, year, estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+# skim var
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>% 
+        distinct(mcp_grouping, country, year, estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        skim(estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas)
+
+# inspect chart
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"), year == 2018) %>% 
+        distinct(mcp_grouping, country, year, estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = mcp_grouping)) + geom_col()
+
+# inspect chart
+# note this looks at the fuel-type level for estimated_russia_fuel_type_imports_as_share_of_tes for transparency
+# but the actual chart will only look at the overall level using estimated_russia_fuel_type_imports_as_share_of_tes
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"), year == 2018) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(var = fuel_type,
+               values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+
+#////////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"),
+                               year == 2018) %>% 
+        distinct(mcp_grouping, country, year, estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        rename(values = estimated_russia_fossil_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+# title
+title <- "Estimated fossil fuel imports from Russia, as a share of primary energy use (2018)"
+
+
+#/////////////////////
+
+
+# create chart
+fossil_imports_from_russia_as_share_of_tes_by_country_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = values), 
+                             y = values, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.5, by = .25), 
+                           limits = c(0, 1.5), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 8 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 9, face = "plain", family = "Calibri", 
                                             color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
                 # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
                 panel.grid.minor = element_blank(),
@@ -4482,32 +7444,33 @@ atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_ch
                 # axis.ticks.x = element_blank(),
                 # axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
                                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
                 # axis.text.x = element_blank(),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
                 axis.line.y.left = element_blank(),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 0, r = 13, b = 0, l = 0)),
-                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                plot.title = element_text(size = 9, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
                 legend.position = "bottom",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
-                                           hjust = .5, color = "#333333")
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333"),
                 # legend.spacing.y = unit(5.5, "cm"),
+                legend.spacing.x = unit(.5, "cm")
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
         ) + 
         guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
 
 # inspect
-atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart
+fossil_imports_from_russia_as_share_of_tes_by_country_bar_chart
 
 
 #//////////////////////////////////
@@ -4516,13 +7479,2547 @@ atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_ch
 # save chart as emf
 filename <- tempfile(fileext = ".emf")
 emf(file = filename)
-print(atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart)
+print(fossil_imports_from_russia_as_share_of_tes_by_country_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
-        print(target = "output/charts/atlas_iea_combined_share_of_net_fossil_imports_from_russia_county_grouped_bar_chart.docx")
+        print(target = "output/charts/fossil_imports_from_russia_as_share_of_tes_by_country_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create russia_fossil_import_sum_as_share_of_global_fossil_import_sum_balkans_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, fuel_type, russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fossil_import_sum, global_fossil_import_sum, 
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) 
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans",
+                 country == "BiH") %>%
+        select(country, year, fuel_type, russia_fuel_type_import_adj, global_fuel_type_import_sum_adj,
+               russia_fossil_import_sum, global_fossil_import_sum, 
+               russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% print(n = nrow(.))
+
+# inspect for report
+chart_data %>% filter(country == "Albania") %>% 
+        summarize(mean = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% mutate(values = russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Fossil fuel imports from Russia as a share of total fossil fuel imports, by value"
+
+
+#/////////////////////
+
+
+# create chart
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        geom_line(size = 1) +
+        geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create russia_fossil_import_sum_as_share_of_global_fossil_import_sum_eurasia_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% filter(country == "Belarus") %>% 
+        summarize(mean = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% mutate(values = russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Fossil fuel imports from Russia as a share of total fossil fuel imports, by value"
+
+
+#/////////////////////
+
+
+# create chart
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values + .01, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create russia_fossil_import_sum_as_share_of_global_fossil_import_sum_mcp_grouping_patch_line_chart ####
+
+# inspect
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(mcp_grouping, country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum_avg = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(mcp_grouping, country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum_avg = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = russia_fossil_import_sum_as_share_of_global_fossil_import_sum_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+# inspect for report
+chart_data %>% group_by(mcp_grouping) %>% 
+        summarize(mean = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum_avg)) %>%
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        group_by(mcp_grouping, country, year, russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum_avg = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = russia_fossil_import_sum_as_share_of_global_fossil_import_sum_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Fossil fuel imports from Russia as a share of total fossil fuel imports, by value"
+
+
+#////////////////////////
+
+
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values + .03, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for russia_fossil_import_sum_as_share_of_global_fossil_import_sum_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+russia_fossil_import_sum_as_share_of_global_fossil_import_sum_patch_line_chart <- wrap_plots(plot_spacer(),
+                                                                                             russia_fossil_import_sum_as_share_of_global_fossil_import_sum_balkans_patch_line_chart,
+                                                                                             russia_fossil_import_sum_as_share_of_global_fossil_import_sum_eurasia_patch_line_chart,
+                                                                                             russia_fossil_import_sum_as_share_of_global_fossil_import_sum_mcp_grouping_patch_line_chart, 
+                                                                                             plot_spacer()) +
+        plot_layout(design = layout) 
+# russia_fossil_import_sum_as_share_of_global_fossil_import_sum_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(russia_fossil_import_sum_as_share_of_global_fossil_import_sum_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/russia_fossil_import_sum_as_share_of_global_fossil_import_sum_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create gdp_ppp_per_tes_balkans_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, gdp_ppp_per_tes) %>% group_by(country, year, gdp_ppp_per_tes) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, gdp_ppp_per_tes) %>% group_by(country, year, gdp_ppp_per_tes) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = gdp_ppp_per_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(gdp_ppp_per_tes)) %>% 
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, gdp_ppp_per_tes) %>% group_by(country, year, gdp_ppp_per_tes) %>% slice(1) %>%
+        ungroup() %>% mutate(values = gdp_ppp_per_tes / 1000000) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Gross domestic product (current U.S. dollars) per ktoe of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+gdp_ppp_per_tes_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 2, to = 18, by = 2), limits = c(2, 18), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "GDP per ktoe of primary energy use\n(millions of constant 2017 PPP dollars)", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 2, ymax = 18, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2, yend = 2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 4, yend = 4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 6, yend = 6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 8, yend = 8), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 10, yend = 10), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 12, yend = 12), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 14, yend = 14), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 16, yend = 16), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 18, yend = 18), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 2, yend = 2), color = "#333333", size = .5) +
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+gdp_ppp_per_tes_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create gdp_ppp_per_tes_eurasia_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, gdp_ppp_per_tes) %>% group_by(country, year, gdp_ppp_per_tes) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, gdp_ppp_per_tes) %>% group_by(country, year, gdp_ppp_per_tes) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = gdp_ppp_per_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(gdp_ppp_per_tes)) %>% 
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, gdp_ppp_per_tes) %>% group_by(country, year, gdp_ppp_per_tes) %>% slice(1) %>%
+        ungroup() %>% mutate(values = gdp_ppp_per_tes / 1000000) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Gross domestic product (current U.S. dollars) per ktoe of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+gdp_ppp_per_tes_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 2, to = 18, by = 2), limits = c(2, 18), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 2, ymax = 18, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2, yend = 2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 4, yend = 4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 6, yend = 6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 8, yend = 8), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 10, yend = 10), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 12, yend = 12), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 14, yend = 14), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 16, yend = 16), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 18, yend = 18), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 2, yend = 2), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+gdp_ppp_per_tes_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create gdp_ppp_per_tes_mcp_grouping_patch_line_chart ####
+
+# inspect
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, gdp_ppp_per_tes) %>% group_by(mcp_grouping, country, year, gdp_ppp_per_tes) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(gdp_ppp_per_tes_avg = mean(gdp_ppp_per_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, gdp_ppp_per_tes) %>% group_by(mcp_grouping, country, year, gdp_ppp_per_tes) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(gdp_ppp_per_tes_avg = mean(gdp_ppp_per_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = gdp_ppp_per_tes_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas%>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, gdp_ppp_per_tes) %>% group_by(mcp_grouping, country, year, gdp_ppp_per_tes) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(gdp_ppp_per_tes_avg = mean(gdp_ppp_per_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = gdp_ppp_per_tes_avg / 1000000) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Gross domestic product (current U.S. dollars) per ktoe of primary energy use"
+
+
+#////////////////////////
+
+
+gdp_ppp_per_tes_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 2, to = 18, by = 2), limits = c(2, 18), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 2, ymax = 18, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2, yend = 2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 4, yend = 4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 6, yend = 6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 8, yend = 8), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 10, yend = 10), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 12, yend = 12), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 14, yend = 14), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 16, yend = 16), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 18, yend = 18), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 2, yend = 2), color = "#333333", size = .5) +
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+gdp_ppp_per_tes_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for gdp_ppp_per_tes_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+gdp_ppp_per_tes_patch_line_chart <- wrap_plots(plot_spacer(),
+                                           gdp_ppp_per_tes_balkans_patch_line_chart,
+                                           gdp_ppp_per_tes_eurasia_patch_line_chart,
+                                           gdp_ppp_per_tes_mcp_grouping_patch_line_chart, 
+                             plot_spacer()) +
+        plot_layout(design = layout) 
+# gdp_ppp_per_tes_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(gdp_ppp_per_tes_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/gdp_ppp_per_tes_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create tes_kgoe_per_capita_balkans_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, tes_kgoe_per_capita) %>% group_by(country, year, tes_kgoe_per_capita) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, tes_kgoe_per_capita) %>% group_by(country, year, tes_kgoe_per_capita) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = tes_kgoe_per_capita)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(tes_kgoe_per_capita)) %>%
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, tes_kgoe_per_capita) %>% group_by(country, year, tes_kgoe_per_capita) %>% slice(1) %>%
+        ungroup() %>% mutate(values = tes_kgoe_per_capita) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Primary energy use (kgoe) per capita"
+
+
+#/////////////////////
+
+
+# create chart
+tes_kgoe_per_capita_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values + 50, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 3500, by = 500), limits = c(0, 3500), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Primary energy use (kgoe) per capita", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 3500, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 500, yend = 500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1000, yend = 1000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1500, yend = 1500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2000, yend = 2000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2500, yend = 2500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 3000, yend = 3000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 3500, yend = 3500), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+tes_kgoe_per_capita_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create tes_kgoe_per_capita_eurasia_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, tes_kgoe_per_capita) %>% group_by(country, year, tes_kgoe_per_capita) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, tes_kgoe_per_capita) %>% group_by(country, year, tes_kgoe_per_capita) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = tes_kgoe_per_capita)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(tes_kgoe_per_capita)) %>%
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, tes_kgoe_per_capita) %>% group_by(country, year, tes_kgoe_per_capita) %>% slice(1) %>%
+        ungroup() %>% mutate(values = tes_kgoe_per_capita) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Primary energy use (kgoe) per capita"
+
+
+#/////////////////////
+
+
+# create chart
+tes_kgoe_per_capita_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values + 50, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 3500, by = 500), limits = c(0, 3500), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 3500, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 500, yend = 500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1000, yend = 1000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1500, yend = 1500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2000, yend = 2000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2500, yend = 2500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 3000, yend = 3000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 3500, yend = 3500), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+tes_kgoe_per_capita_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create tes_kgoe_per_capita_mcp_grouping_patch_line_chart ####
+
+# inspect
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, tes_kgoe_per_capita) %>% group_by(mcp_grouping, country, year, tes_kgoe_per_capita) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(tes_kgoe_per_capita_avg = mean(tes_kgoe_per_capita)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, tes_kgoe_per_capita) %>% group_by(mcp_grouping, country, year, tes_kgoe_per_capita) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(tes_kgoe_per_capita_avg = mean(tes_kgoe_per_capita)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = tes_kgoe_per_capita_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, tes_kgoe_per_capita) %>% group_by(mcp_grouping, country, year, tes_kgoe_per_capita) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(tes_kgoe_per_capita_avg = mean(tes_kgoe_per_capita)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = tes_kgoe_per_capita_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Primary energy use (kgoe) per capita"
+
+
+#////////////////////////
+
+
+tes_kgoe_per_capita_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 3500, by = 500), limits = c(0, 3500), expand = c(0, 0),
+                           labels = comma_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 3500, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 500, yend = 500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1000, yend = 1000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 1500, yend = 1500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2000, yend = 2000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 2500, yend = 2500), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 3000, yend = 3000), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = 3500, yend = 3500), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+tes_kgoe_per_capita_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for tes_kgoe_per_capita_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+tes_kgoe_per_capita_patch_line_chart <- wrap_plots(plot_spacer(),
+                                               tes_kgoe_per_capita_balkans_patch_line_chart,
+                                               tes_kgoe_per_capita_eurasia_patch_line_chart,
+                                               tes_kgoe_per_capita_mcp_grouping_patch_line_chart, 
+                                               plot_spacer()) +
+        plot_layout(design = layout) 
+# tes_kgoe_per_capita_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(tes_kgoe_per_capita_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/tes_kgoe_per_capita_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create global_fossil_import_as_share_of_gdp_current_balkans_patch_line_chart ####
+
+# note there was a global rise in crude oil prices peaking in 2012, which shows up in the charts
+# https://www.eia.gov/todayinenergy/detail.php?id=7630
+
+# inspect
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, fuel_type, global_fuel_type_import_sum_adj, 
+               global_fossil_import_sum, gdp_current, global_fossil_import_as_share_of_gdp_current) 
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = global_fossil_import_as_share_of_gdp_current)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
+        ungroup() %>% mutate(values = global_fossil_import_as_share_of_gdp_current) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Fossil fuel imports as a share of GDP (current dollars)"
+
+
+#/////////////////////
+
+
+# create chart
+global_fossil_import_as_share_of_gdp_current_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .25, by = .05), limits = c(0, .25), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = .25, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .05, yend = .05), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .1, yend = .1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .15, yend = .15), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .25, yend = .25), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+global_fossil_import_as_share_of_gdp_current_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create global_fossil_import_as_share_of_gdp_current_eurasia_patch_line_chart ####
+
+# inspect
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
+        ungroup() %>% print(n = nrow(.))
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = global_fossil_import_as_share_of_gdp_current)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# insepct for report
+atlas %>% filter(country == "Belarus") %>%  
+        select(country, year, fuel_type, global_fuel_type_import_sum_adj, global_fossil_import_sum, 
+               gdp_current, global_fossil_import_as_share_of_gdp_current) %>% print(n = nrow(.))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, global_fossil_import_as_share_of_gdp_current) %>% group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
+        ungroup() %>% mutate(values = global_fossil_import_as_share_of_gdp_current) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Fossil fuel imports as a share of GDP (current dollars)"
+
+
+#/////////////////////
+
+
+# create chart
+global_fossil_import_as_share_of_gdp_current_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .25, by = .05), limits = c(0, .25), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = .25, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .05, yend = .05), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .1, yend = .1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .15, yend = .15), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .25, yend = .25), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+global_fossil_import_as_share_of_gdp_current_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create global_fossil_import_as_share_of_gdp_current_mcp_grouping_patch_line_chart ####
+
+# inspect
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(mcp_grouping, country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(global_fossil_import_as_share_of_gdp_current_avg = mean(global_fossil_import_as_share_of_gdp_current)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        group_by(mcp_grouping, country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(global_fossil_import_as_share_of_gdp_current_avg = mean(global_fossil_import_as_share_of_gdp_current)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = global_fossil_import_as_share_of_gdp_current_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+# inspect for report
+chart_data %>% group_by(mcp_grouping) %>% summarize(mean = mean(global_fossil_import_as_share_of_gdp_current_avg)) %>%
+        ungroup() %>% arrange(desc(mean))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- atlas %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, global_fossil_import_as_share_of_gdp_current) %>% group_by(mcp_grouping, country, year, global_fossil_import_as_share_of_gdp_current) %>% 
+        slice(1) %>%
+        ungroup() %>% group_by(mcp_grouping, year) %>% 
+        mutate(global_fossil_import_as_share_of_gdp_current_avg = mean(global_fossil_import_as_share_of_gdp_current)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = global_fossil_import_as_share_of_gdp_current_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Fossil fuel imports as a share of GDP (current dollars)"
+
+
+#////////////////////////
+
+
+global_fossil_import_as_share_of_gdp_current_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values - .01, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .25, by = .05), limits = c(0, .25), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = .25, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .05, yend = .05), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .1, yend = .1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .15, yend = .15), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .25, yend = .25), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+global_fossil_import_as_share_of_gdp_current_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for global_fossil_import_as_share_of_gdp_current_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+global_fossil_import_as_share_of_gdp_current_patch_line_chart <- wrap_plots(plot_spacer(),
+                                                                            global_fossil_import_as_share_of_gdp_current_balkans_patch_line_chart,
+                                                                            global_fossil_import_as_share_of_gdp_current_eurasia_patch_line_chart,
+                                                                            global_fossil_import_as_share_of_gdp_current_mcp_grouping_patch_line_chart, 
+                                                                            plot_spacer()) +
+        plot_layout(design = layout) 
+# global_fossil_import_as_share_of_gdp_current_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(global_fossil_import_as_share_of_gdp_current_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/global_fossil_import_as_share_of_gdp_current_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create avg_fossil_fuel_import_price_facet_line_chart ####
+
+# note this chart was not made/used because the data quality seemed to have a lot of variability and could not be validated``
+
+# inspect imports by value
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, fuel_type, global_fuel_type_import_sum, global_fuel_type_import_sum_adj)
+
+# inspect imports by ktoe
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches(match = "^Imports_"), -Imports_total) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "imported_ktoe") %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var)
+
+# inspect combined atlas and iea data
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, fuel_type, global_fuel_type_import_sum, global_fuel_type_import_sum_adj) %>%
+        left_join(., iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                            (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+                          select(country, year, matches(match = "^Imports_"), -Imports_total) %>%
+                          pivot_longer(cols = -c(country, year), names_to = "var", values_to = "imported_ktoe") %>%
+                          mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                                       str_detect(string = var, pattern = "coal") ~ "Coal",
+                                                       str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                                       str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                                       str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                                       str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                                       str_detect(string = var, pattern = "heat") ~ "Heat",
+                                                       str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                                       str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                                       str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+                          select(-var), by = c("country", "year", "fuel_type")) %>%
+        mutate(dollars_per_imported_ktoe = global_fuel_type_import_sum_adj / imported_ktoe) %>%
+        filter(dollars_per_imported_ktoe > 0, dollars_per_imported_ktoe != Inf, dollars_per_imported_ktoe < 1000000) %>%
+        ggplot(data = ., mapping = aes(x = fuel_type, y = dollars_per_imported_ktoe)) + geom_boxplot()
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5588,7 +11085,7 @@ emf(file = filename)
 print(albania_energy_exports_imports_production_tes_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/albania_energy_exports_imports_production_tes_line_chart.docx")
@@ -5769,7 +11266,7 @@ emf(file = filename)
 print(albania_production_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/albania_production_by_fuel_type_line_chart.docx")
@@ -5948,7 +11445,7 @@ emf(file = filename)
 print(albania_imports_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/albania_imports_by_fuel_type_line_chart.docx")
@@ -6129,7 +11626,7 @@ emf(file = filename)
 print(albania_exports_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/albania_exports_by_fuel_type_line_chart.docx")
@@ -6261,7 +11758,7 @@ emf(file = filename)
 print(albania_net_imports_and_production_as_share_of_tes_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/albania_net_imports_and_production_as_share_of_tes_line_chart.docx")
@@ -6402,7 +11899,7 @@ emf(file = filename)
 print(bih_energy_exports_imports_production_tes_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/bih_energy_exports_imports_production_tes_line_chart.docx")
@@ -6583,7 +12080,7 @@ emf(file = filename)
 print(bih_production_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/bih_production_by_fuel_type_line_chart.docx")
@@ -6715,7 +12212,7 @@ emf(file = filename)
 print(bih_net_imports_and_production_as_share_of_tes_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/bih_net_imports_and_production_as_share_of_tes_line_chart.docx")
@@ -6896,7 +12393,7 @@ emf(file = filename)
 print(bih_exports_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/bih_exports_by_fuel_type_line_chart.docx")
@@ -7225,7 +12722,7 @@ emf(file = filename)
 print(armenia_production_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/armenia_production_by_fuel_type_line_chart.docx")
@@ -7369,7 +12866,7 @@ emf(file = filename)
 print(armenia_energy_exports_imports_production_tes_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/armenia_energy_exports_imports_production_tes_line_chart.docx")
@@ -7548,7 +13045,7 @@ emf(file = filename)
 print(armenia_imports_by_fuel_type_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/armenia_imports_by_fuel_type_line_chart.docx")
@@ -7573,8 +13070,12 @@ read_docx() %>%
 # https://data.oecd.org/energy/primary-energy-supply.htm
 # https://www.iea.org/data-and-statistics/data-tables?country=WORLD
 # https://www.eia.gov/totalenergy/data/annual/index.php 
+# http://energyatlas.iea.org/#!/tellmap/-297203538/4
 # https://www.iea.org/countries/russia
 # iea highlights data: https://www.iea.org/reports/world-energy-balances-overview
+# IEA explainer on energy balance: https://www.iea.org/commentaries/understanding-and-using-the-energy-balance
+# above explainer on energy balance includes reference to "Total Primary Energy Supply", 
+# instead of "TES" acronym on balance sheet
 
 # IEA albania in 2014: 1905 ktoe imports; 2132 ktoe total final consumption; 2132 - 1905 = 227 ktoe imports or inventory decrease??
 # imports as share of total final consumption: 1905 / 2132 = .89
@@ -7682,8 +13183,7 @@ iea_highlights %>% filter(country == "Australia", year > 2015)
 
 
 # load iea data ####
-iea <- dir_ls("data/iea") %>% tibble(path = as.character(.)) %>% select(path) %>% 
-        filter(str_detect(string = path, pattern = "data/iea/iea_")) %>% pull(path) %>%
+iea <- dir_ls("data/iea/scraped_data") %>% tibble(path = as.character(.)) %>% select(path) %>% pull(path) %>%
         map(.x = ., .f = ~ read_csv(file = .x, na = c("", "NA", "nan"))) %>% bind_rows()
 
 # inspect
@@ -8101,6 +13601,326 @@ iea %>% count(mcp_grouping_aggregate_flag)
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add iea_natural_gas to iea ####
+
+
+# load iea_energy_balance_inspect_subset
+iea_energy_balance_inspect_subset <- read_excel(path = "data/iea/iea_energy_balance_subset_by_ktoe_and_tj_for_inspection.xlsx",
+                                                sheet = "Sheet1") %>% 
+        rename(country = COUNTRY, flow = FLOW, year = TIME, unit = UNIT) %>%
+        fill(country, .direction = "down") %>%
+        fill(unit, .direction = "down") %>%
+        fill(year, .direction = "down") %>%
+        select(country, year, unit, flow, values)
+
+# inspect
+iea_energy_balance_inspect_subset
+iea_energy_balance_inspect_subset %>% glimpse()
+iea_energy_balance_inspect_subset %>% count(country, year, unit, flow) %>% skim(n)
+iea_energy_balance_inspect_subset %>% count(unit)
+
+
+#/////////////////
+
+
+# load iea_natural_gas_2009_through_2014
+iea_natural_gas_2009_through_2014 <- read_excel(path = "data/iea/iea_natural_gas_imports_by_origin_2009_through_2014.xlsx",
+                                                sheet = "Sheet1") 
+
+# inspect
+iea_natural_gas_2009_through_2014
+iea_natural_gas_2009_through_2014 %>% glimpse()
+iea_natural_gas_2009_through_2014 %>% nrow() # 7425
+iea_natural_gas_2009_through_2014 %>% ncol() # 9
+iea_natural_gas_2009_through_2014 %>% distinct(COUNTRY) %>% print(n = nrow(.)) # 46, but 1 is NA, so 45 countries
+
+
+#/////////////////
+
+
+# load iea_natural_gas_2015_through_2019
+iea_natural_gas_2015_through_2019 <- read_excel(path = "data/iea/iea_natural_gas_imports_by_origin_2015_through_2019.xlsx",
+                                                sheet = "Sheet1")
+
+# inspect
+iea_natural_gas_2015_through_2019
+iea_natural_gas_2015_through_2019 %>% glimpse()
+iea_natural_gas_2015_through_2019 %>% nrow() # 7425
+iea_natural_gas_2015_through_2019 %>% ncol() # 8
+iea_natural_gas_2015_through_2019 %>% distinct(COUNTRY) %>% print(n = nrow(.)) # 46, but 1 is NA, so 45 countries
+
+
+#//////////////////
+
+
+# note conversion of terajoules to ktoe is done by:
+# 1) multiplying TJ by 1000 to get GJ, 
+# 2) dividing GJ by 41.868 to get toe,
+# 3) dividing toe by 1000 to get ktoe
+# iea, uk gov, oecd, and wikipedia say 1 toe = 41.868 GJ
+# iea converter: https://www.iea.org/reports/unit-converter-and-glossary
+# oecd: https://stats.oecd.org/glossary/detail.asp?ID=4109
+# uk: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/736148/DUKES_2018.pdf
+# uk report says: "1 tonne of oil equivalent = 107 kilocalories
+# = 396.83 therms
+# = 41.868 Gigajoules (GJ)
+# = 11,630 Kilowatt hours (kWh)"
+# https://en.wikipedia.org/wiki/Tonne_of_oil_equivalent
+# oddly, the UN cites a slightly different "historic" conversion rate of 1 ktoe = 42.6216 TJ
+# un: https://unstats.un.org/unsd/energy/balance/conversion.htm
+
+# wikipedia and kylesconvert show sthat 1 TJ = 1000 GJ
+# https://en.wikipedia.org/wiki/Metric_prefix
+# http://www.kylesconverter.com/energy,-work,-and-heat/terajoules-to-gigajoules
+# wikipedia, unitconverters, and unitjuggler show 1000 toe = 1 ktoe
+# https://www.unitconverters.net/weight-and-mass/tonne-to-kiloton-metric.htm
+# https://en.wikipedia.org/wiki/Tonne_of_oil_equivalent
+# http://www.kylesconverter.com/mass/tonnes-to-kilotonne
+# https://www.unitjuggler.com/convert-energy-from-ktoe-to-toe.html
+
+
+#///////////////////
+
+
+# clean iea_natural_gas_2009_through_2014
+iea_natural_gas_2009_through_2014 <- iea_natural_gas_2009_through_2014 %>%
+        rename(country = COUNTRY, import_origin = `IMPORT ORIGINS`) %>%
+        select(-PRODUCT) %>%
+        fill(country, .direction = "down") %>% 
+        pivot_longer(cols = -c(country, import_origin), names_to = "year", values_to = "natural_gas_tj_imports") %>%
+        filter(!(country %in% c("Non-specified/Other", "Total Imports (Trade)")),
+               !(import_origin %in% c("Other Africa", "Other Asia and Pacific", "Other Europe",
+                                      "Other Former Soviet Union", "Other Near and Middle East",
+                                      "Other Non-OECD Americas"))) %>%
+        mutate(import_origin = case_when(import_origin == "Non-specified/Other" ~ "not_specified",
+                                         import_origin == "Total Imports (Trade)" ~ "total",
+                                         TRUE ~ import_origin)) %>% 
+        pivot_wider(id_cols = c(country, year), names_from = import_origin, values_from = natural_gas_tj_imports) %>%
+        pivot_longer(cols = -c(country, year, total), names_to = "import_origin", 
+                     values_to = "natural_gas_tj_imports") %>%
+        rename(natural_gas_tj_imports_total = total) %>%
+        select(country, year, import_origin, natural_gas_tj_imports, natural_gas_tj_imports_total) %>%
+        mutate(natural_gas_ktoe_imports = ((natural_gas_tj_imports * 1000) / 41.868) / 1000,
+               natural_gas_ktoe_imports_total = ((natural_gas_tj_imports_total * 1000) / 41.868) / 1000) %>%
+        group_by(country, year) %>% 
+        mutate(natural_gas_tj_imports_total_by_hand = sum(natural_gas_tj_imports),
+               natural_gas_ktoe_imports_total_by_hand = sum(natural_gas_ktoe_imports)) %>%
+        ungroup() 
+
+
+#////////////////////
+
+
+# inspect
+iea_natural_gas_2009_through_2014
+iea_natural_gas_2009_through_2014 %>% glimpse()
+iea_natural_gas_2009_through_2014 %>% nrow() # 42660
+iea_natural_gas_2009_through_2014 %>% ncol() # 9
+
+iea_natural_gas_2009_through_2014 %>% distinct(year)
+iea_natural_gas_2009_through_2014 %>% distinct(country) %>% print(n = nrow(.)) # 45
+
+# note natural_gas_tj_imports_total_by_hand (and by extension then natural_gas_ktoe_imports_total_by_hand) equals the 
+# natural_gas_tj_imports_total variable provided in iea raw data, so the total variable does sum the country-origin records
+iea_natural_gas_2009_through_2014 %>% filter(natural_gas_ktoe_imports > 0)
+iea_natural_gas_2009_through_2014 %>% filter(country == "Austria", year == 2009)
+
+# note there is a difference between ktoe natural gas imports in iea natural gas download, vs 
+# the iea energy balance data (scraped & downloaded energy balance data both match)
+# note that the conversion of TJ to ktoe is not the issue, since the downloaded energy balance data includes both TJ and ktoe
+# and running the conversion on them yields the corresponding value correctly
+# eg, see austria's 2009 total natural gas imports of 407906 TJ per iea_natural_gas download, which is 9743 ktoe
+((407906 * 1000) / 41.868) / 1000 # 9742.6 ktoe
+# but in the energy balance download/scrape, austria's 2009 total natural gas imports are 
+iea_energy_balance_inspect_subset %>% filter(country == "Austria", year == 2009, flow == "Imports")
+((367115 * 1000) / 41.868) / 1000 # 8768.3 ktoe
+# it's not clear why the difference, but it seems to be a broad pattern
+# the iea_natural_gas download docs cite that imports include "Data are shown for total trade, pipeline and LNG",
+# though that seems expected, and not some kind of odd deviation, and in any case you'd expect IEA to use the same methodology
+# so that their natural gas imports matched in the natural gas download and the energy balance download/scrape
+# will further inspect the variation once iea_natural_gas download is added to iea scraped dataset
+# also, since the main takeaway from iea_natural_gas download will be import share from russia, the difference in levels
+# might not have a huge difference in shares; but will check russia shares against alternative method using atlas data too
+
+# lastly, note that the iea_natural_gas download docs list tons of specific exceptions and caveats about data quality for
+# specific countries, like countries not providing info on import origin for variety of reasons, only last country of transit
+# so none of this data is perfect, and there's not easy way to estimate how much measurement error there is for
+# which countries/time periods, so there's a hefty caveat on all of it
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# clean iea_natural_gas_2015_through_2019
+iea_natural_gas_2015_through_2019 <- iea_natural_gas_2015_through_2019 %>%
+        rename(country = COUNTRY, import_origin = `IMPORT ORIGINS`) %>%
+        select(-PRODUCT) %>%
+        fill(country, .direction = "down") %>% 
+        pivot_longer(cols = -c(country, import_origin), names_to = "year", values_to = "natural_gas_tj_imports") %>%
+        filter(!(country %in% c("Non-specified/Other", "Total Imports (Trade)")),
+               !(import_origin %in% c("Other Africa", "Other Asia and Pacific", "Other Europe",
+                                      "Other Former Soviet Union", "Other Near and Middle East",
+                                      "Other Non-OECD Americas"))) %>%
+        mutate(import_origin = case_when(import_origin == "Non-specified/Other" ~ "not_specified",
+                                         import_origin == "Total Imports (Trade)" ~ "total",
+                                         TRUE ~ import_origin)) %>% 
+        pivot_wider(id_cols = c(country, year), names_from = import_origin, values_from = natural_gas_tj_imports) %>%
+        pivot_longer(cols = -c(country, year, total), names_to = "import_origin", 
+                     values_to = "natural_gas_tj_imports") %>%
+        rename(natural_gas_tj_imports_total = total) %>%
+        select(country, year, import_origin, natural_gas_tj_imports, natural_gas_tj_imports_total) %>%
+        mutate(natural_gas_ktoe_imports = ((natural_gas_tj_imports * 1000) / 41.868) / 1000,
+               natural_gas_ktoe_imports_total = ((natural_gas_tj_imports_total * 1000) / 41.868) / 1000) %>%
+        group_by(country, year) %>% 
+        mutate(natural_gas_tj_imports_total_by_hand = sum(natural_gas_tj_imports),
+               natural_gas_ktoe_imports_total_by_hand = sum(natural_gas_ktoe_imports)) %>%
+        ungroup() 
+
+
+#////////////////////
+
+
+# inspect
+iea_natural_gas_2015_through_2019
+iea_natural_gas_2015_through_2019 %>% glimpse()
+iea_natural_gas_2015_through_2019 %>% nrow() # 35550
+iea_natural_gas_2015_through_2019 %>% ncol() # 9
+
+iea_natural_gas_2015_through_2019 %>% distinct(year)
+iea_natural_gas_2015_through_2019 %>% distinct(country) %>% print(n = nrow(.)) # 45
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine to create iea_natural_gas
+iea_natural_gas <- iea_natural_gas_2009_through_2014 %>% bind_rows(., iea_natural_gas_2015_through_2019) %>%
+        select(country, year, import_origin, natural_gas_tj_imports, natural_gas_tj_imports_total,
+               natural_gas_ktoe_imports, natural_gas_ktoe_imports_total) %>% 
+        mutate(year = as.numeric(year)) %>% 
+        filter(import_origin %in% c("Russia", "not_specified"), year < 2019) %>%
+        pivot_longer(cols = -c(country, year, import_origin), names_to = "var", values_to = "values") %>%
+        mutate(var = case_when(var %in% c("natural_gas_tj_imports_total", "natural_gas_ktoe_imports_total") ~ var,
+                               import_origin == "Russia" ~ str_c(var, import_origin, sep = "_"),
+                               import_origin == "not_specified" ~ str_c(var, import_origin, sep = "_"))) %>%
+        select(-import_origin) %>% 
+        group_by(country, year, var) %>% slice(1) %>%
+        ungroup() %>%
+        pivot_wider(id_cols = c(country, year), names_from = var, values_from = values) %>%
+        mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH",
+                                       country == "Czech Republic" ~ "Czechia",
+                                       country == "Republic of Moldova" ~ "Moldova",
+                                       country == "Republic of North Macedonia" ~ "N. Macedonia",
+                                       country == "Slovak Republic" ~ "Slovakia",
+                                       country == "United States" ~ "U.S.",
+                                       TRUE ~ country)) 
+
+
+#/////////////////////
+
+
+# inspect
+iea_natural_gas
+iea_natural_gas %>% glimpse()
+iea_natural_gas %>% nrow() # 450
+iea_natural_gas %>% ncol() # 8
+
+iea_natural_gas %>% skim()
+iea_natural_gas %>% distinct(country) %>% nrow() # 45
+iea_natural_gas %>% distinct(year) %>% nrow() # 10
+
+# note that most countries have zero natural_gas_ktoe_imports_not_specified_pct (75 percentile is < 1%)
+# it averages 8% though, because for a few countries/years it's as high as 1 (incl. georgia)
+# of those with > 1%, most are EU-15 and CARs, only georgia is from E&E
+iea_natural_gas %>% mutate(natural_gas_ktoe_imports_not_specified_pct = natural_gas_ktoe_imports_not_specified / 
+                                   natural_gas_ktoe_imports_total) %>%
+        # arrange(desc(natural_gas_ktoe_imports_not_specified_pct)) %>% select(country, year, contains("ktoe")) %>%
+        # print(n = 100)
+        filter(country == "Georgia") %>% select(country, year, contains("ktoe")) 
+        # skim(natural_gas_ktoe_imports_not_specified_pct)
+        # ggplot(data = ., mapping = aes(x = year, y = natural_gas_ktoe_imports_not_specified_pct, color = country)) +
+        # geom_line()
+        # ggplot(data = ., mapping = aes(x = natural_gas_ktoe_imports_not_specified_pct)) + geom_histogram()
+        # ggplot(data = ., mapping = aes(x = natural_gas_ktoe_imports_not_specified_pct)) + stat_ecdf()
+
+# for georgia, it's natural gas was imported from azerbaijan mostly from 2009 through 2012, then went 100% to unspecified
+iea_natural_gas_2009_through_2014 %>% bind_rows(., iea_natural_gas_2015_through_2019) %>%
+        select(country, year, import_origin, natural_gas_tj_imports, natural_gas_tj_imports_total,
+               natural_gas_ktoe_imports, natural_gas_ktoe_imports_total) %>%
+        filter(country == "Georgia", natural_gas_ktoe_imports > 0)
+
+# check country names for join
+# note that iea_natural_gas includes the EU-15 countries, but iea does not, so they won't be joined
+# the share_of_imports_from_russia charts don't include EU, so it's not an issue. and EU seems to have significant
+# data quality issues in terms of natural gas import origins 
+# see germany with very high share of imports from ANS unspecified - 27B of 36B in natural gas (75%) for 2018
+iea_natural_gas %>% distinct(country) %>% anti_join(., iea %>% distinct(country), by = "country") %>% print(n = nrow(.))
+iea %>% distinct(country) %>% anti_join(., iea_natural_gas %>% distinct(country), by = "country")
+
+
+#////////////////////////
+
+
+# read/write final iea_natural_gas ####
+# iea_natural_gas %>% write_csv(path = "data/iea/iea_natural_gas_20210226.csv")
+iea_natural_gas <- read_csv(file = "data/iea/iea_natural_gas_20210226.csv")
+
+# inspect
+iea_natural_gas
+iea_natural_gas %>% glimpse()
+iea_natural_gas %>% nrow() # 450
+iea_natural_gas %>% ncol() # 8
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add iea_natural_gas to iea ####
+iea <- iea_natural_gas %>% left_join(iea, ., by = c("country", "year")) 
+
+# inspect
+iea
+iea %>% glimpse()
+iea %>% nrow() # 350
+iea %>% ncol() # 163
+
+# note there natural_gas variables are missing for the mcp_groupings, which is fine because those are not used anymore
+iea %>% select(matches("^natural_gas_tj_|natural_gas_ktoe")) %>% skim()
+iea %>% filter(is.na(natural_gas_tj_imports_total)) %>% select(country, year, matches("^natural_gas_tj_|natural_gas_ktoe"))
+iea %>% filter(is.na(natural_gas_tj_imports_total)) %>% count(country)
+
+# note it's very odd that pct_diff_btw_imports_natural_gas_total is almost uniformly 11%???, 
+# the energy balance is higher in every case where energy balance imports of natural gas > 0 (except uzbekistan in 2009)
+# seems to strongly indicate a common issue, like conversion calculation, 
+# but the calculation checked out exactly on the energy balance download
+# or maybe the exclusion of a type of natural gas from the energy balance?
+# note the iea_natural_gas download calls it "Data are shown for total trade, pipeline and LNG"
+# but it seems odd iea would exclude something in calculation of energy balance, and include it elsewhere
+# i wonder if they padded the iea_natural_gas downloads with an estimated 11% to account for some avg category they missed??
+# either way, it seems like the russia_share should be relatively unaffected then, since the variables track each other 
+# consistently, and are just a constant 11% different
+# can ignore
+iea %>% select(country, year, Imports_natural_gas, natural_gas_ktoe_imports_total) %>%
+        mutate(diff_btw_imports_natural_gas_total = Imports_natural_gas - natural_gas_ktoe_imports_total,
+                pct_diff_btw_imports_natural_gas_total = (Imports_natural_gas - natural_gas_ktoe_imports_total) / 
+                       Imports_natural_gas) %>%
+        # arrange(diff_btw_imports_natural_gas_total) %>% print(n = 100)
+        # arrange(desc(diff_btw_imports_natural_gas_total)) %>% print(n = 100)
+        # arrange(pct_diff_btw_imports_natural_gas_total) %>% print(n = 100)
+        # arrange(desc(pct_diff_btw_imports_natural_gas_total)) %>% print(n = 100)
+        # skim(diff_btw_imports_natural_gas_total, pct_diff_btw_imports_natural_gas_total)
+        # ggplot(data = ., mapping = aes(x = year, y = diff_btw_imports_natural_gas_total, color = country)) +
+        ggplot(data = ., mapping = aes(x = year, y = pct_diff_btw_imports_natural_gas_total, color = country)) +
+        geom_line()
+        
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
 
 
 # write/read final iea data ####
@@ -8110,8 +13930,186 @@ iea <- read_csv(file = "data/iea/iea_20201218.csv")
 # inspect
 iea
 iea %>% glimpse()
-iea %>% nrow()
-iea %>% ncol()
+iea %>% nrow() # 350
+iea %>% ncol() # 163
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_supplement ####
+
+# note that iea_supplement is used to create charts for 
+# sector share_of_electricity_generation and energy type tfc_as_share_of_tfc
+iea_raw <- dir_ls("data/iea/scraped_data") %>% tibble(path = as.character(.)) %>% select(path) %>% pull(path) %>%
+        map(.x = ., .f = ~ read_csv(file = .x, na = c("", "NA", "nan"))) %>% bind_rows()
+
+# inspect
+iea_raw 
+iea_raw  %>% glimpse()
+iea_raw  %>% nrow() # 13860
+iea_raw  %>% distinct(country) %>% print(n = nrow(.))
+iea_raw  %>% distinct(country) %>% nrow() # 45
+iea_raw %>% count(category) %>% print(n = nrow(.))
+ee_country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                                    "EU-15", "U.S.", "Russia")) %>% nrow() # 45
+iea_raw %>% skim()
+
+
+#///////////////////////
+
+
+# clean iea_supplement, drop unused categories, convert NA to 0 for energy ktoe variables, join with ee_country_crosswalk,
+iea_supplement <- iea_raw %>% rename(biofuels_and_waste = "Biofuels and waste", coal = Coal, crude_oil = "Crude oil",
+                                            electricity = Electricity, heat = Heat, hydro = Hydro, natural_gas = "Natural gas",
+                                            nuclear = Nuclear, oil_products = "Oil products", total = Total, wind_solar_etc = "Wind, solar, etc.") %>%
+        filter(category %in% c("Electricity plants", "Total final consumption", "Industry",
+                               "Transport", "Residential", "Commercial and public services",
+                               "Agriculture / forestry", "Fishing", "Non-specified", "Non-energy use")) %>%
+        mutate(across(.cols = c(biofuels_and_waste, coal, crude_oil, electricity, heat, hydro, natural_gas,
+                                nuclear, oil_products, total, wind_solar_etc),
+                      .fns = ~ ifelse(is.na(.x), 0, .x))) %>%
+        mutate(country = case_when(country == "BOSNIAHERZ" ~ "Bosnia and Herzegovina",
+                                   country == "CZECH" ~ "Czechia",
+                                   country == "NORTHMACED" ~ "North Macedonia",
+                                   country == "TURKMENIST" ~ "Turkmenistan",
+                                   country == "LUXEMBOU" ~ "Luxembourg",
+                                   country == "NETHLAND" ~ "Netherlands",
+                                   country == "UK" ~ "United Kingdom",
+                                   country == "USA" ~ "United States",
+                                   TRUE ~ str_to_title(string = country)),
+               measurement_units = "ktoe") %>%
+        select(country, year, category, measurement_units, everything()) %>%
+        left_join(., ee_country_crosswalk, by = "country")
+
+# inspect
+iea_supplement
+iea_supplement %>% glimpse()
+iea_supplement %>% nrow() # 4950
+iea_supplement %>% ncol() # 23
+iea_supplement %>% distinct(country, year) # 495
+iea_supplement %>% distinct(year) # 11
+iea_supplement %>% distinct(country) # 45; 45*11 = 495
+iea_supplement %>% count(category) # 10
+
+
+#//////////////////
+
+
+# reshape iea to unite category and fuel type vars, giving a wide record per country/year
+iea_supplement <- iea_supplement %>% pivot_longer(cols = -c(country, year, category, measurement_units, world_bank_region,
+                                                            iso_3_alpha, iso_3_numeric, ee_status, mcp_grouping, mcp_subgroup,
+                                                            region, sub_region), names_to = "var", values_to = "value") %>%
+        unite(col = category_var, category, var) %>% 
+        pivot_wider(id_cols = -c(category_var, value), names_from = category_var, values_from = value)
+
+# inspect
+iea_supplement
+iea_supplement %>% glimpse()
+iea_supplement %>% nrow() # 495
+iea_supplement %>% ncol() # 121
+iea_supplement %>% distinct(year) # 11
+iea_supplement %>% distinct(country) # 45; 45*11 = 495
+
+
+#/////////////////////
+
+
+# filter iea data down to < 2019, edit long country names
+iea_supplement <- iea_supplement %>% filter(year < 2019) %>% 
+        mutate(country = case_when(country == "Bosnia and Herzegovina" ~ "BiH",
+                                   country == "North Macedonia" ~ "N. Macedonia",
+                                   country == "United States" ~ "U.S.",
+                                   TRUE ~ country))
+# inspect
+iea_supplement
+iea_supplement %>% glimpse()
+iea_supplement %>% nrow() # 450
+iea_supplement %>% ncol() # 121
+iea_supplement %>% distinct(year) # 10
+iea_supplement %>% distinct(country) # 45; 45*10 = 450
+
+
+#//////////////////////
+
+
+# add each sector's tfc as share of total tfc
+# add each energy type's share of electricity generation
+iea_supplement <- iea_supplement %>% mutate(industry_tfc_as_share_of_tfc = Industry_total / `Total final consumption_total`,
+                                            transport_tfc_as_share_of_tfc = Transport_total / `Total final consumption_total`,
+                                            residential_tfc_as_share_of_tfc = Residential_total / `Total final consumption_total`,
+                                            commercial_and_public_services_tfc_as_share_of_tfc = `Commercial and public services_total` / `Total final consumption_total`,
+                                            agriculture_forestry_tfc_as_share_of_tfc = `Agriculture / forestry_total` / `Total final consumption_total`,
+                                            fishing_tfc_as_share_of_tfc = Fishing_total / `Total final consumption_total`,
+                                            non_specified_tfc_as_share_of_tfc = `Non-specified_total` / `Total final consumption_total`,
+                                            non_energy_use_tfc_as_share_of_tfc = `Non-energy use_total` / `Total final consumption_total`) %>%
+        mutate(sum_across_sectors_tfc_as_share_of_tfc = (industry_tfc_as_share_of_tfc + transport_tfc_as_share_of_tfc +
+                                                                 residential_tfc_as_share_of_tfc + commercial_and_public_services_tfc_as_share_of_tfc +
+                                                                 agriculture_forestry_tfc_as_share_of_tfc + fishing_tfc_as_share_of_tfc +
+                                                                 non_specified_tfc_as_share_of_tfc + non_energy_use_tfc_as_share_of_tfc)) %>%
+        rowwise() %>%
+        mutate(sum_across_energy_types_electricity_generation = sum(c_across(cols = c(matches("Electricity plants"),
+                                                                                      -c(`Electricity plants_electricity`, `Electricity plants_total`))))) %>%
+        ungroup() %>%
+        mutate(biofuels_and_waste_share_of_electricity_generation = `Electricity plants_biofuels_and_waste` / 
+                       sum_across_energy_types_electricity_generation,
+               coal_share_of_electricity_generation = `Electricity plants_coal` / 
+                       sum_across_energy_types_electricity_generation,
+               crude_oil_share_of_electricity_generation = `Electricity plants_crude_oil` / 
+                       sum_across_energy_types_electricity_generation,
+               heat_share_of_electricity_generation = `Electricity plants_heat` / 
+                       sum_across_energy_types_electricity_generation,
+               hydro_share_of_electricity_generation = `Electricity plants_hydro` / 
+                       sum_across_energy_types_electricity_generation,
+               natural_gas_share_of_electricity_generation = `Electricity plants_natural_gas` / 
+                       sum_across_energy_types_electricity_generation,
+               nuclear_share_of_electricity_generation = `Electricity plants_nuclear` / 
+                       sum_across_energy_types_electricity_generation,
+               oil_products_share_of_electricity_generation = `Electricity plants_oil_products` / 
+                       sum_across_energy_types_electricity_generation,
+               wind_solar_etc_share_of_electricity_generation = `Electricity plants_wind_solar_etc` / 
+                       sum_across_energy_types_electricity_generation) %>%
+        # note that turkmenistan had zero electricity generation, so got NaN when trying get share of elect. generation (0/0)
+        mutate(across(.cols = contains("share_of_electricity_generation"), 
+                      .fns = ~ ifelse(is.nan(.x), 0, .x))) %>%
+        mutate(sum_across_energy_types_as_share_of_electricity_generation = biofuels_and_waste_share_of_electricity_generation + 
+                       coal_share_of_electricity_generation + 
+                       crude_oil_share_of_electricity_generation +
+                       heat_share_of_electricity_generation +
+                       hydro_share_of_electricity_generation +
+                       natural_gas_share_of_electricity_generation +
+                       nuclear_share_of_electricity_generation +
+                       oil_products_share_of_electricity_generation +
+                       wind_solar_etc_share_of_electricity_generation)
+
+
+# inspect
+iea_supplement 
+iea_supplement %>% glimpse()
+iea_supplement %>% nrow() # 450
+iea_supplement %>% ncol() # 141
+iea_supplement %>% select(contains("tfc_as_share_of_tfc")) %>% glimpse()
+iea_supplement %>% select(contains("share_of_electricity_generation")) %>% glimpse()
+
+# confirm that sum_across_sectors_tfc_as_share_of_tfc is effectively 1
+iea_supplement %>% skim(sum_across_sectors_tfc_as_share_of_tfc)
+iea_supplement %>% skim(sum_across_energy_types_as_share_of_electricity_generation)
+
+
+#//////////////////////
+
+
+# write/read final iea_supplement ####
+# iea_supplement %>% write_csv(path = "data/iea/iea_supplement_20201218.csv")
+iea_supplement <- read_csv(file = "data/iea/iea_supplement_20201218.csv")
+
+# inspect
+iea_supplement
+iea_supplement %>% glimpse()
+iea_supplement %>% nrow() # 450
+iea_supplement %>% ncol() # 141
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -8123,25 +14121,28 @@ iea %>% ncol()
 
 # check filter
 iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2018) %>% 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+               year == 2018) %>% 
         count(mcp_grouping, country) %>% print(n = nrow(.))
 
 # check raw data
-iea %>% filter(year == 2018, country %in% c("Azerbaijan", "Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
+iea %>% filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+               year == 2018) %>% 
         select(country, year, net_energy_imports_as_share_of_tes)
+
+
+#////////////////
 
 
 # add color_bin and color
 chart_data <- iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), year == 2018) %>%
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+               year == 2018) %>%
         mutate(color_bin = mcp_grouping,
                color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
                                  color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
                                  color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
-                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
-                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
-                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -8157,7 +14158,7 @@ iea_net_energy_imports_as_share_of_tes_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes), 
                              y = net_energy_imports_as_share_of_tes, 
                              fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+                                                                 "CARs")))) + 
         geom_col(width = .8) + 
         # geom_text(data = chart_data %>% filter(year == 2018),
         #           mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
@@ -8167,35 +14168,42 @@ iea_net_energy_imports_as_share_of_tes_bar_chart <- chart_data %>%
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes, 
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs", "Russia", "EU-15", "U.S.")),
-                                label = country), angle = 45, size = 3, nudge_y = .1, hjust = 0, fontface = "bold") +
+                                                                     "CARs")),
+                                label = country), angle = 45, size = 2, nudge_y = .1, hjust = 0, fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, country == "Estonia"),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs", "Russia", "EU-15", "U.S.")),
-                                label = country), angle = 360, size = 3, nudge_y = -.1, hjust = 0, fontface = "bold") +
+                                                                     "CARs")),
+                                label = country), angle = 360, size = 2, nudge_y = -.1, hjust = 0, fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, country %in% c("Russia", "Uzbekistan")),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs", "Russia", "EU-15", "U.S.")),
-                                label = country), angle = 360, size = 3, nudge_y = -.2, hjust = 0, fontface = "bold") +
+                                                                     "CARs")),
+                                label = country), angle = 360, size = 2, nudge_y = -.2, hjust = 0, fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, 
-                                               country %in% c("Turkmenistan", "Kazakhstan", "Azerbaijan")),
+                                               country %in% c("Turkmenistan", "Kazakhstan")),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs", "Russia", "EU-15", "U.S.")),
-                                label = country), angle = 360, size = 3, nudge_y = -.3, hjust = 0, fontface = "bold") +
+                                                                     "CARs")),
+                                label = country), angle = 360, size = 2, nudge_y = -.3, hjust = 0, fontface = "bold") +
+        geom_text(data = chart_data %>% filter(year == 2018, 
+                                               country %in% c("Azerbaijan")),
+                  mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
+                                y = net_energy_imports_as_share_of_tes,
+                                color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                     "CARs")),
+                                label = country), angle = 360, size = 2, nudge_x = .5, hjust = 0, fontface = "bold") +
         scale_fill_manual(values = chart_data_color_list) +
         scale_color_manual(values = chart_data_color_list, guide = FALSE) +
         scale_x_discrete(expand = c(0, 0)) +
-        scale_y_continuous(breaks = seq(from = -3.5, to = 1, by = .50), 
-                           limits = c(-3.5, 1), 
+        scale_y_continuous(breaks = seq(from = -3, to = 1, by = .50), 
+                           limits = c(-3, 1), 
                            expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = NULL, y = "Net energy imports as a share\nof primary energy use, by ktoe", 
+        labs(x = NULL, y = "Share", 
              title = NULL,
              caption = NULL, fill = "") +
         coord_fixed(ratio = 3/1, clip = "off") +
@@ -8218,29 +14226,31 @@ iea_net_energy_imports_as_share_of_tes_bar_chart <- chart_data %>%
                 axis.ticks.x = element_blank(),
                 # axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                # axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                 #                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
                 axis.text.x = element_blank(),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
                 axis.line.y.left = element_blank(),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                # axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                #                             margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.title.x = element_blank(),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
                 plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
                 legend.position = "bottom",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
-                                           hjust = .5, color = "#333333")
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333"),
+                legend.box.margin=margin(-10,-10,-10,-10)
                 # legend.spacing.y = unit(5.5, "cm"),
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
         ) + 
-        guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
 
 # inspect
 iea_net_energy_imports_as_share_of_tes_bar_chart
@@ -8255,7 +14265,7 @@ emf(file = filename)
 print(iea_net_energy_imports_as_share_of_tes_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_bar_chart.docx")
@@ -8374,7 +14384,7 @@ emf(file = filename)
 print(iea_net_energy_imports_as_share_of_tes_importers_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_importers_bar_chart.docx")
@@ -8503,7 +14513,7 @@ emf(file = filename)
 print(iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_by_mcp_grouping_line_chart.docx")
@@ -8646,7 +14656,7 @@ emf(file = filename)
 print(iea_net_energy_imports_as_share_of_tes_balkans_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_balkans_line_chart.docx")
@@ -8731,7 +14741,7 @@ iea_net_energy_imports_as_share_of_tes_eurasia_line_chart <- chart_data %>%
         scale_y_continuous(breaks = seq(from = .2, to = 1, by = .1), limits = c(.2, 1), expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
         scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
-        labs(x = NULL, y = "Net energy imports as a share\nof primary energy supply, by ktoe", 
+        labs(x = NULL, y = "Net energy imports as a share\nof primary energy use, by ktoe", 
              title = NULL,
              caption = NULL, color = "", linetype = "") +
         coord_fixed(ratio = 7 / 1, clip = "off") +
@@ -8792,7 +14802,7 @@ emf(file = filename)
 print(iea_net_energy_imports_as_share_of_tes_eurasia_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
         print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_eurasia_line_chart.docx")
@@ -8803,62 +14813,90 @@ read_docx() %>%
 #////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# iea_net_energy_imports_as_share_of_tes_stacked_bar_chart ####
+# create net_imports_by_type_as_share_of_tes_stacked_bar_chart ####
 
-# check filter
-iea %>% 
-        filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        count(mcp_grouping, country) %>% print(n = nrow(.))
 
 # check raw data
-iea %>% filter(year == 2018, country %in% c("Azerbaijan", "Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
-        select(country, year, net_energy_imports_as_share_of_tes)
+iea %>% filter(year == 2018, country %in% c("Belarus")) %>%
+        select(country, year, matches("^net_.*_imports_as_share_of_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        select(country, year, var, values)
 
-# note they arent net importers of 
-iea %>% 
-        filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
-        select(-net_energy_imports_as_share_of_tes) %>%
-        arrange(net_natural_gas_imports_as_share_of_tes) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
-        group_by(var) %>% skim(value)
+# confirm that the sum of positive values only will rise above 100%
+iea %>% filter(year == 2018, country %in% c("Belarus")) %>%
+        select(country, year, matches("^net_.*_imports_as_share_of_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        select(country, year, var, values) %>% 
+        filter(var != "net_energy_imports_as_share_of_tes", values > 0) %>% 
+        mutate(sum = sum(values))
+
+
+# inspect energy types with zero share of production across all countries/years, to exclude from chart
+# note heat, hydro, nuclear, and wind_solar always have zero imports, and will be excluded
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "^Imports")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+iea %>% filter(Production_electricity > 0) %>% nrow() # 0
+iea %>% filter(Production_oil_products > 0) %>% nrow() # 0
+
+
+# inspect chart
+# note azerbaijan's crude oil net imports will be dropped because it is -228%
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^net_.*_imports_as_share_of_tes"), 
+               -c(net_energy_imports_as_share_of_tes)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("net_heat_imports_as_share_of_tes",
+                            "net_hydro_imports_as_share_of_tes",
+                            "net_nuclear_imports_as_share_of_tes",
+                            "net_wind_solar_etc_imports_as_share_of_tes")),
+               !(country == "Azerbaijan" & var == "net_crude_oil_imports_as_share_of_tes"),
+               year == 2018) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+
+#///////////////////////////
+
 
 # add color_bin and color
-chart_data <- iea %>% 
-        filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
-        select(-net_energy_imports_as_share_of_tes) %>%
-        arrange(net_natural_gas_imports_as_share_of_tes) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^net_.*_imports_as_share_of_tes"), 
+               -c(net_energy_imports_as_share_of_tes)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("net_heat_imports_as_share_of_tes",
+                            "net_hydro_imports_as_share_of_tes",
+                            "net_nuclear_imports_as_share_of_tes",
+                            "net_wind_solar_etc_imports_as_share_of_tes")),
+               !(country == "Azerbaijan" & var == "net_crude_oil_imports_as_share_of_tes"),
+               year == 2018) %>%
         mutate(var = case_when(var == "net_natural_gas_imports_as_share_of_tes" ~ "Natural gas",
                                var == "net_coal_imports_as_share_of_tes" ~ "Coal",
                                var == "net_crude_oil_imports_as_share_of_tes" ~ "Crude oil",
                                var == "net_oil_products_imports_as_share_of_tes" ~ "Oil products",
                                var == "net_electricity_imports_as_share_of_tes" ~ "Electricity",
-                               var == "net_biofuels_and_waste_imports_as_share_of_tes" ~ "Biofuels and waste",
-                               var == "net_heat_imports_as_share_of_tes" ~ "Heat",
-                               var == "net_hydro_imports_as_share_of_tes" ~ "Hydro",
-                               var == "net_nuclear_imports_as_share_of_tes" ~ "Nuclear",
-                               var == "net_wind_solar_etc_imports_as_share_of_tes" ~ "Wind, solar, etc.")) %>%
+                               var == "net_biofuels_and_waste_imports_as_share_of_tes" ~ "Biofuels and waste"
+                               # var == "net_heat_imports_as_share_of_tes" ~ "Heat",
+                               # var == "net_hydro_imports_as_share_of_tes" ~ "Hydro",
+                               # var == "net_nuclear_imports_as_share_of_tes" ~ "Nuclear",
+                               # var == "net_wind_solar_etc_imports_as_share_of_tes" ~ "Wind, solar, etc."
+        )) %>%
         mutate(color_bin = var,
                color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
-                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
-                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
-                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
-                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
-                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                 color_bin == "Hydro" ~ "#99ba78",
-                 color_bin == "Nuclear" ~ "#24A99C",
-                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex)
+                                 # color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 # color_bin == "Hydro" ~ "#99ba78",
+                                 # color_bin == "Nuclear" ~ "#24A99C",
+                                 # color_bin == "Wind, solar, etc." ~ "#2E6657"
+               ))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -8870,24 +14908,25 @@ chart_data_color_list
 
 
 # create chart
-iea_net_energy_imports_as_share_of_tes_stacked_bar_chart <- chart_data %>% 
+net_imports_by_type_as_share_of_tes_stacked_bar_chart <- chart_data %>% 
         ggplot(data = ., aes(x = country, 
-                             y = value, 
+                             y = values, 
                              fill = factor(color_bin, 
-                levels = c("Wind, solar, etc.",
-                            "Nuclear", "Hydro",
-                            "Heat", "Biofuels and waste",
-                            "Electricity", "Oil products",
-                            "Crude oil", "Coal",
-                           "Natural gas")))) + 
-        geom_bar(position = position_stack(), stat = "identity", width = .8) + 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        # geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
         scale_fill_manual(values = chart_data_color_list) +
         scale_x_discrete(expand = c(0, 0)) +
-        scale_y_continuous(breaks = seq(from = -.5, to = 1.5, by = .25), 
-                           limits = c(-.5, 1.5), 
+        scale_y_continuous(breaks = seq(from = -.5, to = 1.25, by = .25), 
+                           limits = c(-.5, 1.3), 
                            expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = NULL, y = "Net energy imports as a share\nof total primary energy supply, by ktoe", 
+        labs(x = NULL, y = "Share", 
              title = NULL,
              caption = NULL, fill = "") +
         coord_fixed(ratio = 3/1, clip = "off") +
@@ -8910,32 +14949,32 @@ iea_net_energy_imports_as_share_of_tes_stacked_bar_chart <- chart_data %>%
                 # axis.ticks.x = element_blank(),
                 axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
                                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
                 # axis.text.x = element_blank(),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
                 axis.line.y.left = element_blank(),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
                 plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
                 legend.position = "right",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                            hjust = .5, color = "#333333")
                 # legend.spacing.y = unit(5.5, "cm"),
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
         ) 
-        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
 
 # inspect
-iea_net_energy_imports_as_share_of_tes_stacked_bar_chart
+net_imports_by_type_as_share_of_tes_stacked_bar_chart 
 
 
 #//////////////////////////////////
@@ -8944,13 +14983,13 @@ iea_net_energy_imports_as_share_of_tes_stacked_bar_chart
 # save chart as emf
 filename <- tempfile(fileext = ".emf")
 emf(file = filename)
-print(iea_net_energy_imports_as_share_of_tes_stacked_bar_chart)
+print(net_imports_by_type_as_share_of_tes_stacked_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
-        print(target = "output/charts/iea_net_energy_imports_as_share_of_tes_stacked_bar_chart.docx")
+        print(target = "output/charts/net_imports_by_type_as_share_of_tes_stacked_bar_chart.docx")
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////
@@ -8958,60 +14997,208 @@ read_docx() %>%
 #////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# iea_tes_as_share_of_overall_tes_stacked_bar_chart ####
+# iea_tes_by_country_bar_chart ####
 
-# check filter
+# inspect
 iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        count(mcp_grouping, country) %>% print(n = nrow(.))
+        filter(year == 2018, 
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"),
+               !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        arrange(mcp_grouping) %>%
+        select(mcp_grouping, country, year, TES_total) %>% print(n = nrow(.))
 
-# check raw data
-iea %>% filter(year == 2018, country %in% c("Turkmenistan", "Kazakhstan", "Russia", "Uzbekistan")) %>%
-        select(country, year, net_energy_imports_as_share_of_tes)
-
-# note they arent net importers of 
 iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*tes_as_share_of_overall_tes")) %>%
-        select(-tes_as_share_of_overall_tes_sum) %>%
-        arrange(natural_gas_tes_as_share_of_overall_tes) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
-        group_by(var) %>% skim(value)
+        filter(year == 2018, 
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"),
+               !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        skim(TES_total)
 
-# check negative tes_as_share_of_overall_tes
-# note they are net exporters of the energy type, so fuel-TES is negative, which as a share of overall TES is negative
-# ggplot will drop these 9 negative values/energy types from stacked chart since there is no way to show negative in stack
-# i will just footnote they are not depicted in chart
-iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*tes_as_share_of_overall_tes")) %>%
-        select(-tes_as_share_of_overall_tes_sum) %>%
-        arrange(natural_gas_tes_as_share_of_overall_tes) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
-        filter(value < 0)
+# inspect chart
+iea %>% filter(year == 2018, 
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"),
+               !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        ggplot(data = ., mapping = aes(x = fct_reorder(.f = country, .x = TES_total, .desc = FALSE), y = TES_total)) + 
+        geom_col()
 
-iea %>% glimpse()
-iea %>% select(country, year, contains("tes_as_share_of_overall_tes"))
-iea %>% filter(year == 2018, country == "Albania") %>% select(TES_electricity, TES_total)
+# inspect for report
+chart_data %>% filter(year == 2018, 
+                      mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"),
+                      !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        # arrange(TES_total) %>% select(country, year, TES_total) %>% print(n = nrow(.))
+        # arrange(desc(TES_total)) %>% select(country, year, TES_total) %>% print(n = nrow(.))
+        skim(TES_total)
+
+# inspect for report
+chart_data %>% select(country, year, TES_total) %>% arrange(TES_total) %>% print(n = nrow(.))
+chart_data %>% select(country, year, TES_total) %>% summarize(median = median(TES_total))
+chart_data %>% distinct(mcp_grouping)
+
+#////////////////////
+
 
 # add color_bin and color
-chart_data <- iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*tes_as_share_of_overall_tes")) %>%
-        select(-tes_as_share_of_overall_tes_sum) %>%
-        arrange(natural_gas_tes_as_share_of_overall_tes) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+chart_data <- iea %>% filter(year == 2018, 
+                             mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"),
+                             !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        mutate(values = TES_total) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_tes_by_country_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = values), 
+                             y = values, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 110000, by = 25000), 
+                           limits = c(0, 110000), 
+                           expand = c(0, 0),
+                           labels = comma_format()) +
+        labs(x = NULL, y = "Primary energy use (ktoe)", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = .1 / 900, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 9, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 9, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333"),
+                # legend.spacing.y = unit(5.5, "cm"),
+                legend.spacing.x = unit(.5, "cm")
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_tes_by_country_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_tes_by_country_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_tes_by_country_bar_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_tes_as_share_of_overall_tes_stacked_bar_chart ####
+
+
+# check raw data
+iea %>% filter(year == 2018, country %in% c("Belarus")) %>%
+        select(country, year, matches("^.*tes_as_share_of_overall_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        select(country, year, var, values)
+
+# confirm that the sum of positive values only will rise above 100%
+iea %>% filter(year == 2018, country %in% c("Belarus")) %>%
+        select(country, year, matches("^.*tes_as_share_of_overall_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        select(country, year, var, values) %>% 
+        filter(var != "tes_as_share_of_overall_tes_sum", values > 0) %>% 
+        mutate(sum = sum(values))
+
+# inspect energy types with zero share of production across all countries/years, to exclude from chart
+# note that all energy types can contribute to TES, no exclusions
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "^TES"), matches("^.*tes_as_share_of_overall_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+# inspect chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^.*tes_as_share_of_overall_tes"), 
+               -c(tes_as_share_of_overall_tes_sum)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+# inspect for report
+chart_data %>% filter(country %in% c("Albania", "Armenia", "BiH", "Georgia", "Kosovo", "Moldova", "Ukraine")) %>%
+        select(country, year, var, values) %>% arrange(values) %>% print(n = nrow(.))
+chart_data %>% filter(country %in% c("Albania", "Armenia", "BiH", "Georgia", "Kosovo", "Moldova", "Ukraine"),
+                      var %in% c("Hydro", "Wind, solar, etc", "Biofuels and waste", "Heat")) %>%
+        select(country, year, var, values) %>% arrange(values) %>% print(n = nrow(.))
+chart_data %>% filter(country %in% c("Albania", "Armenia", "BiH", "Georgia", "Kosovo", "Moldova", "Ukraine"),
+                      var == "Nuclear") %>%
+        select(country, year, var, values) %>% arrange(values) %>% print(n = nrow(.))
+
+#///////////////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^.*tes_as_share_of_overall_tes"), 
+               -c(tes_as_share_of_overall_tes_sum)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018) %>%
         mutate(var = case_when(var == "natural_gas_tes_as_share_of_overall_tes" ~ "Natural gas",
                                var == "coal_tes_as_share_of_overall_tes" ~ "Coal",
                                var == "crude_oil_tes_as_share_of_overall_tes" ~ "Crude oil",
@@ -9046,7 +15233,7 @@ chart_data_color_list
 # create chart
 iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>% 
         ggplot(data = ., aes(x = country, 
-                             y = value, 
+                             y = values, 
                              fill = factor(color_bin, 
                                            levels = c("Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
@@ -9054,14 +15241,369 @@ iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>%
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
-        geom_bar(position = "fill", stat = "identity", width = .8) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        # geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
         scale_fill_manual(values = chart_data_color_list) +
         scale_x_discrete(expand = c(0, 0)) +
-        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), 
+        scale_y_continuous(breaks = seq(from = -.5, to = 1.5, by = .25), 
+                           limits = c(-.5, 1.5), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 3/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_tes_as_share_of_overall_tes_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_tes_as_share_of_overall_tes_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_tes_as_share_of_overall_tes_stacked_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create tes_by_type_as_share_of_tes_facet_line_chart ####
+
+# inspect energy types with zero share of tes across all countries/years, to exclude from chart
+# note that all energy types had at least one record with non-zero share of tes
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tes_as_share_of_overall_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+
+# inspect imports by ktoe
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tes_as_share_of_overall_tes"), -tes_as_share_of_overall_tes_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = fuel_type)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% filter(year %in% c(2009, 2018)) %>% arrange(country, fuel_type) %>% print(n = nrow(.))
+chart_data %>% group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>% ungroup() %>% 
+        arrange(mean) %>% print(n = nrow(.))
+chart_data %>% filter(fuel_type %in% c("Hydro", "Wind, solar, etc", "Biofuels and waste", "Heat")) %>%
+        group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>% ungroup() %>% 
+        arrange(mean) %>% print(n = nrow(.))
+        
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tes_as_share_of_overall_tes"), -tes_as_share_of_overall_tes_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        mutate(color_bin = fuel_type,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+tes_by_type_as_share_of_tes_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Wind, solar, etc.",
+                                                                 "Nuclear", "Hydro",
+                                                                 "Heat", "Biofuels and waste",
+                                                                 "Electricity", "Oil products",
+                                                                 "Crude oil", "Coal",
+                                                                 "Natural gas")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = -.75, to = 1, by = .25), 
+                           limits = c(-.75, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = -.75, yend = -.75), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 4/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+tes_by_type_as_share_of_tes_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(tes_by_type_as_share_of_tes_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/tes_by_type_as_share_of_tes_facet_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_tfc_by_type_as_share_of_overall_tfc_stacked_bar_chart ####
+
+
+# inspect energy types with zero share of final consumption across all countries/years, to exclude from chart
+# note that hydro and nuclear never appear in final consumption, and will be excluded
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches("^.*tfc_as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+# confirm that sum for each country is effectively equal to 1
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches("^.*tfc_as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018) %>%
+        select(-var) %>% group_by(country) %>% mutate(sum = sum(values)) %>% skim(sum)
+
+# inspect chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches("^.*tfc_as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018,
+               !(var %in% c("hydro_tfc_as_share_of_overall_tfc", "nuclear_tfc_as_share_of_overall_tfc"))) %>%
+        mutate(var = case_when(var == "natural_gas_tfc_as_share_of_overall_tfc" ~ "Natural gas",
+                               var == "coal_tfc_as_share_of_overall_tfc" ~ "Coal",
+                               var == "crude_oil_tfc_as_share_of_overall_tfc" ~ "Crude oil",
+                               var == "oil_products_tfc_as_share_of_overall_tfc" ~ "Oil products",
+                               var == "electricity_tfc_as_share_of_overall_tfc" ~ "Electricity",
+                               var == "biofuels_and_waste_tfc_as_share_of_overall_tfc" ~ "Biofuels and waste",
+                               var == "heat_tfc_as_share_of_overall_tfc" ~ "Heat",
+                               # var == "hydro_tfc_as_share_of_overall_tfc" ~ "Hydro",
+                               # var == "nuclear_tfc_as_share_of_overall_tfc" ~ "Nuclear",
+                               var == "wind_solar_etc_tfc_as_share_of_overall_tfc" ~ "Wind, solar, etc.")) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+# inspect for report
+chart_data %>% group_by(var) %>% summarize(sum = sum(values)) %>% arrange(desc(sum))
+chart_data %>% group_by(var) %>% summarize(mean = mean(values)) %>% arrange(desc(mean))
+
+
+
+#///////////////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches("^.*tfc_as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018,
+               !(var %in% c("hydro_tfc_as_share_of_overall_tfc", "nuclear_tfc_as_share_of_overall_tfc"))) %>%
+        mutate(var = case_when(var == "natural_gas_tfc_as_share_of_overall_tfc" ~ "Natural gas",
+                               var == "coal_tfc_as_share_of_overall_tfc" ~ "Coal",
+                               var == "crude_oil_tfc_as_share_of_overall_tfc" ~ "Crude oil",
+                               var == "oil_products_tfc_as_share_of_overall_tfc" ~ "Oil products",
+                               var == "electricity_tfc_as_share_of_overall_tfc" ~ "Electricity",
+                               var == "biofuels_and_waste_tfc_as_share_of_overall_tfc" ~ "Biofuels and waste",
+                               var == "heat_tfc_as_share_of_overall_tfc" ~ "Heat",
+                               # var == "hydro_tfc_as_share_of_overall_tfc" ~ "Hydro",
+                               # var == "nuclear_tfc_as_share_of_overall_tfc" ~ "Nuclear",
+                               var == "wind_solar_etc_tfc_as_share_of_overall_tfc" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 # color_bin == "Hydro" ~ "#99ba78",
+                                 # color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_tfc_by_type_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = values, 
+                             fill = factor(color_bin, 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        # geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
                            limits = c(0, 1), 
                            expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = NULL, y = "Primary energy supply as a share\nof total primary energy supply, by ktoe", 
+        labs(x = NULL, y = "Share", 
              title = NULL,
              caption = NULL, fill = "") +
         coord_fixed(ratio = 6/1, clip = "off") +
@@ -9084,9 +15626,687 @@ iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>%
                 # axis.ticks.x = element_blank(),
                 axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
                                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
                 # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_tfc_by_type_as_share_of_overall_tfc_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_tfc_by_type_as_share_of_overall_tfc_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_tfc_by_type_as_share_of_overall_tfc_stacked_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create sector_tfc_as_share_of_tfc_facet_line_chart ####
+
+# inspect energy types with zero share of final consumption across all countries/years, to exclude from chart
+# note that all sectors have at least some non-zero share of tfc, so none will be excluded
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+# inspect 
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        mutate(sector = case_when(str_detect(string = var, pattern = "industry_") ~ "Industry",
+                                  str_detect(string = var, pattern = "transport_") ~ "Transport",
+                                  str_detect(string = var, pattern = "residential_") ~ "Residential",
+                                  str_detect(string = var, pattern = "commercial_and_public_services") ~ "Commercial / public",
+                                  str_detect(string = var, pattern = "agriculture_forestry") ~ "Agriculture / forestry",
+                                  str_detect(string = var, pattern = "fishing_") ~ "Fishing",
+                                  str_detect(string = var, pattern = "non_specified_") ~ "Non-specified",
+                                  str_detect(string = var, pattern = "non_energy") ~ "Non-energy")) %>%
+        select(-var) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = sector)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% filter(country %in% c("Armenia", "Azerbaijan", "BiH", "Georgia", "Moldova", "N. Macedonia"),
+                      year %in% c(2009, 2018)) %>% arrange(country, sector, year) %>%
+        print(n = nrow(.))
+chart_data %>% group_by(sector) %>% summarize(sum = sum(values)) %>% arrange(desc(sum))
+chart_data %>% group_by(sector) %>% summarize(mean = mean(values)) %>% arrange(desc(mean))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                                (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        mutate(sector = case_when(str_detect(string = var, pattern = "industry_") ~ "Industry",
+                                  str_detect(string = var, pattern = "transport_") ~ "Transport",
+                                  str_detect(string = var, pattern = "residential_") ~ "Residential",
+                                  str_detect(string = var, pattern = "commercial_and_public_services") ~ "Commercial / public",
+                                  str_detect(string = var, pattern = "agriculture_forestry") ~ "Agriculture / forestry",
+                                  str_detect(string = var, pattern = "fishing_") ~ "Fishing",
+                                  str_detect(string = var, pattern = "non_specified_") ~ "Non-specified",
+                                  str_detect(string = var, pattern = "non_energy") ~ "Non-energy")) %>%
+        select(-var) %>%
+        mutate(color_bin = sector,
+               color = case_when(color_bin == "Agriculture / forestry" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Commercial / public" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Fishing" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Industry" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Non-energy" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Non-specified" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Residential" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Transport" ~ "#99ba78"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+sector_tfc_as_share_of_tfc_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Transport", "Residential", "Non-specified", 
+                                                                 "Non-energy", "Industry", "Fishing", 
+                                                                 "Commercial / public", "Agriculture / forestry")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = .5, by = .1), 
+                           limits = c(0, .5), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 12/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+sector_tfc_as_share_of_tfc_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(sector_tfc_as_share_of_tfc_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/sector_tfc_as_share_of_tfc_facet_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_tfc_by_sector_as_share_of_overall_tfc_stacked_bar_chart ####
+
+
+# inspect energy types with zero share of final consumption across all countries/years, to exclude from chart
+# note that all sectors have at least some non-zero share of tfc, so none will be excluded
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+# confirm that sum for each country is effectively equal to 1
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018) %>%
+        mutate(sector = case_when(str_detect(string = var, pattern = "industry_") ~ "Industry",
+                                  str_detect(string = var, pattern = "transport_") ~ "Transport",
+                                  str_detect(string = var, pattern = "residential_") ~ "Residential",
+                                  str_detect(string = var, pattern = "commercial_and_public_services") ~ "Commercial / public",
+                                  str_detect(string = var, pattern = "agriculture_forestry") ~ "Agriculture / forestry",
+                                  str_detect(string = var, pattern = "fishing_") ~ "Fishing",
+                                  str_detect(string = var, pattern = "non_specified_") ~ "Non-specified",
+                                  str_detect(string = var, pattern = "non_energy") ~ "Non-energy")) %>%
+        select(-var) %>% group_by(country) %>% mutate(sum = sum(values)) %>% skim(sum)
+
+# inspect chart
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018) %>%
+        mutate(sector = case_when(str_detect(string = var, pattern = "industry_") ~ "Industry",
+                                  str_detect(string = var, pattern = "transport_") ~ "Transport",
+                                  str_detect(string = var, pattern = "residential_") ~ "Residential",
+                                  str_detect(string = var, pattern = "commercial_and_public_services") ~ "Commercial / public",
+                                  str_detect(string = var, pattern = "agriculture_forestry") ~ "Agriculture / forestry",
+                                  str_detect(string = var, pattern = "fishing_") ~ "Fishing",
+                                  str_detect(string = var, pattern = "non_specified_") ~ "Non-specified",
+                                  str_detect(string = var, pattern = "non_energy") ~ "Non-energy")) %>%
+        select(-var) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = sector)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+# inspect for report
+chart_data %>% group_by(sector) %>% summarize(mean = mean(values)) %>% arrange(desc(mean))
+
+
+#///////////////////////////
+
+
+# add color_bin and color
+chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                                (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "tfc_as_share_of_tfc"), -sum_across_sectors_tfc_as_share_of_tfc) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(year == 2018) %>%
+        mutate(sector = case_when(str_detect(string = var, pattern = "industry_") ~ "Industry",
+                                  str_detect(string = var, pattern = "transport_") ~ "Transport",
+                                  str_detect(string = var, pattern = "residential_") ~ "Residential",
+                                  str_detect(string = var, pattern = "commercial_and_public_services") ~ "Commercial / public",
+                                  str_detect(string = var, pattern = "agriculture_forestry") ~ "Agriculture / forestry",
+                                  str_detect(string = var, pattern = "fishing_") ~ "Fishing",
+                                  str_detect(string = var, pattern = "non_specified_") ~ "Non-specified",
+                                  str_detect(string = var, pattern = "non_energy") ~ "Non-energy")) %>%
+        mutate(color_bin = sector,
+               color = case_when(color_bin == "Agriculture / forestry" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Commercial / public" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Fishing" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Industry" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Non-energy" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Non-specified" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Residential" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Transport" ~ "#99ba78"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_tfc_by_sector_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = values, 
+                             fill = factor(color_bin, 
+                                           levels = c("Transport", "Residential", "Non-specified", 
+                                                      "Non-energy", "Industry", "Fishing", 
+                                                      "Commercial / public", "Agriculture / forestry")))) + 
+        # geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_tfc_by_sector_as_share_of_overall_tfc_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_tfc_by_sector_as_share_of_overall_tfc_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_tfc_by_sector_as_share_of_overall_tfc_stacked_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create tfc_by_type_as_share_of_tfc_facet_line_chart ####
+
+# inspect 
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>% glimpse()
+
+# confirm the sum of energy type shares of tfc equals 1
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(country, year) %>% summarize(sum_of_tfc_shares = sum(values)) %>% 
+        ungroup() %>% skim(sum_of_tfc_shares)
+
+# inspect energy types with zero share of final consumption across all countries/years, to exclude from chart
+# note that nuclear and hydro will be removed
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+# inspect chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("hydro_tfc_as_share_of_overall_tfc", "nuclear_tfc_as_share_of_overall_tfc"))) %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = fuel_type)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+
+# inspect for report
+chart_data %>% filter(country %in% c("Albania", "Armenia", "BiH", "Georgia", "Moldova", "N. Macedonia", "Ukraine"),
+                      year %in% c(2009, 2018)) %>% 
+        arrange(country, fuel_type, year) %>% print(n = nrow(.))
+chart_data %>% group_by(fuel_type) %>% summarize(sum = sum(values)) %>% arrange(desc(sum))
+chart_data %>% group_by(fuel_type) %>% summarize(mean = mean(values)) %>% arrange(desc(mean))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_tfc"), -tfc_as_share_of_overall_tfc_sum) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("hydro_tfc_as_share_of_overall_tfc", "nuclear_tfc_as_share_of_overall_tfc"))) %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        mutate(color_bin = fuel_type,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+tfc_by_type_as_share_of_tfc_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Wind, solar, etc.",
+                                                                 "Nuclear", "Hydro",
+                                                                 "Heat", "Biofuels and waste",
+                                                                 "Electricity", "Oil products",
+                                                                 "Crude oil", "Coal",
+                                                                 "Natural gas")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = .7, by = .2), 
+                           limits = c(0, .7), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 8/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+tfc_by_type_as_share_of_tfc_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(tfc_by_type_as_share_of_tfc_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/tfc_by_type_as_share_of_tfc_facet_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_production_as_share_of_tes_balkans_line_chart ####
+
+# check filter
+iea %>% 
+        filter(country != "E&E Balkans", mcp_grouping %in% c("E&E Balkans")) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% 
+        filter(country != "E&E Balkans", mcp_grouping %in% c("E&E Balkans")) %>%
+        mutate(values = Production_total / TES_total) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Energy production as a share of primary energy use in E&E Balkans, by ktoe"
+
+#/////////////////////
+
+
+# create chart
+iea_production_as_share_of_tes_balkans_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo", 
+                                      "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo", 
+                                         "N. Macedonia", "Serbia", "Russia", "CARs", "E&E graduates")) +
+        scale_y_continuous(breaks = seq(from = .4, to = 1, by = .2), limits = c(.4, 1.1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 10 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
                 axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
@@ -9097,7 +16317,7 @@ iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>%
                                             margin = margin(t = 0, r = 13, b = 0, l = 0)),
                 plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
-                legend.position = "right",
+                legend.position = "bottom",
                 # legend.key.size = unit(2, "mm"), 
                 legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
                 legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
@@ -9106,10 +16326,12 @@ iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>%
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
         ) 
-# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
 
 # inspect
-iea_tes_as_share_of_overall_tes_stacked_bar_chart
+iea_production_as_share_of_tes_balkans_line_chart
 
 
 #//////////////////////////////////
@@ -9118,61 +16340,1624 @@ iea_tes_as_share_of_overall_tes_stacked_bar_chart
 # save chart as emf
 filename <- tempfile(fileext = ".emf")
 emf(file = filename)
-print(iea_tes_as_share_of_overall_tes_stacked_bar_chart)
+print(iea_production_as_share_of_tes_balkans_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
-        print(target = "output/charts/iea_tes_as_share_of_overall_tes_stacked_bar_chart.docx")
+        print(target = "output/charts/iea_production_as_share_of_tes_balkans_line_chart.docx")
 
 
-#////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# iea_production_as_share_of_overall_production_stacked_bar_chart ####
+# create iea_production_as_share_of_tes_eurasia_line_chart ####
 
 # check filter
 iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
+        filter(country != "E&E Eurasia", mcp_grouping %in% c("E&E Eurasia")) %>% 
         count(mcp_grouping, country) %>% print(n = nrow(.))
 
-# check raw data
+# note that azerbaijan should be excluded because its an outlier with very large production that dwarfs the scale
+iea %>% filter(!(country %in% c("E&E Eurasia", "E&E Balkans")), 
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans")) %>% 
+        mutate(values = Production_total / TES_total) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
 
-# no one pruduces oil products
-iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*production_as_share_of_overall_production")) %>%
-        select(-production_as_share_of_overall_production_sum) %>%
-        arrange(natural_gas_production_as_share_of_overall_production) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
-        group_by(var) %>% skim(value)
 
+#///////////////
+
+
+# add color_bin and color
+# note will drop azerbaijan because they are a major producer/exporter and dwarf the scale, 
+# also less of interest regarding energy security/dependency
+chart_data <- iea %>% 
+        filter(country != "E&E Eurasia", mcp_grouping %in% c("E&E Eurasia"), country != "Azerbaijan") %>%
+        mutate(values = Production_total / TES_total) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 # color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(5) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Energy production as a share of primary energy use in E&E Eurasia, by ktoe"
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_as_share_of_tes_eurasia_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine", "Russia")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine", "Russia")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"), 
+                  mapping = aes(x = year + 0.15, y = values + .02, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"), 
+                  mapping = aes(x = year + 0.15, y = values - .02, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"), 
+                  mapping = aes(x = year + 0.15, y = values - .02, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine", "Russia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine", "Russia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .8, by = .2), limits = c(0, .85), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 7 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+iea_production_as_share_of_tes_eurasia_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_as_share_of_tes_eurasia_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_as_share_of_tes_eurasia_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_production_as_share_of_tes_mcp_grouping_line_chart ####
+
+# check filter
 iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*production_as_share_of_overall_production")) %>%
-        filter(nuclear_production_as_share_of_overall_production > 0) %>% 
-        select(country, year, nuclear_production_as_share_of_overall_production)
+        filter(country %in% c("E&E Eurasia", "E&E Balkans", "CARs", "E&E graduates")) %>% 
+        count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# check to make sure that group_by/summarize on the countries works to get mcp_grouping avgs, 
+# which match the mcp_grouping avgs already in the data where each mcp_grouping has its own row 
+expect_equal(object = iea %>% filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "CARs", 
+                                "E&E graduates", "U.S.", "Russia", "EU-15"))) %>%
+        group_by(mcp_grouping, year) %>% summarize(Production_total = mean(Production_total),
+                                              TES_total = mean(TES_total)) %>% arrange(mcp_grouping, year) %>% 
+                ungroup(),
+        expected = iea %>% filter(country %in% c("E&E Eurasia", "E&E Balkans", "CARs", "E&E graduates")) %>% 
+        select(mcp_grouping, year, Production_total, TES_total) %>% arrange(mcp_grouping, year))
+
+
+# note that azerbaijan should be excluded because its an outlier with very large production that dwarfs the scale
+iea %>% filter(!(country %in% c("E&E Eurasia", "E&E Balkans")), 
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans")) %>% 
+        mutate(values = Production_total / TES_total) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+
+# note that CARs should also be dropped because its an outlier with very large production that dwarfs the scale
+iea %>% filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "CARs", 
+                                "E&E graduates", "U.S.", "Russia", "EU-15"))) %>%
+        group_by(mcp_grouping, year) %>% summarize(Production_total = mean(Production_total),
+                                                   TES_total = mean(TES_total)) %>% arrange(mcp_grouping, year) %>% 
+        ungroup() %>% mutate(values = Production_total / TES_total) %>%
+        ggplot(data = ., aes(x = year, y = values, color = mcp_grouping)) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4)
+
+
+#/////////////////////
+
+
+# add color_bin and color
+# note will drop azerbaijan and CARs because they are a major producer/exporter and dwarf the scale, 
+# also less of interest regarding energy security/dependency
+chart_data <- iea %>% filter(!(country %in% c("Azerbaijan", "E&E Eurasia", "E&E Balkans", "CARs", 
+                                              "E&E graduates", "U.S.", "Russia", "EU-15")),
+                             mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")) %>%
+        group_by(mcp_grouping, year) %>% summarize(Production_total = mean(Production_total),
+                                                   TES_total = mean(TES_total)) %>% arrange(mcp_grouping, year) %>% 
+        ungroup() %>%
+        mutate(values = Production_total / TES_total) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+               # color_bin == "CARs" ~ color_palette %>% slice(6) %>% pull(hex),
+               # color_bin == "E&E graduates" ~ color_palette %>% slice(7) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+"Energy production as a share of primary energy use in E&E, by ktoe"
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_as_share_of_tes_mcp_grouping_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")),
+                             linetype = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")))) + 
+        geom_line(size = 2) + 
+        geom_point(size = 4) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "E&E Balkans"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "E&E Eurasia"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "E&E graduates"), 
+                  mapping = aes(x = year + 0.15, y = values, label = color_bin), 
+                  fontface = "bold", hjust = 0) + 
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) +
+        scale_y_continuous(breaks = seq(from = .5, to = .8, by = .1), limits = c(.5, .85), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "", linetype = "") +
+        coord_fixed(ratio = 18 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 5, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+
+# inspect
+iea_production_as_share_of_tes_mcp_grouping_line_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_as_share_of_tes_mcp_grouping_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_as_share_of_tes_mcp_grouping_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_production_by_type_as_share_of_production_stacked_bar_chart ####
+
+# inspect energy types with zero share of production across all countries/years, to exclude from chart
+# note electricity and oil products have zero share of production; 
+# note electricity is already excluded, 
+# oil products will be manually dropped for chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+iea %>% filter(Production_electricity > 0) %>% nrow() # 0
+iea %>% filter(Production_oil_products > 0) %>% nrow() # 0
+
+
+# inspect azerbaijan's crude production
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(country == "Azerbaijan" & var == "Production_crude_oil") %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total,
+               production_as_share_of_tes_avg = mean(production_as_share_of_tes))
+
+# confirm shares sum to 1
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("production_as_share_of_overall_production"), 
+               -c(production_as_share_of_overall_production_sum)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("oil_products_production_as_share_of_overall_production")),
+               year == 2018) %>% group_by(country, year) %>% mutate(sum = sum(values)) %>% skim(sum)
+
+
+# inspect chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("production_as_share_of_overall_production"), 
+               -c(production_as_share_of_overall_production_sum)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("oil_products_production_as_share_of_overall_production")),
+               year == 2018) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+
+#///////////////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("production_as_share_of_overall_production"), 
+               -c(production_as_share_of_overall_production_sum)) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("oil_products_production_as_share_of_overall_production")),
+               year == 2018) %>%
+        mutate(var = case_when(var == "natural_gas_production_as_share_of_overall_production" ~ "Natural gas",
+                               var == "coal_production_as_share_of_overall_production" ~ "Coal",
+                               var == "crude_oil_production_as_share_of_overall_production" ~ "Crude oil",
+                               # var == "oil_products_production_as_share_of_overall_production" ~ "Oil products",
+                               # var == "electricity_production_as_share_of_overall_production" ~ "Electricity",
+                               var == "biofuels_and_waste_production_as_share_of_overall_production" ~ "Biofuels and waste",
+                               var == "heat_production_as_share_of_overall_production" ~ "Heat",
+                               var == "hydro_production_as_share_of_overall_production" ~ "Hydro",
+                               var == "nuclear_production_as_share_of_overall_production" ~ "Nuclear",
+                               var == "wind_solar_etc_production_as_share_of_overall_production" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 # color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# title
+title <- "Energy production by type, as a share of total production, by ktoe (2018)"
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_by_type_as_share_of_production_stacked_bar_chart  <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = values, 
+                             fill = factor(color_bin, 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        # geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_production_by_type_as_share_of_production_stacked_bar_chart 
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_by_type_as_share_of_production_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_by_type_as_share_of_production_stacked_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create production_as_share_of_tes_balkans_patch_line_chart ####
+
+# inspect
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(country, year, production_as_share_of_tes) %>% print(n = nrow(.))
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(country, year, production_as_share_of_tes) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = production_as_share_of_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(production_as_share_of_tes)) %>%
+        arrange(desc(mean))
+
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(country, year, production_as_share_of_tes) %>% 
+        mutate(values = production_as_share_of_tes) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Production as a share of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+production_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        geom_line(size = 1) +
+        geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+production_as_share_of_tes_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create production_as_share_of_tes_eurasia_patch_line_chart ####
+
+# inspect
+# note azerbaijan will be dropped because it's an outlief with very large production_as_share_of_tes
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(country, year, production_as_share_of_tes) %>% 
+        print(n = nrow(.))
+
+# inspect azerbaijan avg - 442%
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        group_by(country) %>% mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        select(country, year, production_as_share_of_tes, production_as_share_of_tes_avg) %>%
+        print(n = nrow(.))
+
+# inspect chart
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia", country != "Azerbaijan") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(country, year, production_as_share_of_tes) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = production_as_share_of_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect oil refining for report
+iea_raw %>% glimpse()
+iea_raw %>% distinct(category) %>% print(n = nrow(.))
+iea_raw %>% filter(category %in% c("Oil refineries", "TES")) %>% select(country, year, category, `Oil products`, Total) %>%
+        pivot_longer(cols = -c(country, year, category), names_to = "var", values_to = "values") %>% 
+        unite(col = var, category, var, remove = TRUE) %>%
+        filter(var %in% c("TES_Total", "Oil refineries_Oil products")) %>%
+        pivot_wider(id_cols = c(country, year), names_from = var, values_from = values) %>%
+        rename(refined_oil_products = `Oil refineries_Oil products`) %>%
+        mutate(refined_oil_products_as_share_of_tes = refined_oil_products / TES_Total) %>%
+        ggplot(data = ., mapping = aes(x = year, y = refined_oil_products_as_share_of_tes, color = country)) + geom_line()
+
+# refined oil as share of TES
+iea_raw %>% filter(category %in% c("Oil refineries", "TES")) %>% select(country, year, category, `Oil products`, Total) %>%
+        pivot_longer(cols = -c(country, year, category), names_to = "var", values_to = "values") %>% 
+        unite(col = var, category, var, remove = TRUE) %>%
+        filter(var %in% c("TES_Total", "Oil refineries_Oil products")) %>%
+        pivot_wider(id_cols = c(country, year), names_from = var, values_from = values) %>%
+        rename(refined_oil_products = `Oil refineries_Oil products`) %>%
+        mutate(refined_oil_products_as_share_of_tes = refined_oil_products / TES_Total) %>%
+        group_by(country) %>% 
+        mutate(avg_refined_oil_products_as_share_of_tes = mean(refined_oil_products_as_share_of_tes, na.rm = TRUE)) %>% 
+        slice(1) %>%
+        ungroup() %>% arrange(desc(avg_refined_oil_products_as_share_of_tes)) %>% print(n = nrow(.))
+
+# refined oil in levels 
+iea_raw %>% filter(category %in% c("Oil refineries") %>% select(country, year, `Oil products`)) %>%
+        group_by(country) %>% mutate(avg_refined_oil_products = mean(`Oil products`, na.rm = TRUE)) %>% slice(1) %>%
+        ungroup() %>% arrange(desc(avg_refined_oil_products)) %>% print(n = nrow(.))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(production_as_share_of_tes)) %>%
+        arrange(desc(mean))
+
+        
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia", country != "Azerbaijan") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(country, year, production_as_share_of_tes) %>% 
+        mutate(values = production_as_share_of_tes) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Production as a share of primary energy use, by ktoe"
+
+
+#/////////////////////
+
+
+# create chart
+production_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+production_as_share_of_tes_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create production_as_share_of_tes_mcp_grouping_patch_line_chart ####
+
+# inspect
+# note that azerbaijan and the CARs are excluded because their large production_as_share_of_tes distorts scale
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan", mcp_grouping != "CARs") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+
+# inspect CARs avg - 148%
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        arrange(mcp_grouping, year, country) %>% slice(1) %>%
+        ungroup() %>% 
+        group_by(mcp_grouping) %>% 
+        mutate(production_as_share_of_tes_mcp_grouping_avg_over_time = mean(production_as_share_of_tes_avg)) %>%
+        ungroup()
+
+
+# inspect chart
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan", mcp_grouping != "CARs") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = production_as_share_of_tes_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+# inspect for report
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan", mcp_grouping != "CARs") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>% 
+        group_by(mcp_grouping) %>%
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() 
+
+# leaving in azerbaijan and CARs
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15"))) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>% 
+        group_by(mcp_grouping) %>%
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() 
+
+# just azerbaijan
+iea %>% filter(country == "Azerbaijan") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>%
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes))
+        
+
+# confirm that iea never considers oil products or electricty "production"
+iea %>% select(country, year, matches("^Production_")) %>% skim()
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                             "U.S.", "Russia", "EU-15")),
+                            country != "Azerbaijan", mcp_grouping != "CARs") %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>%
+        select(mcp_grouping, country, year, production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = production_as_share_of_tes_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Production as a share of primary energy use"
+
+
+#////////////////////////
+
+
+production_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+production_as_share_of_tes_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for production_as_share_of_tes_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+production_as_share_of_tes_patch_line_chart <- wrap_plots(plot_spacer(),
+                                                          production_as_share_of_tes_balkans_patch_line_chart,
+                                                          production_as_share_of_tes_eurasia_patch_line_chart,
+                                                          production_as_share_of_tes_mcp_grouping_patch_line_chart, 
+                                                          plot_spacer()) +
+        plot_layout(design = layout) 
+# production_as_share_of_tes_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(production_as_share_of_tes_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/production_as_share_of_tes_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_production_by_type_as_share_of_tes_facet_line_chart ####
+
+# inspect energy types with zero share of production across all countries/years, to exclude from chart
+# note electricity and oil products have zero share of production; 
+# note electricity is already excluded, 
+# oil products will be manually dropped for chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+iea %>% filter(Production_electricity > 0) %>% nrow() # 0
+iea %>% filter(Production_oil_products > 0) %>% nrow() # 0
+
+
+# inspect azerbaijan's crude production avg 328% of TES, natural gas production avg is 112% of TES
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(country == "Azerbaijan" & var %in% c("Production_crude_oil", "Production_natural_gas")) %>%
+        group_by(var) %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total,
+               production_as_share_of_tes_avg = mean(production_as_share_of_tes)) %>% 
+        ungroup() %>% arrange(var, year)
+
+# inspect chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(!(var %in% c("Production_oil_products", "Production_electricity")),
+               country != "Azerbaijan") %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total) %>%
+        rename(values = production_as_share_of_tes) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() +
+        facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% filter(year %in% c(2009, 2018), var == "Coal", 
+                      country %in% c("BiH", "Kosovo", "N. Macedonia", "Serbia")) %>%
+        group_by(year) %>% summarize(mean = mean(values))
+
+
+#//////////////////
+
+
+# add color_bin and color
+# note that azerbaijan will be excluded because it distorts the scale
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(!(var %in% c("Production_oil_products", "Production_electricity")),
+               country != "Azerbaijan") %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total) %>%
+        rename(values = production_as_share_of_tes) %>%
+        mutate(var = case_when(var == "Production_natural_gas" ~ "Natural gas",
+                               var == "Production_coal" ~ "Coal",
+                               var == "Production_crude_oil" ~ "Crude oil",
+                               # var == "Production_oil_products" ~ "Oil products",
+                               # var == "Production_electricity" ~ "Electricity",
+                               var == "Production_biofuels_and_waste" ~ "Biofuels and waste",
+                               var == "Production_heat" ~ "Heat",
+                               var == "Production_hydro" ~ "Hydro",
+                               var == "Production_nuclear" ~ "Nuclear",
+                               var == "Production_wind_solar_etc" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 # color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_by_type_as_share_of_tes_facet_line_chart  <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Wind, solar, etc.",
+                                                                 "Nuclear", "Hydro",
+                                                                 "Heat", "Biofuels and waste",
+                                                                 "Electricity", "Oil products",
+                                                                 "Crude oil", "Coal",
+                                                                 "Natural gas")))) + 
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = .7, by = .2), 
+                           limits = c(0, .7), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        coord_fixed(ratio = 8/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333", size = .5),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+iea_production_by_type_as_share_of_tes_facet_line_chart 
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_by_type_as_share_of_tes_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_by_type_as_share_of_tes_facet_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_production_as_share_of_tes_stacked_bar_chart ####
+
+# inspect energy types with zero share of production across all countries/years, to exclude from chart
+# note electricity and oil products have zero share of production; 
+# note electricity is already excluded, 
+# oil products will be manually dropped for chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+iea %>% filter(Production_electricity > 0) %>% nrow() # 0
+iea %>% filter(Production_oil_products > 0) %>% nrow() # 0
+
+
+# inspect azerbaijan's crude production is 328% of TES avg for the period; 271% of TES for 2018
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(country == "Azerbaijan" & var == "Production_crude_oil") %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total,
+               production_as_share_of_tes_avg = mean(production_as_share_of_tes))
+
+# inspect chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(!(var %in% c("Production_oil_products", "Production_electricity")),
+               !(country == "Azerbaijan" & var == "Production_crude_oil"),
+               year == 2018) %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total) %>%
+        rename(values = production_as_share_of_tes) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = var)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+
+#///////////////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, matches("^Production_"), -c(Production_total, production_as_share_of_overall_production_sum), 
+               TES_total) %>% 
+        pivot_longer(cols = -c(country, year, TES_total), names_to = "var", values_to = "production_by_type") %>%
+        filter(!(var %in% c("Production_oil_products", "Production_electricity")),
+               !(country == "Azerbaijan" & var == "Production_crude_oil"),
+               year == 2018) %>%
+        mutate(production_as_share_of_tes = production_by_type / TES_total) %>%
+        rename(values = production_as_share_of_tes) %>%
+        mutate(var = case_when(var == "Production_natural_gas" ~ "Natural gas",
+                               var == "Production_coal" ~ "Coal",
+                               var == "Production_crude_oil" ~ "Crude oil",
+                               # var == "Production_oil_products" ~ "Oil products",
+                               # var == "Production_electricity" ~ "Electricity",
+                               var == "Production_biofuels_and_waste" ~ "Biofuels and waste",
+                               var == "Production_heat" ~ "Heat",
+                               var == "Production_hydro" ~ "Hydro",
+                               var == "Production_nuclear" ~ "Nuclear",
+                               var == "Production_wind_solar_etc" ~ "Wind, solar, etc.")) %>%
+        mutate(color_bin = var,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 # color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_as_share_of_tes_stacked_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = country, 
+                             y = values, 
+                             fill = factor(color_bin, 
+                                           levels = c("Wind, solar, etc.",
+                                                      "Nuclear", "Hydro",
+                                                      "Heat", "Biofuels and waste",
+                                                      "Electricity", "Oil products",
+                                                      "Crude oil", "Coal",
+                                                      "Natural gas")))) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        # geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1.2, by = .2), 
+                           limits = c(0, 1.2), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_production_as_share_of_tes_stacked_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_as_share_of_tes_stacked_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_as_share_of_tes_stacked_bar_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create iea_production_by_type_as_share_of_overall_production_facet_line_chart ####
+
+# inspect energy types with zero share of production across all countries/years, to exclude from chart
+# note electricity and oil products have zero share of production; 
+# note electricity is already excluded, 
+# oil products will be manually dropped for chart
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "as_share_of_overall_production")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+iea %>% filter(Production_electricity > 0) %>% nrow() # 0
+iea %>% filter(Production_oil_products > 0) %>% nrow() # 0
+
+# inspect
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, contains("as_share_of_overall_production"), 
+               -production_as_share_of_overall_production_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(var != "oil_products_production_as_share_of_overall_production") %>%
+        mutate(energy_type = str_to_sentence(string = 
+                                                     str_replace(string = var, pattern = regex("_production_as_share_of_overall_production"),
+                                                                 replacement = ""))) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = energy_type)) + geom_line() +
+        facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
 
 # add color_bin and color
 chart_data <- iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*production_as_share_of_overall_production")) %>%
-        select(-production_as_share_of_overall_production_sum) %>%
-        arrange(natural_gas_production_as_share_of_overall_production) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
+        filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, contains("as_share_of_overall_production"), 
+               -production_as_share_of_overall_production_sum) %>% 
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(var != "oil_products_production_as_share_of_overall_production") %>%
         mutate(var = case_when(var == "natural_gas_production_as_share_of_overall_production" ~ "Natural gas",
                                var == "coal_production_as_share_of_overall_production" ~ "Coal",
                                var == "crude_oil_production_as_share_of_overall_production" ~ "Crude oil",
@@ -9205,26 +17990,30 @@ chart_data_color_list
 
 
 # create chart
-iea_production_as_share_of_overall_production_stacked_bar_chart <- chart_data %>% 
-        ggplot(data = ., aes(x = country, 
-                             y = value, 
-                             fill = factor(color_bin, 
-                                           levels = c("Wind, solar, etc.",
-                                                      "Nuclear", "Hydro",
-                                                      "Heat", "Biofuels and waste",
-                                                      "Electricity", "Oil products",
-                                                      "Crude oil", "Coal",
-                                                      "Natural gas")))) + 
-        geom_bar(position = "fill", stat = "identity", width = .8) + 
-        scale_fill_manual(values = chart_data_color_list) +
-        scale_x_discrete(expand = c(0, 0)) +
-        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), 
+iea_production_by_type_as_share_of_overall_production_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Wind, solar, etc.",
+                                                                 "Nuclear", "Hydro",
+                                                                 "Heat", "Biofuels and waste",
+                                                                 "Electricity", "Oil products",
+                                                                 "Crude oil", "Coal",
+                                                                 "Natural gas")))) + 
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
                            limits = c(0, 1), 
                            expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = NULL, y = "Energy production as a share\nof total energy production, by ktoe", 
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        labs(x = NULL, y = "Share", 
              title = NULL,
-             caption = NULL, fill = "") +
+             caption = NULL, color = "") +
         coord_fixed(ratio = 6/1, clip = "off") +
         theme_bw() +
         theme(
@@ -9235,108 +18024,1393 @@ iea_production_as_share_of_overall_production_stacked_bar_chart <- chart_data %>
                 # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
                 panel.grid.minor = element_blank(),
                 panel.grid.major.x = element_blank(),
-                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
                 # panel.grid.major.y = element_line(color = "#000000"),
                 panel.border = element_blank(),
                 # panel.grid = element_blank(),
                 # line = element_blank(),
                 # rect = element_blank(),
-                axis.ticks.y = element_line(color = "#DDDDDD"),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
                 # axis.ticks.x = element_blank(),
-                axis.ticks.length.y.left = unit(.2, "cm"),
-                axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
-                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
                 # axis.text.x = element_blank(),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
-                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333", size = .5),
                 axis.line.y.left = element_blank(),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
                                             margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
-                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
                 legend.position = "right",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                            hjust = .5, color = "#333333")
                 # legend.spacing.y = unit(5.5, "cm"),
                 # legend.key = element_rect(size = 5),
                 # legend.key.size = unit(2, 'lines')
-        ) 
-# guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
 
 # inspect
-iea_production_as_share_of_overall_production_stacked_bar_chart
+iea_production_by_type_as_share_of_overall_production_facet_line_chart
 
 
-#//////////////////////////////////
+#///////////////////
 
 
 # save chart as emf
 filename <- tempfile(fileext = ".emf")
 emf(file = filename)
-print(iea_production_as_share_of_overall_production_stacked_bar_chart)
+print(iea_production_by_type_as_share_of_overall_production_facet_line_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
-        print(target = "output/charts/iea_production_as_share_of_overall_production_stacked_bar_chart.docx")
+        print(target = "output/charts/iea_production_by_type_as_share_of_overall_production_facet_line_chart.docx")
 
 
-#////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////
-#////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# iea_tfc_as_share_of_overall_tfc_stacked_bar_chart ####
 
-# check filter
-iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        count(mcp_grouping, country) %>% print(n = nrow(.))
 
-# check raw data
+# create renewable_production_as_share_of_tes_balkans_patch_line_chart ####
 
-# nuclear and hydro are not final consumption
-iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*tfc_as_share_of_overall_tfc")) %>%
-        select(-tfc_as_share_of_overall_tfc_sum) %>%
-        arrange(natural_gas_tfc_as_share_of_overall_tfc) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
-        group_by(var) %>% skim(value)
+# inspect
+# eu renewables definition: https://www.eea.europa.eu/data-and-maps/indicators/renewable-energy-consumption-outlook-from-iea
+# note that iea includes geothermal with "wind, solar, etc" 
+# https://www.iea.org/commentaries/understanding-and-using-the-energy-balance
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                      Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, Production_biofuels_and_waste, 
+               Production_hydro, Production_wind_solar_etc, renewable_production, TES_total, 
+               renewable_production_as_share_of_tes) 
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, renewable_production_as_share_of_tes) %>% print(n = nrow(.))
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, renewable_production_as_share_of_tes) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = renewable_production_as_share_of_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+
+#//////////////////
 
 
 # add color_bin and color
-chart_data <- iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates")),
-               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans"), 
-               year == 2018) %>% 
-        select(country, year, mcp_grouping, matches("^.*tfc_as_share_of_overall_tfc")) %>%
-        select(-tfc_as_share_of_overall_tfc_sum) %>%
-        arrange(natural_gas_tfc_as_share_of_overall_tfc) %>%
-        mutate(x_axis_ordering_index = row_number()) %>%
-        pivot_longer(cols = -c(country, year, mcp_grouping, x_axis_ordering_index), names_to = "var", values_to = "value") %>%
-        mutate(var = case_when(var == "natural_gas_tfc_as_share_of_overall_tfc" ~ "Natural gas",
-                               var == "coal_tfc_as_share_of_overall_tfc" ~ "Coal",
-                               var == "crude_oil_tfc_as_share_of_overall_tfc" ~ "Crude oil",
-                               var == "oil_products_tfc_as_share_of_overall_tfc" ~ "Oil products",
-                               var == "electricity_tfc_as_share_of_overall_tfc" ~ "Electricity",
-                               var == "biofuels_and_waste_tfc_as_share_of_overall_tfc" ~ "Biofuels and waste",
-                               var == "heat_tfc_as_share_of_overall_tfc" ~ "Heat",
-                               var == "hydro_tfc_as_share_of_overall_tfc" ~ "Hydro",
-                               var == "nuclear_tfc_as_share_of_overall_tfc" ~ "Nuclear",
-                               var == "wind_solar_etc_tfc_as_share_of_overall_tfc" ~ "Wind, solar, etc.")) %>%
+chart_data <- iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, renewable_production_as_share_of_tes) %>% 
+        mutate(values = renewable_production_as_share_of_tes) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Renewable energy production as a share of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+renewable_production_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        geom_line(size = 1) +
+        geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .5, by = .1), limits = c(0, .5), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = .5, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .1, yend = .1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .3, yend = .3), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .5, yend = .5), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) +  
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+renewable_production_as_share_of_tes_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create renewable_production_as_share_of_tes_eurasia_patch_line_chart ####
+
+# inspect
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, renewable_production_as_share_of_tes) %>% 
+        print(n = nrow(.))
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, renewable_production_as_share_of_tes) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = renewable_production_as_share_of_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(country, year, renewable_production_as_share_of_tes) %>% 
+        mutate(values = renewable_production_as_share_of_tes) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Renewable energy production as a share of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+renewable_production_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values - .01, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .5, by = .1), limits = c(0, .5), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = .5, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .1, yend = .1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .3, yend = .3), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .5, yend = .5), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+renewable_production_as_share_of_tes_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create renewable_production_as_share_of_tes_mcp_grouping_patch_line_chart ####
+
+# inspect
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15"))) %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(mcp_grouping, country, year, renewable_production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(renewable_production_as_share_of_tes_avg = mean(renewable_production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15"))) %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(mcp_grouping, country, year, renewable_production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(renewable_production_as_share_of_tes_avg = mean(renewable_production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = renewable_production_as_share_of_tes_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                             "U.S.", "Russia", "EU-15"))) %>%
+        rowwise() %>% mutate(renewable_production = sum(c_across(cols = c(Production_biofuels_and_waste, 
+                                                                          Production_hydro, Production_wind_solar_etc)))) %>%
+        ungroup() %>% mutate(renewable_production_as_share_of_tes = renewable_production / TES_total) %>%
+        select(mcp_grouping, country, year, renewable_production_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(renewable_production_as_share_of_tes_avg = mean(renewable_production_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = renewable_production_as_share_of_tes_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Renewable energy production as a share of primary energy use"
+
+
+#////////////////////////
+
+
+renewable_production_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values + .01, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = .5, by = .1), limits = c(0, .5), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = .5, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .1, yend = .1), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .3, yend = .3), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .5, yend = .5), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+renewable_production_as_share_of_tes_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for renewable_production_as_share_of_tes_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+renewable_production_as_share_of_tes_patch_line_chart <- wrap_plots(plot_spacer(),
+                                                                    renewable_production_as_share_of_tes_balkans_patch_line_chart,
+                                                                    renewable_production_as_share_of_tes_eurasia_patch_line_chart,
+                                                                    renewable_production_as_share_of_tes_mcp_grouping_patch_line_chart, 
+                                                                    plot_spacer()) +
+        plot_layout(design = layout) 
+# renewable_production_as_share_of_tes_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(renewable_production_as_share_of_tes_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/renewable_production_as_share_of_tes_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create net_energy_imports_as_share_of_tes_balkans_patch_line_chart ####
+
+# inspect
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, TES_total, Production_total, net_energy_imports,
+               net_energy_imports_as_share_of_tes) 
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% print(n = nrow(.))
+iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = net_energy_imports_as_share_of_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(net_energy_imports_as_share_of_tes)) %>%
+        ungroup() %>% arrange(desc(mean))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        mutate(values = net_energy_imports_as_share_of_tes) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Albania" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "BiH" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Kosovo" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "N. Macedonia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Serbia" ~ color_palette %>% slice(5) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Net energy imports as a share of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+net_energy_imports_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                  "N. Macedonia", "Serbia")),
+                             linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
+                                                                     "N. Macedonia", "Serbia")))) + 
+        geom_line(size = 1) +
+        geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "BiH"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Kosovo"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "N. Macedonia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Serbia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Albania", "BiH", "Kosovo",
+                                      "N. Macedonia", "Serbia")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Albania", "BiH", "Kosovo",
+                                         "N. Macedonia", "Serbia")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = "Share", 
+             title = "E&E Balkans",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 10.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                            margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                # axis.title.y = element_blank(),
+                # axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+net_energy_imports_as_share_of_tes_balkans_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create net_energy_imports_as_share_of_tes_eurasia_patch_line_chart ####
+
+# inspect
+# note that azerbaijan will be dropped because its a net exporter, w negative net imports, distorting y axis
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        print(n = nrow(.))
+
+# inspect azerbaijan's net_energy_imports_as_share_of_tes - 328%
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        group_by(country) %>% mutate(net_energy_imports_as_share_of_tes_avg = mean(net_energy_imports_as_share_of_tes)) %>%
+        ungroup() %>% print(n = nrow(.))
+
+# inspect chart
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia", country != "Azerbaijan") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = net_energy_imports_as_share_of_tes)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        mutate(values = net_energy_imports_as_share_of_tes) %>%
+        group_by(country) %>% summarize(mean = mean(net_energy_imports_as_share_of_tes)) %>%
+        ungroup() %>% arrange(desc(mean))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia", country != "Azerbaijan") %>%
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        mutate(values = net_energy_imports_as_share_of_tes) %>%
+        mutate(color_bin = country,
+               color = case_when(color_bin == "Armenia" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Azerbaijan" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Belarus" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Georgia" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Moldova" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Ukraine" ~ color_palette %>% slice(6) %>% pull(hex)),
+               linetype_bin = country,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Net energy imports as a share of primary energy use"
+
+
+#/////////////////////
+
+
+# create chart
+net_energy_imports_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                  "Georgia", "Moldova", "Ukraine")),
+                             linetype = factor(color_bin, levels = c("Armenia", "Azerbaijan", "Belarus",
+                                                                     "Georgia", "Moldova", "Ukraine")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Armenia"),
+                  mapping = aes(x = year + .65, y = values - .02, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Azerbaijan"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Belarus"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Georgia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Moldova"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), country == "Ukraine"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Armenia", "Azerbaijan", "Belarus",
+                                      "Georgia", "Moldova", "Ukraine")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Armenia", "Azerbaijan", "Belarus",
+                                         "Georgia", "Moldova", "Ukraine")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E Eurasia",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 9.5, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+net_energy_imports_as_share_of_tes_eurasia_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create net_energy_imports_as_share_of_tes_mcp_grouping_patch_line_chart ####
+
+# inspect
+# note that CARs and Azerbaijan will be excluded because they are net exporters, w negative net imports, distoring y axis
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan") %>%
+        select(mcp_grouping, country, year, net_energy_imports_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(net_energy_imports_as_share_of_tes_avg = mean(net_energy_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        print(n = nrow(.))
+
+# check CARs average over period
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan") %>%
+        select(mcp_grouping, country, year, net_energy_imports_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(net_energy_imports_as_share_of_tes_avg = mean(net_energy_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>%
+        group_by(mcp_grouping) %>% 
+        mutate(net_energy_imports_as_share_of_tes_avg_over_time = mean(net_energy_imports_as_share_of_tes_avg)) %>%
+        print(n = nrow(.))
+
+# inspect chart
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                "U.S.", "Russia", "EU-15")),
+               country != "Azerbaijan", mcp_grouping != "CARs") %>%
+        select(mcp_grouping, country, year, net_energy_imports_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(net_energy_imports_as_share_of_tes_avg = mean(net_energy_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% arrange(year, mcp_grouping, country) %>% 
+        ggplot(data = ., mapping = aes(x = year, y = net_energy_imports_as_share_of_tes_avg, color = mcp_grouping)) + 
+        geom_line() 
+
+# inspect for report
+chart_data %>% glimpse()
+chart_data %>% group_by(mcp_grouping) %>% summarize(mean = mean(net_energy_imports_as_share_of_tes_avg)) %>%
+        ungroup() %>% arrange(desc(mean))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs",
+                                             "U.S.", "Russia", "EU-15")),
+                             country != "Azerbaijan", mcp_grouping != "CARs") %>%
+        select(mcp_grouping, country, year, net_energy_imports_as_share_of_tes) %>% 
+        group_by(mcp_grouping, year) %>% 
+        mutate(net_energy_imports_as_share_of_tes_avg = mean(net_energy_imports_as_share_of_tes)) %>%
+        slice(1) %>%
+        ungroup() %>% mutate(values = net_energy_imports_as_share_of_tes_avg) %>%
+        mutate(mcp_grouping = case_when(mcp_grouping == "E&E Balkans" ~ "Balkans",
+                                        mcp_grouping == "E&E Eurasia" ~ "Eurasia",
+                                        mcp_grouping == "E&E graduates" ~ "Graduates",
+                                        TRUE ~ mcp_grouping)) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)),
+               linetype_bin = mcp_grouping,
+               linetype = case_when(TRUE ~ "solid"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+# create linetype_list for to pass to scale_linetype_manual
+chart_data_linetype_list <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype)
+names(chart_data_linetype_list) <- chart_data %>% count(linetype_bin, linetype) %>% pull(linetype_bin)
+chart_data_linetype_list
+
+# title
+title <- "Net energy imports as a share of primary energy use"
+
+
+#////////////////////////
+
+
+net_energy_imports_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data %>%
+        ggplot(data = ., aes(x = year, 
+                             y = values, 
+                             color = factor(color_bin, levels = c("Balkans", 
+                                                                  "Eurasia", 
+                                                                  "Graduates", 
+                                                                  "CARs")),
+                             linetype = factor(color_bin, levels = c("Balkans", 
+                                                                     "Eurasia", 
+                                                                     "Graduates", 
+                                                                     "CARs")))) + 
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Balkans"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Eurasia"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "Graduates"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        geom_text(data = chart_data %>% filter(year == max(year), mcp_grouping == "CARs"),
+                  mapping = aes(x = year + .65, y = values, label = color_bin),
+                  fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
+        scale_color_manual(values = chart_data_color_list, guide = FALSE,
+                           labels = c("Balkans", 
+                                      "Eurasia", 
+                                      "Graduates", 
+                                      "CARs")) +
+        scale_linetype_manual(values = chart_data_linetype_list, guide = FALSE,
+                              labels = c("Balkans", 
+                                         "Eurasia", 
+                                         "Graduates", 
+                                         "CARs")) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3)) +
+        labs(x = NULL, y = NULL, 
+             title = "E&E regions",
+             caption = NULL, color = "", linetype = "") +
+        # coord_fixed(ratio = 8 / 1, clip = "off") +
+        # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
+        geom_rect(data = chart_data,
+                  mapping = aes(xmin = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                xmax = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5),
+                  ymin = 0, ymax = 1, alpha = 0, color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .2, yend = .2), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .4, yend = .4), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .6, yend = .6), color = "#DDDDDD", size = .25) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
+                                   y = .8, yend = .8), color = "#DDDDDD", size = .25) +
+        geom_line(size = 1) + 
+        geom_point(size = 2) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                plot.margin = unit(c(0, 7, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                # panel.grid.major.y = element_line(color = "#DDDDDD"),
+                panel.grid.major.y = element_blank(),
+                panel.border = element_blank(),
+                # panel.border = element_rect(color = "#DDDDDD", size = .5),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                axis.ticks.x = element_line(size = .5),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                            margin = margin(t = 0, r = -5, b = 0, l = 0)),
+                # axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.x.bottom = element_blank(),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                # axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                #                             margin = margin(t = 0, r = 3, b = 0, l = 0)),
+                axis.title.y = element_blank(),
+                axis.text.y = element_blank(),
+                plot.title = element_text(size = 7, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) 
+# guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+#        linetype = guide_legend(keywidth = 4))
+
+# inspect
+net_energy_imports_as_share_of_tes_mcp_grouping_patch_line_chart
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine patches for net_energy_imports_as_share_of_tes_patch_line_chart ####
+plot_width <- 200
+plot_height <- 13
+layout <- c(
+        area(t = 1, l = 1, b = 10, r = plot_width * 3), # spacer 1 to 1
+        area(t = 11, l = 1, b = plot_height + 11, r = plot_width), # 2 to 4
+        area(t = 11, l = plot_width + 1, b = plot_height + 11, r = plot_width * 2), # 6 to 8
+        area(t = 11, l = (plot_width * 2) + 1, b = plot_height + 11, r = plot_width * 3), # 10 to 12
+        area(t = plot_height + 12, l = 1, b = plot_height + 22, r = plot_width * 3) # spacer 13 to 13
+)
+# plot(layout)
+
+
+#///////////////
+
+
+# create patchwork plot
+net_energy_imports_as_share_of_tes_patch_line_chart <- wrap_plots(plot_spacer(),
+                                                                  net_energy_imports_as_share_of_tes_balkans_patch_line_chart,
+                                                                  net_energy_imports_as_share_of_tes_eurasia_patch_line_chart,
+                                                                  net_energy_imports_as_share_of_tes_mcp_grouping_patch_line_chart, 
+                                                                  plot_spacer()) +
+        plot_layout(design = layout) 
+# net_energy_imports_as_share_of_tes_patch_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(net_energy_imports_as_share_of_tes_patch_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/net_energy_imports_as_share_of_tes_patch_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create net_imports_as_share_of_tes_sum_facet_line_chart ####
+
+# inspect energy types with zero share of tes across all countries/years, to exclude from chart
+# note that heat, hydro, nuclear, and wind/solar will be removed
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches("^net_.*_imports_as_share_of_tes")) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>% skim(values)
+
+# inspect azerbaijan crude net_imports_as_share_of_tes, since it's an outlier and will be dropped to avoid distorting scale
+# average net_crude_oil_imports_as_share_of_tes is -280%
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
+        select(-net_energy_imports_as_share_of_tes) %>% 
+        pivot_longer(cols = -c(country, year, mcp_grouping), names_to = "var", values_to = "values") %>%
+        filter(country == "Azerbaijan" & var == "net_crude_oil_imports_as_share_of_tes") %>%
+        mutate(avg_net_crude_oil_imports_as_share_of_tes = mean(values))
+
+# inspect
+iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                       (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
+        select(-net_energy_imports_as_share_of_tes) %>% 
+        pivot_longer(cols = -c(country, year, mcp_grouping), names_to = "var", values_to = "values") %>%
+        filter(!(country == "Azerbaijan" & var == "net_crude_oil_imports_as_share_of_tes"),
+               !(var %in% c("net_heat_imports_as_share_of_tes",
+                            "net_hydro_imports_as_share_of_tes",
+                            "net_nuclear_imports_as_share_of_tes",
+                            "net_wind_solar_etc_imports_as_share_of_tes"))) %>%
+        mutate(var = case_when(var == "net_natural_gas_imports_as_share_of_tes" ~ "Natural gas",
+                               var == "net_coal_imports_as_share_of_tes" ~ "Coal",
+                               var == "net_crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                               var == "net_oil_products_imports_as_share_of_tes" ~ "Oil products",
+                               var == "net_electricity_imports_as_share_of_tes" ~ "Electricity",
+                               var == "net_biofuels_and_waste_imports_as_share_of_tes" ~ "Biofuels and waste",
+                               var == "net_heat_imports_as_share_of_tes" ~ "Heat",
+                               var == "net_hydro_imports_as_share_of_tes" ~ "Hydro",
+                               var == "net_nuclear_imports_as_share_of_tes" ~ "Nuclear",
+                               var == "net_wind_solar_etc_imports_as_share_of_tes" ~ "Wind, solar, etc.")) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() +
+        facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% filter(var == "Natural gas") %>% group_by(country) %>% 
+        summarize(mean = mean(values)) %>% 
+        ungroup() %>% arrange(desc(mean))
+chart_data %>% group_by(country, var) %>% 
+        summarize(mean = mean(values)) %>% 
+        ungroup() %>% arrange(mean)
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                     (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>%
+        select(country, year, mcp_grouping, matches("^net_.*_imports_as_share_of_tes")) %>%
+        select(-net_energy_imports_as_share_of_tes) %>% 
+        pivot_longer(cols = -c(country, year, mcp_grouping), names_to = "var", values_to = "values") %>%
+        filter(!(country == "Azerbaijan" & var == "net_crude_oil_imports_as_share_of_tes"),
+               !(var %in% c("net_heat_imports_as_share_of_tes",
+                            "net_hydro_imports_as_share_of_tes",
+                            "net_nuclear_imports_as_share_of_tes",
+                            "net_wind_solar_etc_imports_as_share_of_tes"))) %>%
+        mutate(var = case_when(var == "net_natural_gas_imports_as_share_of_tes" ~ "Natural gas",
+                               var == "net_coal_imports_as_share_of_tes" ~ "Coal",
+                               var == "net_crude_oil_imports_as_share_of_tes" ~ "Crude oil",
+                               var == "net_oil_products_imports_as_share_of_tes" ~ "Oil products",
+                               var == "net_electricity_imports_as_share_of_tes" ~ "Electricity",
+                               var == "net_biofuels_and_waste_imports_as_share_of_tes" ~ "Biofuels and waste",
+                               var == "net_heat_imports_as_share_of_tes" ~ "Heat",
+                               var == "net_hydro_imports_as_share_of_tes" ~ "Hydro",
+                               var == "net_nuclear_imports_as_share_of_tes" ~ "Nuclear",
+                               var == "net_wind_solar_etc_imports_as_share_of_tes" ~ "Wind, solar, etc.")) %>%
         mutate(color_bin = var,
                color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
                                  color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
@@ -9359,9 +19433,401 @@ chart_data_color_list
 
 
 # create chart
-iea_tfc_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>% 
+net_imports_as_share_of_tes_sum_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Wind, solar, etc.",
+                                                                 "Nuclear", "Hydro",
+                                                                 "Heat", "Biofuels and waste",
+                                                                 "Electricity", "Oil products",
+                                                                 "Crude oil", "Coal",
+                                                                 "Natural gas")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = -.75, to = 1, by = .25), 
+                           limits = c(-.75, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = -.75, yend = -.75), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 4/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+net_imports_as_share_of_tes_sum_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(net_imports_as_share_of_tes_sum_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/net_imports_as_share_of_tes_sum_facet_line_chart.docx")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create share_of_electricity_generation_by_type_facet_line_chart ####
+
+# inspect 
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"), 
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>% glimpse()
+
+# confirm the sum of energy type shares of tfc equals 1
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(country, year) %>% summarize(sum = sum(values)) %>% 
+        ungroup() %>% distinct(sum)
+
+# inspect energy types with zero share of electricity generation across all countries/years, to exclude from chart
+# note that crude will be removed
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>%
+        skim(values)
+
+# inspect chart
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("crude_oil_share_of_electricity_generation"))) %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     # str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = fuel_type)) + geom_line() + 
+        facet_wrap(facets = vars(country))
+
+
+#//////////////////
+
+
+# add color_bin and color
+chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                                (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("crude_oil_share_of_electricity_generation"))) %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     # str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     # str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        mutate(color_bin = fuel_type,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+share_of_electricity_generation_by_type_facet_line_chart <- chart_data %>% 
+        ggplot(data = ., mapping = aes(x = year, 
+                                       y = values, 
+                                       color = factor(color_bin, 
+                                                      levels = c("Wind, solar, etc.",
+                                                                 "Nuclear", "Hydro",
+                                                                 "Heat", "Biofuels and waste",
+                                                                 "Electricity", "Oil products",
+                                                                 "Crude oil", "Coal",
+                                                                 "Natural gas")))) + 
+        scale_color_manual(values = chart_data_color_list) +
+        scale_x_continuous(breaks = seq(from = 2009, to = 2018, by = 3), expand = c(0,0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
+                           limits = c(0, 1), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, color = "") +
+        geom_line(size = 1) + facet_wrap(facets = vars(country)) +
+        geom_segment(data = chart_data,
+                     mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
+                                   xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
+                                   y = 0, yend = 0), color = "#333333", size = .5) + 
+        coord_fixed(ratio = 6/1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                panel.spacing.x = unit(1, "lines"),
+                panel.spacing.y = unit(1, "lines"),
+                strip.background = element_blank(),
+                strip.text = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333"),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.y = element_line(color = "#DDDDDD"),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333",
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
+                plot.title = element_text(size = 7, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "right",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 7, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 7, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) +
+        # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
+        guides(color = guide_legend(override.aes = list(size = 6)))
+
+# inspect
+share_of_electricity_generation_by_type_facet_line_chart
+
+
+#///////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(share_of_electricity_generation_by_type_facet_line_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/share_of_electricity_generation_by_type_facet_line_chart.docx")
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# create share_of_electricity_generation_by_type_stacked_bar_chart ####
+
+# inspect 
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"), 
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>% glimpse()
+
+# confirm the sum of energy type shares of tfc equals 1
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(country, year) %>% summarize(sum = sum(values)) %>% 
+        ungroup() %>% distinct(sum)
+
+# inspect energy types with zero share of electricity generation across all countries/years, to exclude from chart
+# note that crude will be removed
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        group_by(var) %>%
+        skim(values)
+
+# inspect chart
+iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                  (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("crude_oil_share_of_electricity_generation")),
+               year == 2018) %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     # str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        ggplot(data = ., mapping = aes(x = country, y = values, fill = fuel_type)) + 
+        geom_bar(position = position_stack(), stat = "identity", width = .8)
+
+
+#///////////////////////////
+
+
+# add color_bin and color
+chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                                                (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, matches(match = "share_of_electricity_generation"),
+               -c(sum_across_energy_types_electricity_generation, 
+                  sum_across_energy_types_as_share_of_electricity_generation)) %>%
+        pivot_longer(cols = -c(country, year), names_to = "var", values_to = "values") %>%
+        filter(!(var %in% c("crude_oil_share_of_electricity_generation")),
+               year == 2018) %>%
+        mutate(fuel_type = case_when(str_detect(string = var, pattern = "natural_gas") ~ "Natural gas",
+                                     str_detect(string = var, pattern = "coal") ~ "Coal",
+                                     # str_detect(string = var, pattern = "crude_oil") ~ "Crude oil",
+                                     str_detect(string = var, pattern = "oil_products") ~ "Oil products",
+                                     # str_detect(string = var, pattern = "electricity") ~ "Electricity",
+                                     str_detect(string = var, pattern = "biofuels_and_waste") ~ "Biofuels and waste",
+                                     str_detect(string = var, pattern = "heat") ~ "Heat",
+                                     str_detect(string = var, pattern = "hydro") ~ "Hydro",
+                                     str_detect(string = var, pattern = "nuclear") ~ "Nuclear",
+                                     str_detect(string = var, pattern = "wind_solar_etc") ~ "Wind, solar, etc.")) %>%
+        select(-var) %>%
+        mutate(color_bin = fuel_type,
+               color = case_when(color_bin == "Natural gas" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "Coal" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 # color_bin == "Crude oil" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Hydro" ~ "#99ba78",
+                                 color_bin == "Nuclear" ~ "#24A99C",
+                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+share_of_electricity_generation_by_type_stacked_bar_chart <- chart_data %>% 
         ggplot(data = ., aes(x = country, 
-                             y = value, 
+                             y = values, 
                              fill = factor(color_bin, 
                                            levels = c("Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
@@ -9369,14 +19835,15 @@ iea_tfc_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>%
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
-        geom_bar(position = "fill", stat = "identity", width = .8) + 
+        # geom_bar(position = position_stack(), stat = "identity", width = .8) + # stack exact values
+        geom_bar(position = "fill", stat = "identity", width = .8) + # auto-convert to shares summing to 1
         scale_fill_manual(values = chart_data_color_list) +
         scale_x_discrete(expand = c(0, 0)) +
-        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1), 
+        scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), 
                            limits = c(0, 1), 
                            expand = c(0, 0),
                            labels = percent_format(accuracy = 1)) +
-        labs(x = NULL, y = "Energy final consumption as a share\nof total final consumption, by ktoe", 
+        labs(x = NULL, y = "Share", 
              title = NULL,
              caption = NULL, fill = "") +
         coord_fixed(ratio = 6/1, clip = "off") +
@@ -9399,23 +19866,23 @@ iea_tfc_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>%
                 # axis.ticks.x = element_blank(),
                 axis.ticks.length.y.left = unit(.2, "cm"),
                 axis.ticks.length.x.bottom = unit(.2, "cm"),
-                axis.text.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333",
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
                                            margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
                 # axis.text.x = element_blank(),
-                axis.text.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                            margin = margin(t = 0, r = 5, b = 0, l = 0)),
                 axis.line.x.bottom = element_line(color = "#333333"),
                 axis.line.y.left = element_blank(),
-                axis.title.x = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
                                             margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                axis.title.y = element_text(family = "Calibri", face = "plain", size = 12, color = "#333333", 
-                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 5, b = 0, l = 2)),
                 plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
                                           margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
                 legend.position = "right",
                 # legend.key.size = unit(2, "mm"), 
-                legend.title = element_text(size = 12, family = "Calibri", face = "plain", color = "#333333"),
-                legend.text = element_text(size = 12, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                            hjust = .5, color = "#333333")
                 # legend.spacing.y = unit(5.5, "cm"),
                 # legend.key = element_rect(size = 5),
@@ -9424,7 +19891,7 @@ iea_tfc_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>%
 # guides(fill = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333"))
 
 # inspect
-iea_tfc_as_share_of_overall_tfc_stacked_bar_chart
+share_of_electricity_generation_by_type_stacked_bar_chart
 
 
 #//////////////////////////////////
@@ -9433,18 +19900,21 @@ iea_tfc_as_share_of_overall_tfc_stacked_bar_chart
 # save chart as emf
 filename <- tempfile(fileext = ".emf")
 emf(file = filename)
-print(iea_tfc_as_share_of_overall_tfc_stacked_bar_chart)
+print(share_of_electricity_generation_by_type_stacked_bar_chart)
 dev.off()
 
-# add emf to word doc - will manually crop map in word doc 
+# add emf to word doc  
 read_docx() %>% 
         body_add_img(src = filename, width = 6, height = 6) %>% 
-        print(target = "output/charts/iea_tfc_as_share_of_overall_tfc_stacked_bar_chart.docx")
+        print(target = "output/charts/share_of_electricity_generation_by_type_stacked_bar_chart.docx")
 
 
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 
