@@ -16,39 +16,44 @@ library(patchwork)
 
 
 # setwd
-setwd("C:/Users/Stephen/Desktop/usaid/mcp/tso_portfolio_reviews/energy_and_infrastructure")
-
+# setwd("C:/Users/Stephen/Desktop/usaid/mcp/tso_portfolio_reviews/energy_and_infrastructure")
+setwd("C:/Users/sdevine/Desktop/usaid/mcp/tso_portfolio_reviews/energy_and_infrastructure")
 options(scipen=999)
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# create blue_grey custom palette ####
-color_palette <- tibble(hex = c("#08306B", "#08519C", "#4292C6", "#9ECAE1", "#BDBDBD", "#737373", "#484848"))
+# create custom color_palette ####
+color_palette <- tibble(hex = c("#08306B", "#2474B6", "#8BBFD0", 
+                                "#CBCBCB", "#7D7D7D", "#424242",
+                                "#99ba78", "#35B779FF", "#355e3b", 
+                                "#E4DC68", "#7A378B"))
 color_palette
-show_col(color_palette %>% pull(hex))
+color_palette %>% pull(hex) %>% show_col()
 
-# blue_grey palette supports 7 colors, plus possible extensions via fill/line type
+# color_palette supports 11 colors, plus possible extensions via fill/line type
 show_col(color_palette %>% slice(1, 3) %>% pull(hex)) # 2 colors
 show_col(color_palette %>% slice(1, 2, 3) %>% pull(hex)) # 3 colors
 show_col(color_palette %>% slice(1, 2, 3, 4) %>% pull(hex)) # 4 colors
-show_col(color_palette %>% slice(1, 2, 3, 6, 7) %>% pull(hex)) # 5 colors
-show_col(color_palette %>% slice(1, 2, 3, 5, 6, 7) %>% pull(hex)) # 6 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5) %>% pull(hex)) # 5 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6) %>% pull(hex)) # 6 colors
 show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6, 7) %>% pull(hex)) # 7 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6, 7, 8) %>% pull(hex)) # 8 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6, 7, 8, 9) %>% pull(hex)) # 9 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) %>% pull(hex)) # 10 colors
+show_col(color_palette %>% slice(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) %>% pull(hex)) # 11 colors
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-# setwd
-setwd("C:/Users/Stephen/Desktop/usaid/mcp/tso_portfolio_reviews/energy_and_infrastructure")
 
 # load ee_country_crosswalk ####
 current_directory <- getwd()
-setwd("C:/Users/Stephen/Desktop/usaid/mcp/useful_info")
+# setwd("C:/Users/Stephen/Desktop/usaid/mcp/useful_info")
+setwd("C:/Users/sdevine/Desktop/usaid/mcp/useful_info")
 ee_country_crosswalk <- read_excel(path = "ee_country_crosswalk.xlsx", sheet = "ee_country_crosswalk", na = "NA")
 setwd(current_directory)
 
@@ -778,14 +783,14 @@ data %>% filter(mcp_grouping %in% c("E&E Eurasia"), mcp_grouping_aggregate_flag 
 
 # check filter
 data %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "U.S.")), 
                year == 2019) %>% 
         count(mcp_grouping, country) %>% print(n = nrow(.))
 
 # inspect data
 data %>% glimpse()
 data %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "U.S.")), 
                year == 2019) 
 
 # check raw data
@@ -798,13 +803,14 @@ db_raw %>% filter(Economy %in% c("Belarus"), `DB Year` == 2020) %>%
 
 # add color_bin and color
 chart_data <- data %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "U.S.")), 
                year == 2019) %>% 
         mutate(color_bin = mcp_grouping,
                color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
                                  color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
                                  color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
-                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)))
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -820,7 +826,7 @@ electricity_by_country_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = getting_electricity_score), 
                              y = getting_electricity_score, 
                              fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                 "CARs")))) + 
+                                                                 "CARs", "Russia")))) + 
         geom_col(width = .8) + 
         scale_fill_manual(values = chart_data_color_list) +
         scale_x_discrete(expand = c(0, 0)) +
@@ -1714,8 +1720,8 @@ getting_electricity_score_balkans_patch_line_chart <- chart_data %>%
                                                                   "N. Macedonia", "Serbia")),
                              linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
                                                                      "N. Macedonia", "Serbia")))) + 
-        geom_line(size = 1) +
-        geom_point(size = 2) +
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
                   mapping = aes(x = year + .65, y = values, label = color_bin),
                   fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
@@ -1770,7 +1776,7 @@ getting_electricity_score_balkans_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 90, yend = 90), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -1950,7 +1956,7 @@ getting_electricity_score_eurasia_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 90, yend = 90), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -2143,7 +2149,7 @@ getting_electricity_score_mcp_grouping_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 90, yend = 90), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -6352,6 +6358,9 @@ atlas %>% filter(country == "BiH") %>%
 
 # inspect for report
 chart_data %>% group_by(country) %>% summarize(mean = mean(values)) %>% arrange(mean)
+chart_data %>% print(n = nrow(.))
+chart_data %>% group_by(country) %>% filter(values == min(values) | values == max(values)) %>%
+        ungroup() %>% arrange(country, year)
 
 
 #//////////////////
@@ -6468,7 +6477,7 @@ atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_balkans_patch_line
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
                                    y = 0, yend = 0), color = "#333333", size = .5) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
         theme_bw() +
         theme(
@@ -6602,6 +6611,9 @@ atlas %>% filter(country == "Belarus") %>%
 
 # inspect for report
 chart_data %>% group_by(country) %>% summarize(mean = mean(values)) %>% arrange(mean)
+chart_data %>% print(n = nrow(.))
+chart_data %>% group_by(country) %>% filter(values == min(values) | values == max(values)) %>%
+        ungroup() %>% arrange(country, year)
 
 
 #//////////////////
@@ -6717,7 +6729,7 @@ atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_eurasia_patch_line
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 1.75, yend = 1.75), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -6927,7 +6939,7 @@ atlas_iea_combined_fossil_imports_from_russia_as_share_of_tes_mcp_grouping_patch
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 1.75, yend = 1.75), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -7062,6 +7074,23 @@ atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") |
                values = estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
         ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + geom_line() + 
         facet_wrap(facets = vars(country))
+
+# inspect for report
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        group_by(country, fuel_type) %>% arrange(year) %>%
+        mutate(diff = estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas -
+                       lag(estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas, n = 1)) %>%
+        ungroup() %>% arrange(diff)
+atlas %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
+                         (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
+        select(country, year, fuel_type,
+               estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas) %>%
+        group_by(country, fuel_type) %>% 
+        summarize(mean = mean(estimated_russia_fuel_type_imports_as_share_of_tes_w_iea_nat_gas)) %>%
+        ungroup() %>% arrange(desc(mean)) %>% print(n = nrow(.))
 
 
 #//////////////////
@@ -7518,8 +7547,10 @@ atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans",
                russia_fossil_import_sum_as_share_of_global_fossil_import_sum) %>% print(n = nrow(.))
 
 # inspect for report
-chart_data %>% filter(country == "Albania") %>% 
+chart_data %>%
+        group_by(country) %>%
         summarize(mean = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum))
+chart_data %>% group_by(country) %>% filter(values == max(values) | year == 2018) %>% print(n = nrow(.))
 
 
 #//////////////////
@@ -7564,8 +7595,8 @@ russia_fossil_import_sum_as_share_of_global_fossil_import_sum_balkans_patch_line
                                                                   "N. Macedonia", "Serbia")),
                              linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
                                                                      "N. Macedonia", "Serbia")))) + 
-        geom_line(size = 1) +
-        geom_point(size = 2) +
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
                   mapping = aes(x = year + .65, y = values, label = color_bin),
                   fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
@@ -7616,7 +7647,7 @@ russia_fossil_import_sum_as_share_of_global_fossil_import_sum_balkans_patch_line
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -7695,6 +7726,7 @@ atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
 # inspect for report
 chart_data %>% filter(country == "Belarus") %>% 
         summarize(mean = mean(russia_fossil_import_sum_as_share_of_global_fossil_import_sum))
+chart_data %>% group_by(country) %>% filter(values == max(values) | year == 2018) %>% print(n = nrow(.))
 
 
 #//////////////////
@@ -7795,7 +7827,7 @@ russia_fossil_import_sum_as_share_of_global_fossil_import_sum_eurasia_patch_line
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -7992,7 +8024,7 @@ russia_fossil_import_sum_as_share_of_global_fossil_import_sum_mcp_grouping_patch
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -8230,7 +8262,7 @@ gdp_ppp_per_tes_balkans_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 18, yend = 18), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -8426,7 +8458,7 @@ gdp_ppp_per_tes_eurasia_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 18, yend = 18), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -8635,7 +8667,7 @@ gdp_ppp_per_tes_mcp_grouping_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 18, yend = 18), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -8865,7 +8897,7 @@ tes_kgoe_per_capita_balkans_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 3500, yend = 3500), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -9053,7 +9085,7 @@ tes_kgoe_per_capita_eurasia_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 3500, yend = 3500), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -9254,7 +9286,7 @@ tes_kgoe_per_capita_mcp_grouping_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = 3500, yend = 3500), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -9376,6 +9408,21 @@ atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
         select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
         group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
         ungroup() %>% print(n = nrow(.))
+# confirm that it was peaking global_fossil_import_sum, not dropping gdp_current, causing drop in 
+# global_fossil_import_as_share_of_gdp_current
+# result: confirmed, global_fossil_import_sum peaks for all countries, while gdp_current shows no common trend
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, global_fossil_import_sum) %>% 
+        group_by(country, year, global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = global_fossil_import_sum)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
+        select(country, year, gdp_current) %>% 
+        group_by(country, year, gdp_current) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = gdp_current)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect chart
 atlas %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
         select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
         group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
@@ -9481,7 +9528,7 @@ global_fossil_import_as_share_of_gdp_current_balkans_patch_line_chart <- chart_d
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .25, yend = .25), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -9551,6 +9598,21 @@ atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
         select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
         group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
         ungroup() %>% print(n = nrow(.))
+# confirm that it was peaking global_fossil_import_sum, not dropping gdp_current, causing drop in 
+# global_fossil_import_as_share_of_gdp_current
+# result: confirmed, global_fossil_import_sum peaks for all countries (relatively), while gdp_current shows no common trend
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, global_fossil_import_sum) %>% 
+        group_by(country, year, global_fossil_import_sum) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = global_fossil_import_sum)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
+        select(country, year, gdp_current) %>% 
+        group_by(country, year, gdp_current) %>% slice(1) %>%
+        ungroup() %>% ggplot(data = ., mapping = aes(x = year, y = gdp_current)) + 
+        geom_line() + facet_wrap(facets = vars(country))
+
+# inspect chart
 atlas %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
         select(country, year, global_fossil_import_as_share_of_gdp_current) %>% 
         group_by(country, year, global_fossil_import_as_share_of_gdp_current) %>% slice(1) %>%
@@ -9664,7 +9726,7 @@ global_fossil_import_as_share_of_gdp_current_eurasia_patch_line_chart <- chart_d
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .25, yend = .25), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -9863,7 +9925,7 @@ global_fossil_import_as_share_of_gdp_current_mcp_grouping_patch_line_chart <- ch
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .25, yend = .25), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -14121,14 +14183,16 @@ iea_supplement %>% ncol() # 141
 
 # check filter
 iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "U.S.")), 
                year == 2018) %>% 
         count(mcp_grouping, country) %>% print(n = nrow(.))
 
 # check raw data
-iea %>% filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+iea %>% filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "U.S.")), 
                year == 2018) %>% 
-        select(country, year, net_energy_imports_as_share_of_tes)
+        select(country, year, net_energy_imports_as_share_of_tes) %>% 
+        arrange(net_energy_imports_as_share_of_tes) %>%
+        print(n = nrow(.))
 
 
 #////////////////
@@ -14136,13 +14200,14 @@ iea %>% filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "
 
 # add color_bin and color
 chart_data <- iea %>% 
-        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "Russia", "U.S.")), 
+        filter(!(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "EU-15", "U.S.")), 
                year == 2018) %>%
         mutate(color_bin = mcp_grouping,
                color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
                                  color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
                                  color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
-                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex)))
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -14158,7 +14223,7 @@ iea_net_energy_imports_as_share_of_tes_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes), 
                              y = net_energy_imports_as_share_of_tes, 
                              fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                 "CARs")))) + 
+                                                                 "CARs", "Russia")))) + 
         geom_col(width = .8) + 
         # geom_text(data = chart_data %>% filter(year == 2018),
         #           mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
@@ -14168,34 +14233,39 @@ iea_net_energy_imports_as_share_of_tes_bar_chart <- chart_data %>%
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes, 
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs")),
-                                label = country), angle = 45, size = 2, nudge_y = .1, hjust = 0, fontface = "bold") +
+                                                                     "CARs", "Russia")),
+                                label = country), angle = 45, size = 2, nudge_y = .1, hjust = 0,
+                  family = "Calibri", fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, country == "Estonia"),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs")),
-                                label = country), angle = 360, size = 2, nudge_y = -.1, hjust = 0, fontface = "bold") +
+                                                                     "CARs", "Russia")),
+                                label = country), angle = 360, size = 2, nudge_y = -.1, hjust = 0,
+                  family = "Calibri", fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, country %in% c("Russia", "Uzbekistan")),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs")),
-                                label = country), angle = 360, size = 2, nudge_y = -.2, hjust = 0, fontface = "bold") +
+                                                                     "CARs", "Russia")),
+                                label = country), angle = 360, size = 2, nudge_y = -.2, hjust = 0, 
+                  family = "Calibri", fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, 
                                                country %in% c("Turkmenistan", "Kazakhstan")),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs")),
-                                label = country), angle = 360, size = 2, nudge_y = -.3, hjust = 0, fontface = "bold") +
+                                                                     "CARs", "Russia")),
+                                label = country), angle = 360, size = 2, nudge_y = -.3, hjust = 0, 
+                  family = "Calibri", fontface = "bold") +
         geom_text(data = chart_data %>% filter(year == 2018, 
                                                country %in% c("Azerbaijan")),
                   mapping = aes(x = fct_reorder(.f = factor(country), .x = net_energy_imports_as_share_of_tes),
                                 y = net_energy_imports_as_share_of_tes,
                                 color = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                                     "CARs")),
-                                label = country), angle = 360, size = 2, nudge_x = .5, hjust = 0, fontface = "bold") +
+                                                                     "CARs", "Russia")),
+                                label = country), angle = 360, size = 2, nudge_x = .5, hjust = 0, 
+                  family = "Calibri", fontface = "bold") +
         scale_fill_manual(values = chart_data_color_list) +
         scale_color_manual(values = chart_data_color_list, guide = FALSE) +
         scale_x_discrete(expand = c(0, 0)) +
@@ -15033,6 +15103,7 @@ chart_data %>% select(country, year, TES_total) %>% arrange(TES_total) %>% print
 chart_data %>% select(country, year, TES_total) %>% summarize(median = median(TES_total))
 chart_data %>% distinct(mcp_grouping)
 
+
 #////////////////////
 
 
@@ -15216,10 +15287,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -15235,9 +15306,9 @@ iea_tes_as_share_of_overall_tes_stacked_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = country, 
                              y = values, 
                              fill = factor(color_bin, 
-                                           levels = c("Wind, solar, etc.",
+                                           levels = c("Heat", "Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
-                                                      "Heat", "Biofuels and waste",
+                                                      "Biofuels and waste",
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
@@ -15354,6 +15425,8 @@ iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") |
 chart_data %>% filter(year %in% c(2009, 2018)) %>% arrange(country, fuel_type) %>% print(n = nrow(.))
 chart_data %>% group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>% ungroup() %>% 
         arrange(mean) %>% print(n = nrow(.))
+chart_data %>% group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>% ungroup() %>% 
+        arrange(fuel_type) %>% print(n = nrow(.))
 chart_data %>% filter(fuel_type %in% c("Hydro", "Wind, solar, etc", "Biofuels and waste", "Heat")) %>%
         group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>% ungroup() %>% 
         arrange(mean) %>% print(n = nrow(.))
@@ -15385,10 +15458,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -15404,9 +15477,9 @@ tes_by_type_as_share_of_tes_facet_line_chart <- chart_data %>%
         ggplot(data = ., mapping = aes(x = year, 
                                        y = values, 
                                        color = factor(color_bin, 
-                                                      levels = c("Wind, solar, etc.",
+                                                      levels = c("Heat", "Wind, solar, etc.",
                                                                  "Nuclear", "Hydro",
-                                                                 "Heat", "Biofuels and waste",
+                                                                  "Biofuels and waste",
                                                                  "Electricity", "Oil products",
                                                                  "Crude oil", "Coal",
                                                                  "Natural gas")))) + 
@@ -15570,10 +15643,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 # color_bin == "Hydro" ~ "#99ba78",
-                                 # color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 # color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 # color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -15589,9 +15662,9 @@ iea_tfc_by_type_as_share_of_overall_tfc_stacked_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = country, 
                              y = values, 
                              fill = factor(color_bin, 
-                                           levels = c("Wind, solar, etc.",
+                                           levels = c("Heat", "Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
-                                                      "Heat", "Biofuels and waste",
+                                                       "Biofuels and waste",
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
@@ -15734,7 +15807,7 @@ chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping
                                  color_bin == "Non-energy" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Non-specified" ~ color_palette %>% slice(6) %>% pull(hex),
                                  color_bin == "Residential" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Transport" ~ "#99ba78"))
+                                 color_bin == "Transport" ~ color_palette %>% slice(8) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -15915,7 +15988,7 @@ chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping
                                  color_bin == "Non-energy" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Non-specified" ~ color_palette %>% slice(6) %>% pull(hex),
                                  color_bin == "Residential" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Transport" ~ "#99ba78"))
+                                 color_bin == "Transport" ~ color_palette %>% slice(8) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -16092,10 +16165,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -16111,9 +16184,9 @@ tfc_by_type_as_share_of_tfc_facet_line_chart <- chart_data %>%
         ggplot(data = ., mapping = aes(x = year, 
                                        y = values, 
                                        color = factor(color_bin, 
-                                                      levels = c("Wind, solar, etc.",
+                                                      levels = c("Heat", "Wind, solar, etc.",
                                                                  "Nuclear", "Hydro",
-                                                                 "Heat", "Biofuels and waste",
+                                                                 "Biofuels and waste",
                                                                  "Electricity", "Oil products",
                                                                  "Crude oil", "Coal",
                                                                  "Natural gas")))) + 
@@ -16200,6 +16273,157 @@ read_docx() %>%
         print(target = "output/charts/tfc_by_type_as_share_of_tfc_facet_line_chart.docx")
 
 
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# iea_production_as_share_of_tes_bar_chart ####
+
+# inspect
+iea %>% 
+        filter(year == 2018, 
+               mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia"),
+               !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, TES_total, Production_total) %>% 
+        mutate(production_as_share_of_tes = Production_total / TES_total) %>% 
+        # skim(production_as_share_of_tes)
+        arrange(production_as_share_of_tes) %>% print(n = nrow(.))
+
+# inspect chart
+        iea %>% 
+                filter(year == 2018, 
+                       mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia"),
+                       !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+                select(mcp_grouping, country, year, TES_total, Production_total) %>% 
+                mutate(production_as_share_of_tes = Production_total / TES_total) %>% 
+        ggplot(data = ., mapping = aes(x = fct_reorder(.f = country, .x = production_as_share_of_tes, .desc = FALSE), 
+                                       y = production_as_share_of_tes)) + 
+        geom_col()
+        
+
+# note that production_as_share_of_tes is the complement of net_imports_as_share_of_tes; they add up to 100%
+# which makes sense because net_imports = TES - production
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15"))) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total,
+               sum = net_energy_imports_as_share_of_tes + production_as_share_of_tes) %>% 
+        filter(sum > 1) %>%
+        select(country, year, TES_total, Production_total, production_as_share_of_tes, 
+               net_energy_imports, net_energy_imports_as_share_of_tes,
+               sum) %>%
+        skim(sum)
+
+
+
+#////////////////////
+
+
+# add color_bin and color
+chart_data <- iea %>% filter(year == 2018, 
+                             mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs", "Russia"),
+                             !(country %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs"))) %>%
+        select(mcp_grouping, country, year, TES_total, Production_total) %>% 
+        mutate(production_as_share_of_tes = Production_total / TES_total,
+               values = production_as_share_of_tes) %>%
+        mutate(color_bin = mcp_grouping,
+               color = case_when(color_bin == "E&E Balkans" ~ color_palette %>% slice(1) %>% pull(hex),
+                                 color_bin == "E&E Eurasia" ~ color_palette %>% slice(2) %>% pull(hex),
+                                 color_bin == "E&E graduates" ~ color_palette %>% slice(3) %>% pull(hex),
+                                 color_bin == "CARs" ~ color_palette %>% slice(4) %>% pull(hex),
+                                 color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
+                                 color_bin == "EU-15" ~ color_palette %>% slice(6) %>% pull(hex),
+                                 color_bin == "U.S." ~ color_palette %>% slice(7) %>% pull(hex)))
+
+# create color_list for to pass to scale_color_manual
+chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
+names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% pull(color_bin)
+chart_data_color_list
+
+
+#/////////////////////
+
+
+# create chart
+iea_production_as_share_of_tes_bar_chart <- chart_data %>% 
+        ggplot(data = ., aes(x = fct_reorder(.f = factor(country), .x = values), 
+                             y = values, 
+                             fill = factor(color_bin, levels = c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
+                                                                 "CARs", "Russia", "EU-15", "U.S.")))) + 
+        geom_col(width = .8) + 
+        scale_fill_manual(values = chart_data_color_list) +
+        scale_x_discrete(expand = c(0, 0)) +
+        scale_y_continuous(breaks = seq(from = 0, to = 4, by = .5), 
+                           limits = c(0, 4), 
+                           expand = c(0, 0),
+                           labels = percent_format(accuracy = 1)) +
+        labs(x = NULL, y = "Share", 
+             title = NULL,
+             caption = NULL, fill = "") +
+        coord_fixed(ratio = 3 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 0, 0, 0), "mm"),
+                plot.caption = element_text(hjust = 0, size = 9, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_blank(),
+                # panel.grid = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
+                                           margin = margin(t = 0, r = 0, b = 0, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 2)),
+                plot.title = element_text(size = 9, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 9, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333"),
+                # legend.spacing.y = unit(5.5, "cm"),
+                legend.spacing.x = unit(.5, "cm")
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+        ) + 
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+# inspect
+iea_production_as_share_of_tes_bar_chart
+
+
+#//////////////////////////////////
+
+
+# save chart as emf
+filename <- tempfile(fileext = ".emf")
+emf(file = filename)
+print(iea_production_as_share_of_tes_bar_chart)
+dev.off()
+
+# add emf to word doc  
+read_docx() %>% 
+        body_add_img(src = filename, width = 6, height = 6) %>% 
+        print(target = "output/charts/iea_production_as_share_of_tes_bar_chart.docx")
+
+
+
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16211,6 +16435,17 @@ read_docx() %>%
 iea %>% 
         filter(country != "E&E Balkans", mcp_grouping %in% c("E&E Balkans")) %>% 
         count(mcp_grouping, country) %>% print(n = nrow(.))
+
+# note that production_as_share_of_tes is the complement of net_imports_as_share_of_tes; they add up to 100%
+# which makes sense because net_imports = TES - production
+iea %>% filter(!(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15"))) %>%
+        mutate(production_as_share_of_tes = Production_total / TES_total,
+               sum = net_energy_imports_as_share_of_tes + production_as_share_of_tes) %>% 
+        filter(sum > 1) %>%
+        select(country, year, TES_total, Production_total, production_as_share_of_tes, 
+               net_energy_imports, net_energy_imports_as_share_of_tes,
+               sum) %>%
+        skim(sum)
 
 
 #//////////////////
@@ -16763,10 +16998,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  # color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -16785,9 +17020,9 @@ iea_production_by_type_as_share_of_production_stacked_bar_chart  <- chart_data %
         ggplot(data = ., aes(x = country, 
                              y = values, 
                              fill = factor(color_bin, 
-                                           levels = c("Wind, solar, etc.",
+                                           levels = c("Heat", "Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
-                                                      "Heat", "Biofuels and waste",
+                                                      "Biofuels and waste",
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
@@ -16930,8 +17165,8 @@ production_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
                                                                   "N. Macedonia", "Serbia")),
                              linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
                                                                      "N. Macedonia", "Serbia")))) + 
-        geom_line(size = 1) +
-        geom_point(size = 2) +
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
                   mapping = aes(x = year + .65, y = values, label = color_bin),
                   fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
@@ -16982,7 +17217,7 @@ production_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -17201,7 +17436,7 @@ production_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -17445,7 +17680,7 @@ production_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -17631,10 +17866,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  # color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -17650,9 +17885,9 @@ iea_production_by_type_as_share_of_tes_facet_line_chart  <- chart_data %>%
         ggplot(data = ., mapping = aes(x = year, 
                                        y = values, 
                                        color = factor(color_bin, 
-                                                      levels = c("Wind, solar, etc.",
+                                                      levels = c("Heat", "Wind, solar, etc.",
                                                                  "Nuclear", "Hydro",
-                                                                 "Heat", "Biofuels and waste",
+                                                                  "Biofuels and waste",
                                                                  "Electricity", "Oil products",
                                                                  "Crude oil", "Coal",
                                                                  "Natural gas")))) + 
@@ -17815,10 +18050,10 @@ chart_data <- iea %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Ba
                                  # color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -17834,9 +18069,9 @@ iea_production_as_share_of_tes_stacked_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = country, 
                              y = values, 
                              fill = factor(color_bin, 
-                                           levels = c("Wind, solar, etc.",
+                                           levels = c("Heat", "Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
-                                                      "Heat", "Biofuels and waste",
+                                                      "Biofuels and waste",
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
@@ -17975,10 +18210,10 @@ chart_data <- iea %>%
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -17994,9 +18229,9 @@ iea_production_by_type_as_share_of_overall_production_facet_line_chart <- chart_
         ggplot(data = ., mapping = aes(x = year, 
                                        y = values, 
                                        color = factor(color_bin, 
-                                                      levels = c("Wind, solar, etc.",
+                                                      levels = c("Heat", "Wind, solar, etc.",
                                                                  "Nuclear", "Hydro",
-                                                                 "Heat", "Biofuels and waste",
+                                                                 "Biofuels and waste",
                                                                  "Electricity", "Oil products",
                                                                  "Crude oil", "Coal",
                                                                  "Natural gas")))) + 
@@ -18117,6 +18352,13 @@ iea %>% filter(country != "E&E Balkans", mcp_grouping == "E&E Balkans") %>%
         geom_line() + facet_wrap(facets = vars(country))
 
 
+# inspect for report
+chart_data %>% arrange(desc(renewable_production_as_share_of_tes))
+chart_data %>% group_by(country) %>% summarize(mean = mean(renewable_production_as_share_of_tes)) %>%
+        ungroup() %>% arrange(mean)
+chart_data %>% filter(year %in% c(2009, 2018)) %>% print(n = nrow(.))
+
+
 #//////////////////
 
 
@@ -18161,8 +18403,8 @@ renewable_production_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
                                                                   "N. Macedonia", "Serbia")),
                              linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
                                                                      "N. Macedonia", "Serbia")))) + 
-        geom_line(size = 1) +
-        geom_point(size = 2) +
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
                   mapping = aes(x = year + .65, y = values, label = color_bin),
                   fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
@@ -18217,7 +18459,7 @@ renewable_production_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .5, yend = .5), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -18296,6 +18538,11 @@ iea %>% filter(country != "E&E Eurasia", mcp_grouping == "E&E Eurasia") %>%
         select(country, year, renewable_production_as_share_of_tes) %>% 
         ggplot(data = ., mapping = aes(x = year, y = renewable_production_as_share_of_tes)) + 
         geom_line() + facet_wrap(facets = vars(country))
+
+# inspect for report
+chart_data %>% group_by(country) %>% summarize(mean = mean(renewable_production_as_share_of_tes)) %>%
+        ungroup() %>% arrange(mean)
+chart_data %>% filter(year %in% c(2009, 2018)) %>% print(n = nrow(.))
 
 
 #//////////////////
@@ -18402,7 +18649,7 @@ renewable_production_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .5, yend = .5), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -18604,7 +18851,7 @@ renewable_production_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .5, yend = .5), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -18772,8 +19019,8 @@ net_energy_imports_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
                                                                   "N. Macedonia", "Serbia")),
                              linetype = factor(color_bin, levels = c("Albania", "BiH", "Kosovo",
                                                                      "N. Macedonia", "Serbia")))) + 
-        geom_line(size = 1) +
-        geom_point(size = 2) +
+        # geom_line(size = 1) +
+        # geom_point(size = 2) +
         geom_text(data = chart_data %>% filter(year == max(year), country == "Albania"),
                   mapping = aes(x = year + .65, y = values, label = color_bin),
                   fontface = "bold", hjust = 0, size = 2, family = "Calibri") +
@@ -18824,7 +19071,7 @@ net_energy_imports_as_share_of_tes_balkans_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -19012,7 +19259,7 @@ net_energy_imports_as_share_of_tes_eurasia_patch_line_chart <- chart_data %>%
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -19225,7 +19472,7 @@ net_energy_imports_as_share_of_tes_mcp_grouping_patch_line_chart <- chart_data %
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
                                    y = .8, yend = .8), color = "#DDDDDD", size = .25) +
         geom_line(size = 1) + 
-        geom_point(size = 2) +
+        # geom_point(size = 2) +
         geom_segment(data = chart_data,
                      mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .5,
                                    xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .5,
@@ -19584,6 +19831,14 @@ iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balka
         facet_wrap(facets = vars(country))
 
 
+# inspect for report
+chart_data %>% group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>%
+        ungroup() %>% arrange(desc(mean)) %>% print(n = 20)
+chart_data %>% group_by(country, fuel_type) %>% summarize(mean = mean(values)) %>%
+        ungroup() %>% group_by(country) %>% arrange(desc(mean)) %>% slice(1) %>%
+        ungroup()
+
+
 #//////////////////
 
 
@@ -19613,10 +19868,10 @@ chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -19632,9 +19887,9 @@ share_of_electricity_generation_by_type_facet_line_chart <- chart_data %>%
         ggplot(data = ., mapping = aes(x = year, 
                                        y = values, 
                                        color = factor(color_bin, 
-                                                      levels = c("Wind, solar, etc.",
+                                                      levels = c("Heat", "Wind, solar, etc.",
                                                                  "Nuclear", "Hydro",
-                                                                 "Heat", "Biofuels and waste",
+                                                                 "Biofuels and waste",
                                                                  "Electricity", "Oil products",
                                                                  "Crude oil", "Coal",
                                                                  "Natural gas")))) + 
@@ -19746,7 +20001,7 @@ iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balka
         ungroup() %>% distinct(sum)
 
 # inspect energy types with zero share of electricity generation across all countries/years, to exclude from chart
-# note that crude will be removed
+# note that crude (and electricity) will be removed
 iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping == "E&E Balkans") | 
                                   (country != "E&E Eurasia" & mcp_grouping == "E&E Eurasia")) %>% 
         select(country, year, matches(match = "share_of_electricity_generation"),
@@ -19810,10 +20065,10 @@ chart_data <- iea_supplement %>% filter((country != "E&E Balkans" & mcp_grouping
                                  color_bin == "Oil products" ~ color_palette %>% slice(4) %>% pull(hex),
                                  # color_bin == "Electricity" ~ color_palette %>% slice(5) %>% pull(hex),
                                  color_bin == "Biofuels and waste" ~ color_palette %>% slice(6) %>% pull(hex),
-                                 color_bin == "Heat" ~ color_palette %>% slice(7) %>% pull(hex),
-                                 color_bin == "Hydro" ~ "#99ba78",
-                                 color_bin == "Nuclear" ~ "#24A99C",
-                                 color_bin == "Wind, solar, etc." ~ "#2E6657"))
+                                 color_bin == "Hydro" ~ color_palette %>% slice(7) %>% pull(hex),
+                                 color_bin == "Nuclear" ~ color_palette %>% slice(8) %>% pull(hex),
+                                 color_bin == "Wind, solar, etc." ~ color_palette %>% slice(9) %>% pull(hex),
+                                 color_bin == "Heat" ~ color_palette %>% slice(10) %>% pull(hex)))
 
 # create color_list for to pass to scale_color_manual
 chart_data_color_list <- chart_data %>% count(color_bin, color) %>% pull(color)
@@ -19829,9 +20084,9 @@ share_of_electricity_generation_by_type_stacked_bar_chart <- chart_data %>%
         ggplot(data = ., aes(x = country, 
                              y = values, 
                              fill = factor(color_bin, 
-                                           levels = c("Wind, solar, etc.",
+                                           levels = c("Heat", "Wind, solar, etc.",
                                                       "Nuclear", "Hydro",
-                                                      "Heat", "Biofuels and waste",
+                                                      "Biofuels and waste",
                                                       "Electricity", "Oil products",
                                                       "Crude oil", "Coal",
                                                       "Natural gas")))) + 
