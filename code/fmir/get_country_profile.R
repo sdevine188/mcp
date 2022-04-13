@@ -51,6 +51,320 @@ get_country_profile <- function(current_country) {
                                                current_country == "U.K." ~ "United\nKingdom",
                                                TRUE ~ current_country)
         
+        #////////////////////////////////////////////////////////////////////////////////////////////////////
+        #////////////////////////////////////////////////////////////////////////////////////////////////////
+        #////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        # create get_country_profile_radar_chart() ####
+        
+        # get custom radarchart2, which takes vlabcol and vlab_fontface arg
+        # https://stackoverflow.com/questions/54185029/change-labels-colors-in-r-radarchart
+        # https://r-charts.com/ranking/radar-chart/
+        
+        # updated workflow to save radarchart as ggplot w/ emf:
+        # 1) use recordPlot to get last plot as saved object
+        # 2) use ggplotify::as.ggplot() to wrap cowplot::as_grob to save as ggplot object, then save as normal
+        # https://stackoverflow.com/questions/29583849/save-a-plot-in-an-object
+        # https://cran.r-project.org/web/packages/ggplotify/vignettes/ggplotify.html
+        # https://rdrr.io/cran/cowplot/man/as_grob.html
+        
+        # create radar chart and save as ggplot
+        # grid.newpage()
+        # radarchart2(df = chart_data, country = current_country)
+        # y <- recordPlot()
+        # z <- as.ggplot(as_grob(y))
+        # 
+        # # optional use of patchwork to combine ggplots
+        # x <- starwars %>% count(homeworld) %>% arrange(desc(n)) %>% slice(1:10) %>%
+        #         ggplot(data = ., mapping = aes(x = fct_reorder(.f = homeworld, .x = n, .desc = FALSE), y = n)) + geom_col()
+        # p <- z + x
+        # p
+        # 
+        # # combine multiple radar charts
+        # q <- z + z + z
+        # 
+        # # save chart as emf
+        # filename <- tempfile(fileext = ".emf")
+        # emf(file = filename)
+        # print(q)
+        # dev.off()
+        # 
+        # # add emf to word doc
+        # read_docx() %>%
+        #         body_add_img(src = filename, width = 6, height = 6) %>%
+        #         print(target = "output/charts/p.docx")
+        
+        
+        #/////////////////////////
+        
+        
+        get_country_profile_radar_chart <- function (df, country = NULL, axistype = 0, seg = 4, pty = 16, pcol = 1:8, plty = 1:6, 
+                                                     plwd = 1, pdensity = NULL, pangle = 45, pfcol = NA, cglty = 3, 
+                                                     cglwd = 1, cglcol = "navy", axislabcol = "blue", vlabcol = "black", vlab_fontface = 1, title = "", 
+                                                     maxmin = TRUE, na.itp = TRUE, centerzero = FALSE, vlabels = NULL, 
+                                                     vlcex = NULL, caxislabels = NULL, calcex = NULL, paxislabels = NULL, 
+                                                     palcex = NULL, ...) {
+                
+                # set default parameters
+                axistype = 1 
+                
+                # point symbol
+                pty = 32
+                
+                # color for outside of plotted rings
+                pcol = c("#083D7F", "#EF6712")
+                
+                # color for inside of plotted rings
+                pfcol = c(NA, "#EF671270")
+                
+                # width of plotted rings
+                # plwd = 2
+                plwd = 12
+                
+                # line type for plotted rings
+                plty = 1
+                
+                # number of axis segments between center and outer rim
+                seg = 5 
+                
+                # line color for grid segments
+                cglcol = "#999999"
+                
+                # line type for grid segments
+                cglty = 1 
+                
+                # color of axis grid segment labels
+                axislabcol = "#333333"
+                
+                # values for axis grid segment labels
+                caxislabels = c("0.0", "0.2", "0.4", "0.6", "0.8", "1.0")
+                
+                # line width for axis grid segments
+                # cglwd = 0.8
+                cglwd = 3
+                
+                # font color for outer labels
+                vlabcol = "#333333"
+                
+                # font face for outer labels
+                vlab_fontface = 1
+                
+                # font magnification for outer labels
+                # vlcex = .75
+                vlcex = 2
+                
+                # font magnification for center labels
+                # calcex = .75
+                calcex = 2
+                
+                # font magnification for peripheral labels
+                # palcex = .75
+                palcex = 2
+                
+                # set font as parameter; 1 is normal, 2 is bold, 3 is italic
+                current_parameters <- par(family = "Calibri", font = 1)
+                par(current_parameters)
+                
+                
+                #///////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                
+                if (!is.data.frame(df)) {
+                        cat("The data must be given as dataframe.\n")
+                        return()
+                }
+                if ((n <- length(df)) < 3) {
+                        cat("The number of variables must be 3 or more.\n")
+                        return()
+                }
+                if (maxmin == FALSE) {
+                        dfmax <- apply(df, 2, max)
+                        dfmin <- apply(df, 2, min)
+                        df <- rbind(dfmax, dfmin, df)
+                }
+                plot(c(-1.2, 1.2), c(-1.2, 1.2), type = "n", frame.plot = FALSE, 
+                     axes = FALSE, xlab = "", ylab = "", main = title, asp = 1, 
+                     ...)
+                theta <- seq(90, 450, length = n + 1) * pi/180
+                theta <- theta[1:n]
+                xx <- cos(theta)
+                yy <- sin(theta)
+                CGap <- ifelse(centerzero, 0, 1)
+                for (i in 0:seg) {
+                        polygon(xx * (i + CGap)/(seg + CGap), yy * (i + CGap)/(seg + 
+                                                                                       CGap), lty = cglty, lwd = cglwd, border = cglcol)
+                        if (axistype == 1 | axistype == 3) 
+                                CAXISLABELS <- paste(i/seg * 100, "(%)")
+                        if (axistype == 4 | axistype == 5) 
+                                CAXISLABELS <- sprintf("%3.2f", i/seg)
+                        if (!is.null(caxislabels) & (i < length(caxislabels))) 
+                                CAXISLABELS <- caxislabels[i + 1]
+                        if (axistype == 1 | axistype == 3 | axistype == 4 | 
+                            axistype == 5) {
+                                if (is.null(calcex)) 
+                                        text(-0.05, (i + CGap)/(seg + CGap), CAXISLABELS, 
+                                             col = axislabcol)
+                                else text(-0.05, (i + CGap)/(seg + CGap), CAXISLABELS, 
+                                          col = axislabcol, cex = calcex)
+                        }
+                }
+                if (centerzero) {
+                        arrows(0, 0, xx * 1, yy * 1, lwd = cglwd, lty = cglty, 
+                               length = 0, col = cglcol)
+                }
+                else {
+                        arrows(xx/(seg + CGap), yy/(seg + CGap), xx * 1, yy * 
+                                       1, lwd = cglwd, lty = cglty, length = 0, col = cglcol)
+                }
+                PAXISLABELS <- df[1, 1:n]
+                if (!is.null(paxislabels)) 
+                        PAXISLABELS <- paxislabels
+                if (axistype == 2 | axistype == 3 | axistype == 5) {
+                        if (is.null(palcex)) 
+                                text(xx[1:n], yy[1:n], PAXISLABELS, col = axislabcol)
+                        else text(xx[1:n], yy[1:n], PAXISLABELS, col = axislabcol, 
+                                  cex = palcex)
+                }
+                VLABELS <- colnames(df)
+                if (!is.null(vlabels)) 
+                        VLABELS <- vlabels
+                if (is.null(vlcex)) 
+                        text(xx * 1.2, yy * 1.2, VLABELS, col = vlabcol, font = vlab_fontface)
+                else text(xx * 1.2, yy * 1.2, VLABELS, cex = vlcex, col = vlabcol, font = vlab_fontface)
+                series <- length(df[[1]])
+                SX <- series - 2
+                if (length(pty) < SX) {
+                        ptys <- rep(pty, SX)
+                }
+                else {
+                        ptys <- pty
+                }
+                if (length(pcol) < SX) {
+                        pcols <- rep(pcol, SX)
+                }
+                else {
+                        pcols <- pcol
+                }
+                if (length(plty) < SX) {
+                        pltys <- rep(plty, SX)
+                }
+                else {
+                        pltys <- plty
+                }
+                if (length(plwd) < SX) {
+                        plwds <- rep(plwd, SX)
+                }
+                else {
+                        plwds <- plwd
+                }
+                if (length(pdensity) < SX) {
+                        pdensities <- rep(pdensity, SX)
+                }
+                else {
+                        pdensities <- pdensity
+                }
+                if (length(pangle) < SX) {
+                        pangles <- rep(pangle, SX)
+                }
+                else {
+                        pangles <- pangle
+                }
+                if (length(pfcol) < SX) {
+                        pfcols <- rep(pfcol, SX)
+                }
+                else {
+                        pfcols <- pfcol
+                }
+                for (i in 3:series) {
+                        xxs <- xx
+                        yys <- yy
+                        scale <- CGap/(seg + CGap) + (df[i, ] - df[2, ])/(df[1, 
+                        ] - df[2, ]) * seg/(seg + CGap)
+                        if (sum(!is.na(df[i, ])) < 3) {
+                                cat(sprintf("[DATA NOT ENOUGH] at %d\n%g\n", i, 
+                                            df[i, ]))
+                        }
+                        else {
+                                for (j in 1:n) {
+                                        if (is.na(df[i, j])) {
+                                                if (na.itp) {
+                                                        left <- ifelse(j > 1, j - 1, n)
+                                                        while (is.na(df[i, left])) {
+                                                                left <- ifelse(left > 1, left - 1, n)
+                                                        }
+                                                        right <- ifelse(j < n, j + 1, 1)
+                                                        while (is.na(df[i, right])) {
+                                                                right <- ifelse(right < n, right + 1, 
+                                                                                1)
+                                                        }
+                                                        xxleft <- xx[left] * CGap/(seg + CGap) + 
+                                                                xx[left] * (df[i, left] - df[2, left])/(df[1, 
+                                                                                                           left] - df[2, left]) * seg/(seg + CGap)
+                                                        yyleft <- yy[left] * CGap/(seg + CGap) + 
+                                                                yy[left] * (df[i, left] - df[2, left])/(df[1, 
+                                                                                                           left] - df[2, left]) * seg/(seg + CGap)
+                                                        xxright <- xx[right] * CGap/(seg + CGap) + 
+                                                                xx[right] * (df[i, right] - df[2, right])/(df[1, 
+                                                                                                              right] - df[2, right]) * seg/(seg + 
+                                                                                                                                                    CGap)
+                                                        yyright <- yy[right] * CGap/(seg + CGap) + 
+                                                                yy[right] * (df[i, right] - df[2, right])/(df[1, 
+                                                                                                              right] - df[2, right]) * seg/(seg + 
+                                                                                                                                                    CGap)
+                                                        if (xxleft > xxright) {
+                                                                xxtmp <- xxleft
+                                                                yytmp <- yyleft
+                                                                xxleft <- xxright
+                                                                yyleft <- yyright
+                                                                xxright <- xxtmp
+                                                                yyright <- yytmp
+                                                        }
+                                                        xxs[j] <- xx[j] * (yyleft * xxright - yyright * 
+                                                                                   xxleft)/(yy[j] * (xxright - xxleft) - 
+                                                                                                    xx[j] * (yyright - yyleft))
+                                                        yys[j] <- (yy[j]/xx[j]) * xxs[j]
+                                                }
+                                                else {
+                                                        xxs[j] <- 0
+                                                        yys[j] <- 0
+                                                }
+                                        }
+                                        else {
+                                                xxs[j] <- xx[j] * CGap/(seg + CGap) + xx[j] * 
+                                                        (df[i, j] - df[2, j])/(df[1, j] - df[2, 
+                                                                                             j]) * seg/(seg + CGap)
+                                                yys[j] <- yy[j] * CGap/(seg + CGap) + yy[j] * 
+                                                        (df[i, j] - df[2, j])/(df[1, j] - df[2, 
+                                                                                             j]) * seg/(seg + CGap)
+                                        }
+                                }
+                                if (is.null(pdensities)) {
+                                        polygon(xxs, yys, lty = pltys[i - 2], lwd = plwds[i - 
+                                                                                                  2], border = pcols[i - 2], col = pfcols[i - 
+                                                                                                                                                  2])
+                                }
+                                else {
+                                        polygon(xxs, yys, lty = pltys[i - 2], lwd = plwds[i - 
+                                                                                                  2], border = pcols[i - 2], density = pdensities[i - 
+                                                                                                                                                          2], angle = pangles[i - 2], col = pfcols[i - 
+                                                                                                                                                                                                           2])
+                                }
+                                points(xx * scale, yy * scale, pch = ptys[i - 2],
+                                       col = pcols[i - 2])
+                        }
+                }
+                
+                
+                #//////////////////////////////////////////////////////////////////////////////////////////////
+                
+                
+                # set default legend
+                legend(x = .6, y = 1.2, legend = c("EU-15", country), bty = "n",
+                       pch = 20, col = c("#083D7F", "#EF6712") , text.col = "#333333", cex = 2, pt.cex = 6)
+                
+        }
+        
         
         #////////////////////////////////////////////////////////////////////////////////////////////////////
         #////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,8 +417,14 @@ get_country_profile <- function(current_country) {
                                      summarize(obj_avg_for_eu = mean(obj_avg, na.rm = TRUE)) %>% pull(obj_avg_for_eu))
                 
                 # test obj_4
-                expect_equal(object = eu_obj_avg %>% filter(obj_num == "obj_1", year == 2020) %>% pull(obj_avg_for_eu),
-                             expected = fmir %>% filter(obj_num == "obj_1", year == 2020, mcp_grouping == "EU-15") %>% 
+                expect_equal(object = eu_obj_avg %>% filter(obj_num == "obj_4", year == 2020) %>% pull(obj_avg_for_eu),
+                             expected = fmir %>% filter(obj_num == "obj_4", year == 2020, mcp_grouping == "EU-15") %>% 
+                                     distinct(country, year, obj_num, obj_avg) %>% 
+                                     summarize(obj_avg_for_eu = mean(obj_avg, na.rm = TRUE)) %>% pull(obj_avg_for_eu))
+                
+                # test obj_c
+                expect_equal(object = eu_obj_avg %>% filter(obj_num == "obj_c", year == 2020) %>% pull(obj_avg_for_eu),
+                             expected = fmir %>% filter(obj_num == "obj_c", year == 2020, mcp_grouping == "EU-15") %>% 
                                      distinct(country, year, obj_num, obj_avg) %>% 
                                      summarize(obj_avg_for_eu = mean(obj_avg, na.rm = TRUE)) %>% pull(obj_avg_for_eu))
         }
@@ -141,17 +461,7 @@ get_country_profile <- function(current_country) {
         #//////////////////////////
         
         
-        # convert to a ggplot
-        # grid.newpage()
-        # get_country_profile_radar_chart(df = chart_data, country = current_country)
-        # country_profile_radar_chart <- recordPlot()
-        # country_profile_radar_chart <- as.ggplot(as_grob(country_profile_radar_chart))
-        # country_profile_radar_chart
-        
-        # save ggplot as a png
-        # ggsave(filename = str_c("output/charts/country_profile/country_profile_radar_chart_", str_to_lower(current_country), ".png"), 
-        #        plot = country_profile_radar_chart, dpi = 300, width = 9, height = 9)
-        
+        # save plot as png
         png(filename = str_c("output/charts/country_profile/country_profile_radar_chart_", str_to_lower(current_country), ".png"),
             width = 12, height = 8, units = "in", res = 300)
         get_country_profile_radar_chart(df = chart_data, country = current_country)
@@ -173,31 +483,6 @@ get_country_profile <- function(current_country) {
         # country_profile_dot_plots ####
         
         print(str_c(current_country, " dot_plots"))
-        
-        # get sub_obj_output_names tailored to fit on dot plots
-        # tibble(fmir %>% distinct(sub_obj_short_name)) %>%
-        #         mutate(sub_obj_dotplot_name = case_when(sub_obj_short_name == "Checks and balances and rule of law" ~ 
-        #                                                         "Checks/balances\nand rule of law",
-        #                                                 sub_obj_short_name == "Resilience to electoral/political interference and polarization" ~
-        #                                                         "Electoral/political\ninterference",
-        #                                                 sub_obj_short_name %in% 
-        #                                                         c("Media professionalism", "Trusted media and information") ~ 
-        #                                                         "Trusted media\nand information",
-        #                                                 sub_obj_short_name == "Independence from Russian energy" ~ 
-        #                                                         "Indepence from\nRussian energy",
-        #                                                 sub_obj_short_name == "Energy regulation" ~ "Energy\nregulation",
-        #                                                 sub_obj_short_name == "Economic independence" ~ "Economic\nindependence",
-        #                                                 sub_obj_short_name %in% c("Financial practices", "Financial standards") ~ 
-        #                                                         "Financial\npractices",
-        #                                                 sub_obj_short_name == "Control of corruption" ~ "Corruption",
-        #                                                 TRUE ~ sub_obj_short_name)) %>%
-        #         mutate(nchar = nchar(sub_obj_short_name)) %>%
-        #         ggplot(data = ., mapping = aes(x = sub_obj_dotplot_name, y = nchar)) +
-        #         geom_col() + coord_flip() + 
-        #         theme(
-        #                 axis.text.y = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333",
-        #                                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-        #         )
         
         
         #//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,55 +518,55 @@ get_country_profile <- function(current_country) {
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
                                                         TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
-                       dot_label = case_when(country == current_country ~ str_c(country, "    "),
+                       dot_label = case_when(country == current_country ~ str_c(country, "  "),
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
-                                                            "CARs", "EU-15") ~ str_c(mcp_grouping, "    "),
-                                             TRUE ~ "Other countries    "),
-                       dot_label_plot_order = case_when(dot_label == "Other countries    " ~ 1,
-                                                        dot_label == "EU-15    " ~ 2,
-                                                        dot_label == "CARs    " ~ 3,
-                                                        dot_label == "E&E graduates    " ~ 4,
-                                                        dot_label == "E&E Eurasia    " ~ 5,
-                                                        dot_label == "E&E Balkans    " ~ 6,
+                                                            "CARs", "EU-15") ~ str_c(mcp_grouping, "  "),
+                                             TRUE ~ "Other countries  "),
+                       dot_label_plot_order = case_when(dot_label == "Other countries  " ~ 1,
+                                                        dot_label == "EU-15  " ~ 2,
+                                                        dot_label == "CARs  " ~ 3,
+                                                        dot_label == "E&E graduates  " ~ 4,
+                                                        dot_label == "E&E Eurasia  " ~ 5,
+                                                        dot_label == "E&E Balkans  " ~ 6,
                                                         dot_label == str_c(current_country, "    ") ~ 7)) %>%
                 arrange(dot_label_plot_order) %>%
                 mutate(color_bin = dot_label,
-                       color = case_when(color_bin == str_c(current_country, "    ") ~ color_palette %>% slice(11) %>% pull(hex),
-                                         color_bin == "E&E Balkans    " ~ color_palette %>% slice(1) %>% pull(hex),
-                                         color_bin == "E&E Eurasia    " ~ color_palette %>% slice(2) %>% pull(hex),
-                                         color_bin == "E&E graduates    " ~ color_palette %>% slice(3) %>% pull(hex),
-                                         color_bin == "CARs    " ~ color_palette %>% slice(5) %>% pull(hex),
+                       color = case_when(color_bin == str_c(current_country, "  ") ~ color_palette %>% slice(11) %>% pull(hex),
+                                         color_bin == "E&E Balkans  " ~ color_palette %>% slice(1) %>% pull(hex),
+                                         color_bin == "E&E Eurasia  " ~ color_palette %>% slice(2) %>% pull(hex),
+                                         color_bin == "E&E graduates  " ~ color_palette %>% slice(3) %>% pull(hex),
+                                         color_bin == "CARs  " ~ color_palette %>% slice(5) %>% pull(hex),
                                          # color_bin == "Russia" ~ color_palette %>% slice(5) %>% pull(hex),
-                                         color_bin == "EU-15    " ~ color_palette %>% slice(7) %>% pull(hex),
+                                         color_bin == "EU-15  " ~ color_palette %>% slice(7) %>% pull(hex),
                                          # color_bin == "U.S." ~ color_palette %>% slice(8) %>% pull(hex)),
-                                         color_bin == "Other countries    " ~ color_palette %>% slice(4) %>% pull(hex)),
+                                         color_bin == "Other countries  " ~ color_palette %>% slice(4) %>% pull(hex)),
                        point_size = case_when(
                                               TRUE ~ 3),
-                       point_shape = case_when(color_bin == "Other countries    " ~ 1,
+                       point_shape = case_when(color_bin == "Other countries  " ~ 1,
                                                TRUE ~ 19),
-                       point_stroke = case_when(color_bin == "Other countries    " ~ 1,
+                       point_stroke = case_when(color_bin == "Other countries  " ~ 1,
                                                 TRUE ~ 1))
         
         # create color_list for to pass to scale_color_manual
         chart_data_color_list <- chart_data %>% count(color_bin, color) %>% 
-                mutate(level = case_when(color_bin == str_c(current_country, "    ") ~ 1,
-                                         color_bin == "E&E Balkans    " ~ 2,
-                                         color_bin == "E&E Eurasia    " ~ 3,
-                                         color_bin == "E&E graduates    " ~ 4,
-                                         color_bin == "CARs    " ~ 5,
-                                         color_bin == "EU-15    " ~ 6,
-                                         color_bin == "Other countries    " ~ 7)) %>%
+                mutate(level = case_when(color_bin == str_c(current_country, "  ") ~ 1,
+                                         color_bin == "E&E Balkans  " ~ 2,
+                                         color_bin == "E&E Eurasia  " ~ 3,
+                                         color_bin == "E&E graduates  " ~ 4,
+                                         color_bin == "CARs  " ~ 5,
+                                         color_bin == "EU-15  " ~ 6,
+                                         color_bin == "Other countries  " ~ 7)) %>%
                 arrange(level) %>%
                 pull(color)
         
         names(chart_data_color_list) <- chart_data %>% count(color_bin, color) %>% 
-                mutate(level = case_when(color_bin == str_c(current_country, "    ") ~ 1,
-                                         color_bin == "E&E Balkans    " ~ 2,
-                                         color_bin == "E&E Eurasia    " ~ 3,
-                                         color_bin == "E&E graduates    " ~ 4,
-                                         color_bin == "CARs    " ~ 5,
-                                         color_bin == "EU-15    " ~ 6,
-                                         color_bin == "Other countries    " ~ 7)) %>%
+                mutate(level = case_when(color_bin == str_c(current_country, "  ") ~ 1,
+                                         color_bin == "E&E Balkans  " ~ 2,
+                                         color_bin == "E&E Eurasia  " ~ 3,
+                                         color_bin == "E&E graduates  " ~ 4,
+                                         color_bin == "CARs  " ~ 5,
+                                         color_bin == "EU-15  " ~ 6,
+                                         color_bin == "Other countries  " ~ 7)) %>%
                 arrange(level) %>%
                 pull(color_bin)
         
@@ -291,24 +576,24 @@ get_country_profile <- function(current_country) {
         
         # create chart_data_shape_list for to pass to scale_shape_manual
         chart_data_shape_list <- chart_data %>% count(color_bin, point_shape) %>% 
-                mutate(level = case_when(color_bin == str_c(current_country, "    ") ~ 1,
-                                         color_bin == "E&E Balkans    " ~ 2,
-                                         color_bin == "E&E Eurasia    " ~ 3,
-                                         color_bin == "E&E graduates    " ~ 4,
-                                         color_bin == "CARs    " ~ 5,
-                                         color_bin == "EU-15    " ~ 6,
-                                         color_bin == "Other countries    " ~ 7)) %>%
+                mutate(level = case_when(color_bin == str_c(current_country, "  ") ~ 1,
+                                         color_bin == "E&E Balkans  " ~ 2,
+                                         color_bin == "E&E Eurasia  " ~ 3,
+                                         color_bin == "E&E graduates  " ~ 4,
+                                         color_bin == "CARs  " ~ 5,
+                                         color_bin == "EU-15  " ~ 6,
+                                         color_bin == "Other countries  " ~ 7)) %>%
                 arrange(level) %>%
                 pull(point_shape)
         
         names(chart_data_shape_list) <- chart_data %>% count(color_bin, point_shape) %>% 
-                mutate(level = case_when(color_bin == str_c(current_country, "    ") ~ 1,
-                                         color_bin == "E&E Balkans    " ~ 2,
-                                         color_bin == "E&E Eurasia    " ~ 3,
-                                         color_bin == "E&E graduates    " ~ 4,
-                                         color_bin == "CARs    " ~ 5,
-                                         color_bin == "EU-15    " ~ 6,
-                                         color_bin == "Other countries    " ~ 7)) %>%
+                mutate(level = case_when(color_bin == str_c(current_country, "  ") ~ 1,
+                                         color_bin == "E&E Balkans  " ~ 2,
+                                         color_bin == "E&E Eurasia  " ~ 3,
+                                         color_bin == "E&E graduates  " ~ 4,
+                                         color_bin == "CARs  " ~ 5,
+                                         color_bin == "EU-15  " ~ 6,
+                                         color_bin == "Other countries  " ~ 7)) %>%
                 arrange(level) %>%
                 pull(color_bin)
         
@@ -418,7 +703,7 @@ get_country_profile <- function(current_country) {
         # crop png
         # image_read("output/charts/country_profile/country_profile_dot_plot_legend.png") %>% image_info()
         country_profile_dot_plot_legend_png <- image_read("output/charts/country_profile/country_profile_dot_plot_legend.png") %>%
-                image_crop(image = ., geometry = geometry_area(width = 2600, height = 400, x_off = 485, y_off = 1600))
+                image_crop(image = ., geometry = geometry_area(width = 2750, height = 400, x_off = 390, y_off = 1600))
         
         
         #//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -553,9 +838,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -573,16 +858,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                         # margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -590,8 +875,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -753,9 +1038,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -773,16 +1058,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                         # margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -790,8 +1075,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -953,9 +1238,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -973,16 +1258,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -990,8 +1275,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -1153,9 +1438,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -1173,16 +1458,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -1190,8 +1475,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -1353,9 +1638,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -1373,16 +1658,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -1390,8 +1675,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -1553,9 +1838,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(2, 0, 2, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -1573,16 +1858,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         # axis.text.x = element_blank(),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                                                    margin = margin(t = 2, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -1590,8 +1875,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -1752,9 +2037,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -1772,16 +2057,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                         # margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -1789,8 +2074,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -1951,9 +2236,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -1971,16 +2256,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -1988,8 +2273,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -2150,9 +2435,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(2, 0, 2, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -2170,16 +2455,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         # axis.text.x = element_blank(),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                                                    margin = margin(t = 2, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -2187,8 +2472,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -2349,9 +2634,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -2369,16 +2654,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                         # margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -2386,8 +2671,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -2548,9 +2833,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -2568,16 +2853,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -2585,8 +2870,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -2747,9 +3032,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(2, 0, 2, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -2767,16 +3052,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         # axis.text.x = element_blank(),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                                                    margin = margin(t = 2, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -2784,8 +3069,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -2945,9 +3230,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -2965,16 +3250,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                         # margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -2982,8 +3267,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -3144,9 +3429,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -3164,16 +3449,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -3181,8 +3466,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -3343,9 +3628,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(2, 0, 2, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -3363,16 +3648,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         # axis.text.x = element_blank(),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                                                    margin = margin(t = 2, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -3380,8 +3665,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -3542,9 +3827,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(0, 0, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -3562,16 +3847,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         axis.text.x = element_blank(),
-                        # axis.text.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                        # axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 9, color = "#333333", 
                         #                            margin = margin(t = 10, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -3579,8 +3864,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -3741,9 +4026,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(2, 0, 2, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -3761,16 +4046,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         # axis.text.x = element_blank(),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                                                    margin = margin(t = 2, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -3778,8 +4063,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -3940,9 +4225,9 @@ get_country_profile <- function(current_country) {
                         # plot.background = element_blank(),
                         # plot.margin = unit(c(0, -8, 0, 0), "mm"),
                         plot.margin = unit(c(2, 0, 2, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Gill Sans MT", 
                                                     color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                        # text = element_text(family = "Gill Sans MT", size = 46, face = "plain", color = "#000000"),
                         panel.grid.minor = element_blank(),
                         panel.grid.major.x = element_blank(),
                         # panel.grid.major.y = element_line(color = "#DDDDDD"),
@@ -3960,16 +4245,16 @@ get_country_profile <- function(current_country) {
                         # axis.ticks.length.y.left = unit(.2, "cm"),
                         axis.ticks.length.x.bottom = unit(.1, "cm"),
                         # axis.text.x = element_blank(),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                        axis.text.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333",
                                                    margin = margin(t = 2, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.text.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                    margin = margin(t = 0, r = -20, b = 0, l = 0)),
                         # axis.line.x.bottom = element_line(color = "#333333"),
                         axis.line.x.bottom = element_blank(),
                         axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                        axis.title.x = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", 
                                                     margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", angle = 0,
+                        axis.title.y = element_text(family = "Gill Sans MT", face = "plain", size = 10, color = "#333333", angle = 0,
                                                     vjust = .5, margin = margin(t = 0, r = 0, b = 0, l = 5)),
                         # axis.title.y = element_blank(),
                         # axis.text.y = element_blank(),
@@ -3977,8 +4262,8 @@ get_country_profile <- function(current_country) {
                                                   margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
                         legend.position = "bottom",
                         # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        legend.title = element_text(size = 10, family = "Gill Sans MT", face = "plain", color = "#333333"),
+                        legend.text = element_text(size = 8, family = "Gill Sans MT", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -5225,14 +5510,14 @@ get_country_profile <- function(current_country) {
                 # obj_4_dot_plot_sub_obj_4_1
                 draw_image(sub_obj_4_1_country_profile_dot_plot_png, x = .139, y = obj_4_dot_plot_sub_obj_4_1, 
                            hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
-                draw_label(label = "Economic\nindependence", color = "#333333", size = 5, angle = 0,
+                draw_label(label = "Economic\ncompetitiveness", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
                            x = .183, y = obj_4_dot_plot_sub_obj_4_1 + .003, hjust = .5, vjust = .5) +
                 
                 # obj_4_dot_plot_sub_obj_4_3
                 draw_image(sub_obj_4_2_country_profile_dot_plot_png, x = .139, y = obj_4_dot_plot_sub_obj_4_2, 
                            hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
-                draw_label(label = "Financial practices", color = "#333333", size = 5, angle = 0,
+                draw_label(label = "Financial health", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
                            x = .183, y = obj_4_dot_plot_sub_obj_4_2 + .008, hjust = .5, vjust = .5) +
                 
