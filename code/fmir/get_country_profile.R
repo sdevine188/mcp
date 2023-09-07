@@ -1,6 +1,45 @@
 # country_profiles ####
 
 
+# extrafont::loadfonts(device="win") 
+# library(tidyverse)
+# library(lubridate)
+# library(readxl)
+# library(skimr)
+# library(rlang)
+# library(haven)
+# library(fs)
+# library(janitor)
+# library(ggridges)
+# library(officer)
+# library(devEMF)
+# library(ggrepel)
+# library(rvest)
+# library(scales)
+# library(testthat)
+# library(patchwork)
+# library(vdemdata)
+# library(naniar)
+# library(dichromat)
+# library(RColorBrewer)
+# library(fmsb)
+# library(ggcorrplot)
+# library(bazar)
+# library(cowplot)
+# library(ggplotify)
+# library(elementalist)
+# library(ggforce)
+# library(magick)
+# library(ggpubr)
+# library(grid)
+# library(rworldxtra)
+# library(sf)        
+# library(lwgeom)    
+# library(rworldmap)
+# library(pals)
+# library(openxlsx)
+
+
 # note the best workflow is to create plot_layout with patchwork, but mainly just to establish output size that will cover entire
 # pdf page with out need for any resizing in word before converting to pdf (just horizontal/vertical centering)
 # note the pdf page has wider margins than word doc, so in word the plot will look to be over edge of margins, but
@@ -23,11 +62,11 @@
 # to confirm 300 dpi image on printed page, divide pixel count by 300 dpi, to get pixels/dots per inch
 # ggsave has arguments for dpi and height width - the output pixel dimensions will be width * dpi
 # so dpi = 300 and width = 6 yields an 1800 x 1800 image file, which can be displayed at 300 dpi on printed page if 6 inch or less
-# "So, if you want to print an image that is 1024 × 768 (listed as Width=1024px, Height=768px on a PC), 
+# "So, if you want to print an image that is 1024 ? 768 (listed as Width=1024px, Height=768px on a PC), 
 # you need to divide each value by 300 to see how many inches you can print at 300 dpi.
 # 1024 / 300 = 3.4133 (width)
 # 768 / 300 = 2.56 (height)
-# So, you could print this 1024px × 768px image at 300 DPI at a size of 3.4133 × 2.56 - 
+# So, you could print this 1024px ? 768px image at 300 DPI at a size of 3.4133 ? 2.56 - 
 # any bigger than this, and you risk the image becoming pixellated"
 
 # note that getting rounded rectangle can be problematic in extreme cases because geom_shape has an aspect ratio limit for wide/narrow, 
@@ -41,7 +80,7 @@
 
 
 # create get_country_profile()
-get_country_profile <- function(current_country) {
+get_country_profile <- function(current_country, current_fy) {
         
         print(current_country)
         
@@ -50,6 +89,7 @@ get_country_profile <- function(current_country) {
                                                current_country == "N. Macedonia" ~ "North\nMacedonia",
                                                current_country == "U.K." ~ "United\nKingdom",
                                                TRUE ~ current_country)
+        
         
         #////////////////////////////////////////////////////////////////////////////////////////////////////
         #////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -516,7 +556,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ str_c(country, "  "),
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", 
@@ -541,7 +581,7 @@ get_country_profile <- function(current_country) {
                                          # color_bin == "U.S." ~ color_palette %>% slice(8) %>% pull(hex)),
                                          color_bin == "Other countries  " ~ color_palette %>% slice(4) %>% pull(hex)),
                        point_size = case_when(
-                                              TRUE ~ 3),
+                               TRUE ~ 3),
                        point_shape = case_when(color_bin == "Other countries  " ~ 1,
                                                TRUE ~ 19),
                        point_stroke = case_when(color_bin == "Other countries  " ~ 1,
@@ -609,11 +649,10 @@ get_country_profile <- function(current_country) {
                 ggplot(data = ., mapping = aes(x = values, y = y_axis_order, 
                                                color = color_bin, shape = color_bin)) + 
                 scale_color_manual(values = chart_data_color_list, 
-                                   name = "",
-                                   labels = names(chart_data_color_list)) +
+                                   name = "") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 # scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 2)) +
                 labs(x = NULL, y = current_sub_obj_short_name, 
                      caption = NULL, color = "test", linetype = "") +
@@ -625,8 +664,7 @@ get_country_profile <- function(current_country) {
                                            y = 1, yend = 1), color = "#DDDDDD", size = .25) +
                 geom_point(mapping = aes(size = point_size, stroke = point_stroke)) +
                 scale_shape_manual(values = chart_data_shape_list, 
-                                   name = "",
-                                   labels = names(chart_data_shape_list)) +
+                                   name = "") +
                 # scale_size_continuous(range = c(1, 3), guide = "none") +
                 scale_size_continuous(range = c(4, 6), guide = "none") +
                 coord_fixed(ratio = 1 / 15, clip = "off") +
@@ -670,7 +708,9 @@ get_country_profile <- function(current_country) {
                         # legend.key.size = unit(2, "mm"), 
                         legend.title = element_text(size = 8, family = "Calibri", face = "bold", color = "#083D7F"),
                         # legend.title = element_blank(),
-                        legend.text = element_text(size = 8.5, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        # legend.text = element_text(size = 8.5, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                        #                            hjust = .5, color = "#333333")
+                        legend.text = element_text(size = 9, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
                                                    hjust = .5, color = "#333333")
                         # legend.spacing.y = unit(5.5, "cm"),
                         # legend.key = element_rect(size = 5),
@@ -812,7 +852,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -1012,7 +1052,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -1212,7 +1252,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -1412,7 +1452,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -1612,7 +1652,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -1812,7 +1852,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -1935,7 +1975,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -2011,7 +2051,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -2134,7 +2174,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -2210,7 +2250,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -2333,7 +2373,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -2409,7 +2449,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -2532,7 +2572,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -2608,7 +2648,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -2731,7 +2771,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -2807,7 +2847,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -2930,7 +2970,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -3006,7 +3046,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -3128,7 +3168,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -3204,7 +3244,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -3327,7 +3367,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -3403,7 +3443,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -3526,7 +3566,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -3602,7 +3642,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -3725,7 +3765,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -3801,7 +3841,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -3924,7 +3964,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -4000,7 +4040,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -4123,7 +4163,7 @@ get_country_profile <- function(current_country) {
                                                 year == 2020 ~ 2,
                                                 year == 2019 ~ 3),
                        sub_obj_avg = case_when(y_axis_order == 2 ~ sub_obj_avg,
-                                                        TRUE ~ NA_real_),
+                                               TRUE ~ NA_real_),
                        var = mcp_grouping, values = sub_obj_avg,
                        dot_label = case_when(country == current_country ~ country,
                                              country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs", "EU-15") ~ mcp_grouping,
@@ -4199,7 +4239,7 @@ get_country_profile <- function(current_country) {
                 scale_color_manual(values = chart_data_color_list, guide = "none") +
                 # scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
                 scale_y_continuous(breaks = NULL, limits = c(1, 3), expand = c(0, 0),
-                                   labels = number_format(accuracy = 1)) +
+                                   labels = label_number(accuracy = 1)) +
                 scale_x_continuous(breaks = seq(from = 0, to = 1, by = .1), limits = c(-.02, 1.02)) +
                 labs(x = NULL, y = sub_obj_short_name_placeholder, 
                      caption = NULL, color = "", linetype = "") +
@@ -4415,7 +4455,7 @@ get_country_profile <- function(current_country) {
                 scale_x_continuous(limits = c(0, 2)) +
                 scale_y_continuous(limits = c(0, 2)) +
                 theme_nothing() +
-                theme(aspect.ratio = 1 / 2.2) 
+                theme(aspect.ratio = 1 / 1.8) 
         line_chart_gray_border
         
         
@@ -4423,7 +4463,7 @@ get_country_profile <- function(current_country) {
                plot = line_chart_gray_border, dpi = 300, width = 6, height = 6)
         line_chart_gray_border_png <- image_read(path = "output/charts/country_profile/line_chart_gray_border.png") %>%
                 # image_crop(image = ., geometry = geometry_area(width = 1700, height = 1150, x_off = 50, y_off = 325))
-                image_crop(image = ., geometry = geometry_area(width = 1700, height = 800, x_off = 50, y_off = 500))
+                image_crop(image = ., geometry = geometry_area(width = 1700, height = 1000, x_off = 50, y_off = 400))
         
         
         #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4452,7 +4492,7 @@ get_country_profile <- function(current_country) {
         #//////////////////
         
         
-        # add color_bin and color
+        # get chart_data
         chart_data <- fmir %>% 
                 filter(country == current_country) %>%
                 mutate(values = obj_avg) %>%
@@ -4464,18 +4504,18 @@ get_country_profile <- function(current_country) {
                                          values = miri_avg) %>%
                                   select(obj_num, country, year, mcp_grouping, values)) %>%
                 arrange(desc(obj_num)) %>%
-                mutate(color_bin = case_when(obj_num == "obj_1" ~ "Democratic",
-                                             obj_num == "obj_2" ~ "Information",
-                                             obj_num == "obj_3" ~ "Energy",
-                                             obj_num == "obj_4" ~ "Economic",
-                                             obj_num == "obj_c" ~ "Corruption",
-                                             obj_num == "miri" ~ "Resilience Index"),
-                       color = case_when(color_bin == "Democratic" ~ color_palette %>% slice(1) %>% pull(hex),
-                                         color_bin == "Information" ~ color_palette %>% slice(2) %>% pull(hex),
-                                         color_bin == "Energy" ~ color_palette %>% slice(3) %>% pull(hex),
-                                         color_bin == "Economic" ~ color_palette %>% slice(4) %>% pull(hex),
-                                         color_bin == "Corruption" ~ color_palette %>% slice(5) %>% pull(hex),
-                                         color_bin == "Resilience Index" ~ color_palette %>% slice(7) %>% pull(hex)),
+                mutate(color_bin = case_when(obj_num == "obj_1" ~ "     Democratic",
+                                             obj_num == "obj_2" ~ "     Information",
+                                             obj_num == "obj_3" ~ "     Energy",
+                                             obj_num == "obj_4" ~ "     Economic",
+                                             obj_num == "obj_c" ~ "     Corruption",
+                                             obj_num == "miri" ~ "     MIRI"),
+                       color = case_when(color_bin == "     Democratic" ~ color_palette %>% slice(1) %>% pull(hex),
+                                         color_bin == "     Information" ~ color_palette %>% slice(2) %>% pull(hex),
+                                         color_bin == "     Energy" ~ color_palette %>% slice(3) %>% pull(hex),
+                                         color_bin == "     Economic" ~ color_palette %>% slice(4) %>% pull(hex),
+                                         color_bin == "     Corruption" ~ color_palette %>% slice(5) %>% pull(hex),
+                                         color_bin == "     MIRI" ~ color_palette %>% slice(7) %>% pull(hex)),
                        linetype_bin = color_bin,
                        linetype = case_when(TRUE ~ "solid"))
         
@@ -4493,38 +4533,66 @@ get_country_profile <- function(current_country) {
         #/////////////////////
         
         
-        # get label_position
-        chart_data <- chart_data %>% arrange(country, year, values) %>% 
-                group_by(country, year) %>%
-                mutate(label_position = values,
-                       dist_to_lower = label_position - lag(label_position, n = 1),
-                       dist_to_higher = lead(label_position, n = 1) - label_position,
-                       overlap_flag = case_when(dist_to_lower <= .04 ~ 1,
-                                                TRUE ~ 0)) %>%
-                ungroup()
+        # get label_position 
         
-        # inspect
-        # chart_data
+        # note that for coord_fixed_ratio the optimal ratio was 6/1 when y-axis spanned range of 1
+        # so the y-axis units were given pixels equal to (range = 1) * (coord_fixed_numerator = 6) = (pixel units = 6)
+        # so to get the same size chart with different y-axis range, 
+        # use formula: range * coord_fixed_numerator = pixel_units; 
+        # after rearranging: unknown_coord_fixed_numerator = pixel_units / range
+        # note the coord_fixed_denominator is 1, and doesn't need to be adjusted in this case because x-axis units are unchanged
+        # but if needed, could adjust coord_fixed_denominator by similar formula
+        # range * coord_fixed_denominator = pixel_units
+        chart_data <- chart_data %>% 
+                mutate(max_value = max(values),
+                       min_value = min(values),
+                       max_value_rounded_10 = round_to_threshold(number = max_value, accuracy = .1, fun = ceiling),
+                       min_value_rounded_10 = round_to_threshold(number = min_value, accuracy = .1, fun = floor),
+                       max_value_rounded_20 = round_to_threshold(number = max_value, accuracy = .2, fun = ceiling),
+                       min_value_rounded_20 = round_to_threshold(number = min_value, accuracy = .2, fun = floor),
+                       values_range_10 = max_value_rounded_10 - min_value_rounded_10,
+                       values_range_20 = max_value_rounded_20 - min_value_rounded_20,
+                       coord_fixed_ratio = case_when(values_range_10 <= .6 ~ 6 / values_range_10,
+                                                     values_range_10 > .6 ~ 6 / values_range_20))
         
-        # set counter
-        counter <- 0
-        
-        # run loop to update label_position
-        while((chart_data %>% mutate(sum_overlap_flag = sum(overlap_flag)) %>% slice(1) %>% pull(sum_overlap_flag)) != 0) {
+        # get label_position when y-axis has .1 intervals
+        if((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) <= .6) {
+                if((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) >= .8) {
+                        
+                        chart_data <- chart_data %>% get_label_position(gap = .04)
+                }
                 
-                counter <- counter + 1
-                # print(counter + 1)
+                if(((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) >= .5) & 
+                   ((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) < .8)) {
+                        
+                        chart_data <- chart_data %>% get_label_position(gap = .03)
+                }
                 
-                chart_data <- chart_data %>% arrange(country, year, values) %>% 
-                        group_by(country, year) %>%
-                        mutate(label_position = case_when(is.na(dist_to_lower) | dist_to_lower >= .05 ~ label_position,
-                                                          TRUE ~ label_position + (.05 - dist_to_lower)),
-                               dist_to_higher = lead(label_position, n = 1) - label_position,
-                               dist_to_lower = label_position - lag(label_position, n = 1),
-                               overlap_flag = case_when(dist_to_lower <= .04 ~ 1,
-                                                        TRUE ~ 0)) %>%
-                        ungroup()
+                if((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) < .5) {
+                        
+                        chart_data <- chart_data %>% get_label_position(gap = .02)
+                }
         }
+        
+        # get label_position when y-axis has .2 intervals
+        if((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) > .6) {
+                if((chart_data %>% distinct(values_range_20) %>% pull(values_range_20)) >= .8) {
+                        
+                        chart_data <- chart_data %>% get_label_position(gap = .04)
+                }
+                
+                if(((chart_data %>% distinct(values_range_20) %>% pull(values_range_20)) >= .5) & 
+                   ((chart_data %>% distinct(values_range_20) %>% pull(values_range_20)) < .8)) {
+                        
+                        chart_data <- chart_data %>% get_label_position(gap = .03)
+                }
+                
+                if((chart_data %>% distinct(values_range_20) %>% pull(values_range_20)) < .5) {
+                        
+                        chart_data <- chart_data %>% get_label_position(gap = .02)
+                }
+        }
+     
         
         # inspect
         # chart_data
@@ -4533,121 +4601,211 @@ get_country_profile <- function(current_country) {
         #/////////////////////
         
         
-        # create chart
-        country_profile_line_chart <- chart_data %>%
-                ggplot(data = ., aes(x = year, 
-                                     y = values, 
-                                     color = color_bin,
-                                     linetype = color_bin)) + 
-                # geom_line(size = 1) +
-                # geom_point(size = 2) +
-                geom_text(data = chart_data %>% filter(year == max(year), color_bin == "Democratic"),
-                          mapping = aes(x = year + .35, y = label_position, label = color_bin),
-                          fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
-                geom_text(data = chart_data %>% filter(year == max(year), color_bin == "Information"),
-                          mapping = aes(x = year + .35, y = label_position, label = color_bin),
-                          fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
-                geom_text(data = chart_data %>% filter(year == max(year), color_bin == "Energy"),
-                          mapping = aes(x = year + .35, y = label_position, label = color_bin),
-                          fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
-                geom_text(data = chart_data %>% filter(year == max(year), color_bin == "Economic"),
-                          mapping = aes(x = year + .35, y = label_position, label = color_bin),
-                          fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
-                geom_text(data = chart_data %>% filter(year == max(year), color_bin == "Corruption"),
-                          mapping = aes(x = year + .35, y = label_position, label = color_bin),
-                          fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
-                geom_text(data = chart_data %>% filter(year == max(year), color_bin == "Resilience Index"),
-                          mapping = aes(x = year + .35, y = label_position, label = color_bin),
-                          fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
-                scale_color_manual(values = chart_data_color_list, guide = "none") +
-                scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
-                scale_y_continuous(breaks = seq(from = 0, to = 1, by = .2), limits = c(0, 1), expand = c(0, 0),
-                                   labels = number_format(accuracy = .01)) +
-                scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 2)) +
-                labs(x = NULL, y = "Score (higher is better)", 
-                     caption = NULL, color = "", linetype = "") +
-                coord_fixed(ratio = 6 / 1, clip = "off") +
-                # annotate(geom = "rect", xmin = 2008.5, xmax = 2018.5, ymin = 0, ymax = 1.8, alpha = 0, color = "#DDDDDD") +
-                geom_segment(data = chart_data,
-                             mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
-                                           xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
-                                           y = .2, yend = .2), color = "#DDDDDD", size = .75) +
-                geom_segment(data = chart_data,
-                             mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
-                                           xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
-                                           y = .4, yend = .4), color = "#DDDDDD", size = .75) +
-                geom_segment(data = chart_data,
-                             mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
-                                           xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
-                                           y = .6, yend = .6), color = "#DDDDDD", size = .75) +
-                geom_segment(data = chart_data,
-                             mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
-                                           xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
-                                           y = .8, yend = .8), color = "#DDDDDD", size = .75) +
-                geom_segment(data = chart_data,
-                             mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
-                                           xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
-                                           y = 1, yend = 1), color = "#DDDDDD", size = .75) +
-                geom_segment(data = chart_data,
-                             mapping = aes(x = chart_data %>% filter(year == min(year)) %>% slice(1) %>% pull(year) - .25,
-                                           xend = chart_data %>% filter(year == max(year)) %>% slice(1) %>% pull(year) + .25,
-                                           y = 0, yend = 0), color = "#333333", size = .75) +
-                geom_line(size = 1.5) + 
-                # geom_point(size = 2) +
-                # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
-                theme_bw() +
-                theme(
-                        # plot.background = element_rect(fill = "blue"),
-                        # plot.background = element_rect(colour = "#DDDDDD", size = .5),
-                        plot.margin = unit(c(0, 25, 0, 0), "mm"),
-                        plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
-                                                    color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
-                        # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
-                        panel.grid.minor = element_blank(),
-                        panel.grid.major.x = element_blank(),
-                        # panel.grid.major.y = element_line(color = "#DDDDDD"),
-                        panel.grid.major.y = element_blank(),
-                        panel.border = element_blank(),
-                        # panel.border = element_rect(color = "#DDDDDD", size = .5),
-                        # panel.grid = element_blank(),
-                        # line = element_blank(),
-                        # rect = element_blank(),
-                        axis.ticks.y = element_blank(),
-                        axis.ticks.x = element_line(size = .5),
-                        # axis.ticks.length.y.left = unit(.2, "cm"),
-                        axis.ticks.length.x.bottom = unit(.1, "cm"),
-                        axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
-                                                   margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
-                        axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
-                                                   margin = margin(t = 0, r = 0, b = 0, l = 0)),
-                        # axis.line.x.bottom = element_line(color = "#333333"),
-                        axis.line.x.bottom = element_blank(),
-                        axis.line.y.left = element_blank(),
-                        axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
-                                                    margin = margin(t = 13, r = 0, b = 5, l = 0)),
-                        axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
-                                                    margin = margin(t = 0, r = 10, b = 0, l = 5)),
-                        # axis.title.y = element_blank(),
-                        # axis.text.y = element_blank(),
-                        plot.title = element_text(size = 10, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
-                                                  margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
-                        legend.position = "bottom",
-                        # legend.key.size = unit(2, "mm"), 
-                        legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
-                        legend.text = element_text(size = 10, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
-                                                   hjust = .5, color = "#333333")
-                        # legend.spacing.y = unit(5.5, "cm"),
-                        # legend.key = element_rect(size = 5),
-                        # legend.key.size = unit(2, 'lines')
-                ) 
-        # guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
-        #        linetype = guide_legend(keywidth = 4))
-        
-        # inspect
-        # country_profile_line_chart
+        # create chart with y-axis gridlines with a .1 interval if values_range_10 <= .6
+        if((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) <= .6) {
+                
+                # create chart
+                country_profile_line_chart <- chart_data %>%
+                        ggplot(data = ., aes(x = year, 
+                                             y = values, 
+                                             color = color_bin,
+                                             linetype = color_bin)) + 
+                        # geom_line(size = 1) +
+                        # geom_point(size = 2) +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Democratic"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Information"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Energy"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Economic"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Corruption"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     MIRI"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        scale_color_manual(values = chart_data_color_list, guide = "none") +
+                        scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
+                        scale_y_continuous(breaks = seq(from = chart_data %>% distinct(min_value_rounded_10) %>% pull(min_value_rounded_10), 
+                                                        to = chart_data %>% distinct(max_value_rounded_10) %>% pull(max_value_rounded_10), 
+                                                        by = .1), 
+                                           limits = c(chart_data %>% distinct(min_value_rounded_10) %>% pull(min_value_rounded_10), 
+                                                      chart_data %>% distinct(max_value_rounded_10) %>% pull(max_value_rounded_10)), 
+                                           expand = c(0, 0),
+                                           labels = label_number(accuracy = .01)) +
+                        scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 2), expand = c(.02, .02)) +
+                        labs(x = NULL, y = "Score (higher is better)", 
+                             caption = NULL, color = "", linetype = "") +
+                        coord_fixed(ratio = (chart_data %>% distinct(coord_fixed_ratio) %>% pull(coord_fixed_ratio)), clip = "off") +
+                        geom_line(size = 1.5) + 
+                        # geom_point(size = 2) +
+                        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+                        theme_bw() +
+                        theme(
+                                # plot.background = element_rect(fill = "blue"),
+                                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                                panel.grid.minor = element_blank(),
+                                panel.grid.major.x = element_blank(),
+                                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                                # panel.grid.major.y = element_blank(),
+                                # panel.border = element_blank(),
+                                panel.border = element_rect(color = "#DDDDDD", size = .5),
+                                # panel.grid = element_blank(),
+                                # line = element_blank(),
+                                # rect = element_blank(),
+                                axis.ticks.y = element_blank(),
+                                # axis.ticks.y = element_line(size = .5, color = "#DDDDDD"),
+                                axis.ticks.x = element_line(size = .5),
+                                # axis.ticks.length.y.left = unit(.2, "cm"),
+                                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                                axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                                axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                                                           margin = margin(t = 0, r = 2, b = 0, l = 0)),
+                                axis.line.x.bottom = element_line(colour = "#333333", size = .5),
+                                # axis.line.x.bottom = element_blank(),
+                                axis.line.y.left = element_blank(),
+                                axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                                axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                                                            margin = margin(t = 0, r = 10, b = 0, l = 5)),
+                                # axis.title.y = element_blank(),
+                                # axis.text.y = element_blank(),
+                                plot.title = element_text(size = 10, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                                legend.position = "bottom",
+                                # legend.key.size = unit(2, "mm"), 
+                                legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
+                                legend.text = element_text(size = 10, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                                           hjust = .5, color = "#333333")
+                                # legend.spacing.y = unit(5.5, "cm"),
+                                # legend.key = element_rect(size = 5),
+                                # legend.key.size = unit(2, 'lines')
+                        ) 
+                # guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+                #        linetype = guide_legend(keywidth = 4))
+                
+                # inspect
+                # country_profile_line_chart
+                
+        }
         
         
         #///////////////////////
+        
+        
+        # create chart with y-axis gridlines with a .2 interval if values_range > .6
+        if((chart_data %>% distinct(values_range_10) %>% pull(values_range_10)) > .6) {
+                
+                # create chart
+                country_profile_line_chart <- chart_data %>%
+                        ggplot(data = ., aes(x = year, 
+                                             y = values, 
+                                             color = color_bin,
+                                             linetype = color_bin)) + 
+                        # geom_line(size = 1) +
+                        # geom_point(size = 2) +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Democratic"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Information"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Energy"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Economic"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     Corruption"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        geom_text(data = chart_data %>% filter(year == max(year), color_bin == "     MIRI"),
+                                  mapping = aes(x = year, y = label_position, label = color_bin),
+                                  fontface = "bold", hjust = 0, size = 3.25, family = "Calibri") +
+                        scale_color_manual(values = chart_data_color_list, guide = "none") +
+                        scale_linetype_manual(values = chart_data_linetype_list, guide = "none") +
+                        scale_y_continuous(breaks = seq(from = chart_data %>% distinct(min_value_rounded_20) %>% pull(min_value_rounded_20), 
+                                                        to = chart_data %>% distinct(max_value_rounded_20) %>% pull(max_value_rounded_20), 
+                                                        by = .2), 
+                                           limits = c(chart_data %>% distinct(min_value_rounded_20) %>% pull(min_value_rounded_20), 
+                                                      chart_data %>% distinct(max_value_rounded_20) %>% pull(max_value_rounded_20)), 
+                                           expand = c(0, 0),
+                                           labels = label_number(accuracy = .01)) +
+                        scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 2), expand = c(.02, .02)) +
+                        labs(x = NULL, y = "Score (higher is better)", 
+                             caption = NULL, color = "", linetype = "") +
+                        coord_fixed(ratio = (chart_data %>% distinct(coord_fixed_ratio) %>% pull(coord_fixed_ratio)), clip = "off") +
+                        geom_line(size = 1.5) + 
+                        # geom_point(size = 2) +
+                        # geom_segment(data = segment_tbl, mapping = aes(x = x, xend = xend, y = y, yend = yend)) +
+                        theme_bw() +
+                        theme(
+                                # plot.background = element_rect(fill = "blue"),
+                                # plot.background = element_rect(colour = "#DDDDDD", size = .5),
+                                plot.margin = unit(c(0, 20, 0, 0), "mm"),
+                                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                                panel.grid.minor = element_blank(),
+                                panel.grid.major.x = element_blank(),
+                                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                                # panel.grid.major.y = element_blank(),
+                                # panel.border = element_blank(),
+                                panel.border = element_rect(color = "#DDDDDD", size = .5),
+                                # panel.grid = element_blank(),
+                                # line = element_blank(),
+                                # rect = element_blank(),
+                                axis.ticks.y = element_blank(),
+                                # axis.ticks.y = element_line(size = .5, color = "#DDDDDD"),
+                                axis.ticks.x = element_line(size = .5),
+                                # axis.ticks.length.y.left = unit(.2, "cm"),
+                                axis.ticks.length.x.bottom = unit(.2, "cm"),
+                                axis.text.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 0, hjust = .5),
+                                axis.text.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                                                           margin = margin(t = 0, r = 2, b = 0, l = 0)),
+                                axis.line.x.bottom = element_line(colour = "#333333", size = .5),
+                                # axis.line.x.bottom = element_blank(),
+                                axis.line.y.left = element_blank(),
+                                axis.title.x = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333", 
+                                                            margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                                axis.title.y = element_text(family = "Calibri", face = "plain", size = 10, color = "#333333",
+                                                            margin = margin(t = 0, r = 10, b = 0, l = 5)),
+                                # axis.title.y = element_blank(),
+                                # axis.text.y = element_blank(),
+                                plot.title = element_text(size = 10, face = "plain", hjust = .5, family = "Calibri", color = "#333333", 
+                                                          margin = margin(t = 0, r = 0, b = 5, l = 0, unit = "pt")),
+                                legend.position = "bottom",
+                                # legend.key.size = unit(2, "mm"), 
+                                legend.title = element_text(size = 10, family = "Calibri", face = "plain", color = "#333333"),
+                                legend.text = element_text(size = 10, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                                           hjust = .5, color = "#333333")
+                                # legend.spacing.y = unit(5.5, "cm"),
+                                # legend.key = element_rect(size = 5),
+                                # legend.key.size = unit(2, 'lines')
+                        ) 
+                # guides(color = guide_legend(nrow = 2, byrow = TRUE, label.hjust = 0, color = "#333333", keywidth = 4),
+                #        linetype = guide_legend(keywidth = 4))
+                
+                # inspect
+                # country_profile_line_chart
+        }
+        
+        
+        #///////////////////////        
+                
+                
         
         
         # save plot as png
@@ -4660,7 +4818,7 @@ get_country_profile <- function(current_country) {
         #                  str_to_lower(current_country), ".png")) %>% image_info()
         country_profile_line_chart_png <- image_read(str_c("output/charts/country_profile/country_profile_line_chart_", 
                                                            str_to_lower(current_country), ".png")) %>%
-                image_crop(image = ., geometry = geometry_area(width = 2350, height = 1050, x_off = 0, y_off = 650))
+                image_crop(image = ., geometry = geometry_area(width = 2400, height = 1300, x_off = 0, y_off = 550))
         
         
         #//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4767,11 +4925,11 @@ get_country_profile <- function(current_country) {
                         image_crop(image = ., geometry = geometry_area(width = 800, height = 1700, x_off = 500, y_off = 50))
                 
         } else if(current_country == "Azerbaijan") {
-
+                
                 country_profile_map_png <- image_read(str_c("output/charts/country_profile/map_", str_to_lower(current_country), 
                                                             ".png")) %>%
                         image_crop(image = ., geometry = geometry_area(width = 1700, height = 1300, x_off = 50, y_off = 250))
-
+                
         } else if(current_country == "Belarus") {
                 
                 country_profile_map_png <- image_read(str_c("output/charts/country_profile/map_", str_to_lower(current_country), 
@@ -4910,7 +5068,7 @@ get_country_profile <- function(current_country) {
                                                             ".png"))
                 
         }
-
+        
         
         #//////////////////////////////////////////////////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5167,35 +5325,33 @@ get_country_profile <- function(current_country) {
         
         # ri_dot_plot
         ri_dot_plot_ri <- top_dot_plot
-        ri_dot_plot_obj_1 <- ri_dot_plot_ri - .028
-        ri_dot_plot_obj_2 <- ri_dot_plot_obj_1 - .028
-        ri_dot_plot_obj_3 <- ri_dot_plot_obj_2 - .028
-        ri_dot_plot_obj_4 <- ri_dot_plot_obj_3 - .028
-        ri_dot_plot_obj_c <- ri_dot_plot_obj_4 - .032
+        ri_dot_plot_obj_1 <- ri_dot_plot_ri - .025
+        ri_dot_plot_obj_2 <- ri_dot_plot_obj_1 - .025
+        ri_dot_plot_obj_3 <- ri_dot_plot_obj_2 - .025
+        ri_dot_plot_obj_4 <- ri_dot_plot_obj_3 - .025
+        ri_dot_plot_obj_c <- ri_dot_plot_obj_4 - .03
         
         # obj_1_dot_plot
-        # obj_1_dot_plot_sub_obj_1_1 <- top_dot_plot
-        # obj_1_dot_plot_sub_obj_1_1 <- dot_plot_legend - .079
-        obj_1_dot_plot_sub_obj_1_1 <- dot_plot_legend - .086
-        obj_1_dot_plot_sub_obj_1_2 <- obj_1_dot_plot_sub_obj_1_1 - .028
-        obj_1_dot_plot_sub_obj_1_3 <- obj_1_dot_plot_sub_obj_1_2 - .032
+        obj_1_dot_plot_sub_obj_1_1 <- dot_plot_legend - .083
+        obj_1_dot_plot_sub_obj_1_2 <- obj_1_dot_plot_sub_obj_1_1 - .025
+        obj_1_dot_plot_sub_obj_1_3 <- obj_1_dot_plot_sub_obj_1_2 - .03
         
         # obj_2_dot_plot
-        obj_2_dot_plot_sub_obj_2_1 <- ri_dot_plot_obj_c - .079
-        obj_2_dot_plot_sub_obj_2_2 <- obj_2_dot_plot_sub_obj_2_1 - .028
-        obj_2_dot_plot_sub_obj_2_3 <- obj_2_dot_plot_sub_obj_2_2 - .032
+        obj_2_dot_plot_sub_obj_2_1 <- ri_dot_plot_obj_c - .0785
+        obj_2_dot_plot_sub_obj_2_2 <- obj_2_dot_plot_sub_obj_2_1 - .025
+        obj_2_dot_plot_sub_obj_2_3 <- obj_2_dot_plot_sub_obj_2_2 - .03
         
         # obj_3_dot_plot
-        obj_3_dot_plot_sub_obj_3_1 <- obj_1_dot_plot_sub_obj_1_3 - .079
-        obj_3_dot_plot_sub_obj_3_2 <- obj_3_dot_plot_sub_obj_3_1 - .028
-        obj_3_dot_plot_sub_obj_3_3 <- obj_3_dot_plot_sub_obj_3_2 - .032
+        obj_3_dot_plot_sub_obj_3_1 <- obj_1_dot_plot_sub_obj_1_3 - .076
+        obj_3_dot_plot_sub_obj_3_2 <- obj_3_dot_plot_sub_obj_3_1 - .025
+        obj_3_dot_plot_sub_obj_3_3 <- obj_3_dot_plot_sub_obj_3_2 - .03
         
         # obj_4_dot_plot
-        obj_4_dot_plot_sub_obj_4_1 <- obj_2_dot_plot_sub_obj_2_3 - .079
-        obj_4_dot_plot_sub_obj_4_2 <- obj_4_dot_plot_sub_obj_4_1 - .032
+        obj_4_dot_plot_sub_obj_4_1 <- obj_2_dot_plot_sub_obj_2_3 - .0745
+        obj_4_dot_plot_sub_obj_4_2 <- obj_4_dot_plot_sub_obj_4_1 - .03
         
         # obj_c_dot_plot
-        obj_c_dot_plot_sub_obj_c <- obj_3_dot_plot_sub_obj_3_3 - .079
+        obj_c_dot_plot_sub_obj_c <- obj_3_dot_plot_sub_obj_3_3 - .081
         
         
         #///////////////////
@@ -5297,7 +5453,7 @@ get_country_profile <- function(current_country) {
                 
                 # draw banner and logo
                 draw_image(country_profile_blue_banner_png, x = .5, y = .97, hjust = .5, vjust = .5, width = 7, height = 7) +
-                draw_image(country_profile_usaid_logo_png, x = .12, y = .969, hjust = 0, vjust = .5, width = 0.14, height = 0.14) +
+                draw_image(country_profile_usaid_logo_png, x = .15, y = .969, hjust = 0, vjust = .5, width = 0.14, height = 0.14) +
                 
                 
                 #//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5306,8 +5462,7 @@ get_country_profile <- function(current_country) {
                 # draw map
                 draw_image(country_profile_map_png, x = .5, y = .845, hjust = 1, vjust = .5, 
                            width = map_height_width_scale, height = map_height_width_scale) +
-                # draw_image(country_profile_map_albania, x = .7, y = .845, hjust = 1, vjust = .5, width = 0.17, height = 0.17) +
-                
+
                 
                 #//////////////////////////////////////////////////////////////////////////////////////////////////////////
                 
@@ -5322,18 +5477,18 @@ get_country_profile <- function(current_country) {
                 
                 
                 # draw line chart
-                draw_image(line_chart_gray_border_png, x = .504, y = .629, 
-                           hjust = .5, vjust = .5, width = 0.55, height = 0.55) +
-                draw_image(country_profile_line_chart_png, x = .504, y = .631, 
-                           hjust = .5, vjust = .5, width = 0.5, height = 0.5) +
+                draw_image(line_chart_gray_border_png, x = .5, y = .629,
+                           hjust = .5, vjust = .5, width = 0.45, height = 0.45) +
+                draw_image(country_profile_line_chart_png, x = .5, y = .626, 
+                           hjust = .5, vjust = .5, width = 0.42, height = 0.42) +
                 
                 
                 #//////////////////////////////////////////////////////////////////////////////////////////////////////////
                 
                 
                 # draw divider
-                draw_image(country_profile_divider_png, x = .092, y = top_dot_plot + .048, 
-                           hjust = 0, vjust = .5, width = .82, height = .82) +
+                draw_image(country_profile_divider_png, x = .5, y = top_dot_plot + .052, 
+                           hjust = .5, vjust = .5, width = .75, height = .75) +
                 
                 
                 #//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5348,53 +5503,53 @@ get_country_profile <- function(current_country) {
         
                 # ri_dot_plot background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                draw_image(six_row_blue_rect_background_png, x = .51, y = ri_dot_plot_ri + .128, 
-                         hjust = 1, vjust = 1, width = .4, height = .4) +
-                draw_label(label = "Resilience Index objectives", color = "#ffffff", size = 6, angle = 0,
+                draw_image(six_row_blue_rect_background_png, x = .51, y = ri_dot_plot_ri + .121, 
+                   hjust = 1, vjust = 1, width = .37, height = .37) +
+                draw_label(label = "MIRI objectives", color = "#ffffff", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .138, y = ri_dot_plot_ri + .023, hjust = 0, vjust = .5) +
+                           x = .165, y = ri_dot_plot_ri + .023, hjust = 0, vjust = .5) +
                 
                 # ri_dot_plot_ri
-                draw_image(miri_country_profile_dot_plot_png, x = .139, y = ri_dot_plot_ri, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
-                draw_label(label = "Resilience Index", color = "#333333", size = 5, angle = 0,
+                draw_image(miri_country_profile_dot_plot_png, x = .165, y = ri_dot_plot_ri, 
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
+                draw_label(label = "MIRI", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = ri_dot_plot_ri + .003, hjust = .5, vjust = .5) +
+                           x = .205, y = ri_dot_plot_ri + .003, hjust = .5, vjust = .5) +
                 
                 # ri_dot_plot_obj_1
-                draw_image(obj_1_country_profile_dot_plot_png, x = .139, y = ri_dot_plot_obj_1, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
-                draw_label(label = "Democratic", color = "#333333", size = 4.5, angle = 0,
+                draw_image(obj_1_country_profile_dot_plot_png, x = .165, y = ri_dot_plot_obj_1,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
+                draw_label(label = "Democratic", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = ri_dot_plot_obj_1 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = ri_dot_plot_obj_1 + .004, hjust = .5, vjust = .5) +
+
                 # ri_dot_plot_obj_2
-                draw_image(obj_2_country_profile_dot_plot_png, x = .139, y = ri_dot_plot_obj_2, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(obj_2_country_profile_dot_plot_png, x = .165, y = ri_dot_plot_obj_2,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Information", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = ri_dot_plot_obj_2 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = ri_dot_plot_obj_2 + .004, hjust = .5, vjust = .5) +
+
                 # ri_dot_plot_obj_3
-                draw_image(obj_3_country_profile_dot_plot_png, x = .139, y = ri_dot_plot_obj_3, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(obj_3_country_profile_dot_plot_png, x = .165, y = ri_dot_plot_obj_3,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Energy", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = ri_dot_plot_obj_3 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = ri_dot_plot_obj_3 + .004, hjust = .5, vjust = .5) +
+
                 # ri_dot_plot_obj_4
-                draw_image(obj_4_country_profile_dot_plot_png, x = .139, y = ri_dot_plot_obj_4, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(obj_4_country_profile_dot_plot_png, x = .165, y = ri_dot_plot_obj_4,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Economic", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = ri_dot_plot_obj_4 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = ri_dot_plot_obj_4 + .004, hjust = .5, vjust = .5) +
+
                 # ri_dot_plot_obj_c
-                draw_image(obj_c_country_profile_dot_plot_png, x = .139, y = ri_dot_plot_obj_c, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(obj_c_country_profile_dot_plot_png, x = .165, y = ri_dot_plot_obj_c,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Corruption", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = ri_dot_plot_obj_c + .008, hjust = .5, vjust = .5) +
+                           x = .205, y = ri_dot_plot_obj_c + .008, hjust = .5, vjust = .5) +
                 
                 
                 #///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5402,32 +5557,32 @@ get_country_profile <- function(current_country) {
                 
                 # obj_1_dot_plot background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                draw_image(three_row_blue_rect_background_png, x = .895, y = obj_1_dot_plot_sub_obj_1_1 + .170, 
-                           hjust = 1, vjust = 1, width = .4, height = .4) +
+                draw_image(three_row_blue_rect_background_png, x = .863, y = obj_1_dot_plot_sub_obj_1_1 + .16, 
+                   hjust = 1, vjust = 1, width = .37, height = .37) +
                 draw_label(label = "Democratic sub-objectives", color = "#002F6C", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .523, y = obj_1_dot_plot_sub_obj_1_1 + .023, hjust = 0, vjust = .5) +
+                           x = .518, y = obj_1_dot_plot_sub_obj_1_1 + .023, hjust = 0, vjust = .5) +
                 
                 # obj_1_dot_plot_sub_obj_1_1
-                draw_image(sub_obj_1_1_country_profile_dot_plot_png, x = .524, y = obj_1_dot_plot_sub_obj_1_1, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_1_1_country_profile_dot_plot_png, x = .518, y = obj_1_dot_plot_sub_obj_1_1,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Checks / balances\nand rule of law", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_1_dot_plot_sub_obj_1_1 + .003, hjust = .5, vjust = .5) +
-                
+                           x = .559, y = obj_1_dot_plot_sub_obj_1_1 + .003, hjust = .5, vjust = .5) +
+
                 # obj_1_dot_plot_sub_obj_1_2
-                draw_image(sub_obj_1_2_country_profile_dot_plot_png, x = .524, y = obj_1_dot_plot_sub_obj_1_2, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_1_2_country_profile_dot_plot_png, x = .518, y = obj_1_dot_plot_sub_obj_1_2,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Civil society", color = "#333333", size = 4.5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_1_dot_plot_sub_obj_1_2 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .559, y = obj_1_dot_plot_sub_obj_1_2 + .004, hjust = .5, vjust = .5) +
+
                 # obj_1_dot_plot_sub_obj_1_3
-                draw_image(sub_obj_1_3_country_profile_dot_plot_png, x = .524, y = obj_1_dot_plot_sub_obj_1_3, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_1_3_country_profile_dot_plot_png, x = .518, y = obj_1_dot_plot_sub_obj_1_3,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Electoral / political\ninterference", color = "#333333", size = 4.5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_1_dot_plot_sub_obj_1_3 + .008, hjust = .5, vjust = .5) +
+                           x = .559, y = obj_1_dot_plot_sub_obj_1_3 + .008, hjust = .5, vjust = .5) +
                 
                 
                 #///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5435,32 +5590,32 @@ get_country_profile <- function(current_country) {
                 
                 # obj_2_dot_plot background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                draw_image(three_row_blue_rect_background_png, x = .51, y = obj_2_dot_plot_sub_obj_2_1 + .171, 
-                           hjust = 1, vjust = 1, width = .4, height = .4) +
+                draw_image(three_row_blue_rect_background_png, x = .51, y = obj_2_dot_plot_sub_obj_2_1 + .16, 
+                   hjust = 1, vjust = 1, width = .37, height = .37) +
                 draw_label(label = "Information sub-objectives", color = "#002F6C", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .138, y = obj_2_dot_plot_sub_obj_2_1 + .023, hjust = 0, vjust = .5) +
+                           x = .165, y = obj_2_dot_plot_sub_obj_2_1 + .023, hjust = 0, vjust = .5) +
                 
                 # obj_2_dot_plot_sub_obj_2_1
-                draw_image(sub_obj_2_1_country_profile_dot_plot_png, x = .139, y = obj_2_dot_plot_sub_obj_2_1, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
-                draw_label(label = "Trusted media\nand information", color = "#333333", size = 5, angle = 0,
+                draw_image(sub_obj_2_1_country_profile_dot_plot_png, x = .165, y = obj_2_dot_plot_sub_obj_2_1,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
+                draw_label(label = "Trust in media", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = obj_2_dot_plot_sub_obj_2_1 + .003, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = obj_2_dot_plot_sub_obj_2_1 + .003, hjust = .5, vjust = .5) +
+
                 # obj_2_dot_plot_sub_obj_2_2
-                draw_image(sub_obj_2_2_country_profile_dot_plot_png, x = .139, y = obj_2_dot_plot_sub_obj_2_2, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_2_2_country_profile_dot_plot_png, x = .165, y = obj_2_dot_plot_sub_obj_2_2,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Media demand", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = obj_2_dot_plot_sub_obj_2_2 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = obj_2_dot_plot_sub_obj_2_2 + .004, hjust = .5, vjust = .5) +
+
                 # obj_2_dot_plot_sub_obj_2_3
-                draw_image(sub_obj_2_3_country_profile_dot_plot_png, x = .139, y = obj_2_dot_plot_sub_obj_2_3, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_2_3_country_profile_dot_plot_png, x = .165, y = obj_2_dot_plot_sub_obj_2_3,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Media freedom", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = obj_2_dot_plot_sub_obj_2_3 + .008, hjust = .5, vjust = .5) +
+                           x = .205, y = obj_2_dot_plot_sub_obj_2_3 + .008, hjust = .5, vjust = .5) +
                 
                 
                 #///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5468,32 +5623,32 @@ get_country_profile <- function(current_country) {
                 
                 # obj_3_dot_plot background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                draw_image(three_row_blue_rect_background_png, x = .895, y = obj_3_dot_plot_sub_obj_3_1 + .171, 
-                           hjust = 1, vjust = 1, width = .4, height = .4) +
+                draw_image(three_row_blue_rect_background_png, x = .863, y = obj_3_dot_plot_sub_obj_3_1 + .16, 
+                   hjust = 1, vjust = 1, width = .37, height = .37) +
                 draw_label(label = "Energy sub-objectives", color = "#002F6C", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .523, y = obj_3_dot_plot_sub_obj_3_1 + .023, hjust = 0, vjust = .5) +
+                           x = .518, y = obj_3_dot_plot_sub_obj_3_1 + .023, hjust = 0, vjust = .5) +
                 
                 # obj_3_dot_plot_sub_obj_3_1
-                draw_image(sub_obj_3_1_country_profile_dot_plot_png, x = .524, y = obj_3_dot_plot_sub_obj_3_1, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_3_1_country_profile_dot_plot_png, x = .518, y = obj_3_dot_plot_sub_obj_3_1,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Energy security", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_3_dot_plot_sub_obj_3_1 + .003, hjust = .5, vjust = .5) +
-                
+                           x = .559, y = obj_3_dot_plot_sub_obj_3_1 + .003, hjust = .5, vjust = .5) +
+
                 # obj_3_dot_plot_sub_obj_3_2
-                draw_image(sub_obj_3_2_country_profile_dot_plot_png, x = .524, y = obj_3_dot_plot_sub_obj_3_2, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_3_2_country_profile_dot_plot_png, x = .518, y = obj_3_dot_plot_sub_obj_3_2,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Independence from\nRussian energy", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_3_dot_plot_sub_obj_3_2 + .004, hjust = .5, vjust = .5) +
-                
+                           x = .559, y = obj_3_dot_plot_sub_obj_3_2 + .004, hjust = .5, vjust = .5) +
+
                 # obj_3_dot_plot_sub_obj_3_3
-                draw_image(sub_obj_3_3_country_profile_dot_plot_png, x = .524, y = obj_3_dot_plot_sub_obj_3_3, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_3_3_country_profile_dot_plot_png, x = .518, y = obj_3_dot_plot_sub_obj_3_3,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Energy regulation", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_3_dot_plot_sub_obj_3_3 + .008, hjust = .5, vjust = .5) +
+                           x = .559, y = obj_3_dot_plot_sub_obj_3_3 + .008, hjust = .5, vjust = .5) +
                 
                 
                 #///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5501,25 +5656,25 @@ get_country_profile <- function(current_country) {
                 
                 # obj_4_dot_plot background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                draw_image(two_row_blue_rect_background_png, x = .51, y = obj_4_dot_plot_sub_obj_4_1 + .185, 
-                           hjust = 1, vjust = 1, width = .4, height = .4) +
+                draw_image(two_row_blue_rect_background_png, x = .51, y = obj_4_dot_plot_sub_obj_4_1 + .172, 
+                   hjust = 1, vjust = 1, width = .37, height = .37) +
                 draw_label(label = "Economic sub-objectives", color = "#002F6C", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .138, y = obj_4_dot_plot_sub_obj_4_1 + .023, hjust = 0, vjust = .5) +
+                           x = .165, y = obj_4_dot_plot_sub_obj_4_1 + .023, hjust = 0, vjust = .5) +
                 
                 # obj_4_dot_plot_sub_obj_4_1
-                draw_image(sub_obj_4_1_country_profile_dot_plot_png, x = .139, y = obj_4_dot_plot_sub_obj_4_1, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_4_1_country_profile_dot_plot_png, x = .165, y = obj_4_dot_plot_sub_obj_4_1,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Economic\ncompetitiveness", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = obj_4_dot_plot_sub_obj_4_1 + .003, hjust = .5, vjust = .5) +
-                
+                           x = .205, y = obj_4_dot_plot_sub_obj_4_1 + .003, hjust = .5, vjust = .5) +
+
                 # obj_4_dot_plot_sub_obj_4_3
-                draw_image(sub_obj_4_2_country_profile_dot_plot_png, x = .139, y = obj_4_dot_plot_sub_obj_4_2, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                draw_image(sub_obj_4_2_country_profile_dot_plot_png, x = .165, y = obj_4_dot_plot_sub_obj_4_2,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Financial health", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .183, y = obj_4_dot_plot_sub_obj_4_2 + .008, hjust = .5, vjust = .5) +
+                           x = .205, y = obj_4_dot_plot_sub_obj_4_2 + .008, hjust = .5, vjust = .5) +
                 
                 
                 #///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5527,20 +5682,20 @@ get_country_profile <- function(current_country) {
                 
                 # obj_c_dot_plot background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                draw_image(one_row_blue_rect_background_png, x = .895, y = obj_c_dot_plot_sub_obj_c + .198, 
-                           hjust = 1, vjust = 1, width = .4, height = .4) +
+                draw_image(one_row_blue_rect_background_png, x = .863, y = obj_c_dot_plot_sub_obj_c + .19, 
+                   hjust = 1, vjust = 1, width = .37, height = .37) +
                 draw_label(label = "Corruption sub-objectives", color = "#002F6C", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .523, y = obj_c_dot_plot_sub_obj_c + .023, hjust = 0, vjust = .5) +
+                           x = .518, y = obj_c_dot_plot_sub_obj_c + .023 + .005, hjust = 0, vjust = .5) +
                 
-                # obj_c_dot_plot_sub_obj_c_3
-                # note that y coordinate for obj_c_dot_plot_sub_obj_c_3 and label needs special handling 
-                # because it's uniquely both top and bottom, and bottom always has special handling
-                draw_image(sub_obj_c_country_profile_dot_plot_png, x = .524, y = obj_c_dot_plot_sub_obj_c - .005, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) +
+                # # obj_c_dot_plot_sub_obj_c_3
+                # # note that y coordinate for obj_c_dot_plot_sub_obj_c_3 and label needs special handling 
+                # # because it's uniquely both top and bottom, and bottom always has special handling
+                draw_image(sub_obj_c_country_profile_dot_plot_png, x = .518, y = obj_c_dot_plot_sub_obj_c,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32) +
                 draw_label(label = "Control of\ncorruption", color = "#333333", size = 5, angle = 0,
                            fontface = "plain", fontfamily = "Calibri",
-                           x = .568, y = obj_c_dot_plot_sub_obj_c + .008 - .005, hjust = .5, vjust = .5) +
+                           x = .559, y = obj_c_dot_plot_sub_obj_c + .003, hjust = .5, vjust = .5) +
                 
                 
                 #///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5548,63 +5703,127 @@ get_country_profile <- function(current_country) {
                 
                 # dot_plot_legend background and label
                 # note that for some reason the blue_rect y coordinate does not seem to have same reference as label and dot_plots
-                # draw_image(legend_gray_rect_background_png, x = .895, y = .263, 
-                draw_image(legend_gray_rect_background_png, x = .895, y = .624, 
-                           hjust = 1, vjust = 1, width = .4, height = .4) +
+                draw_image(legend_gray_rect_background_png, x = .863, y = .6125, 
+                           hjust = 1, vjust = 1, width = .37, height = .37) +
                 draw_label(label = "Legend", color = "#002F6C", size = 6, angle = 0,
                            fontface = "bold", fontfamily = "Calibri",
-                           x = .523, y = dot_plot_legend + .036, hjust = 0, vjust = .5) +
+                           x = .518, y = dot_plot_legend + .036, hjust = 0, vjust = .5) +
+                
                 
                 # dot_plot_legend
                 # note that y coordinate for obj_c_dot_plot_sub_obj_c_3 and label needs special handling 
                 # because it's uniquely both top and bottom, and bottom always has special handling
-                draw_image(country_profile_dot_plot_legend_png, x = .524, y = dot_plot_legend, 
-                           hjust = 0, vjust = .5, width = 0.34, height = 0.34) 
- 
-                
+                draw_image(country_profile_dot_plot_legend_png, x = .518, y = dot_plot_legend + .003,
+                           hjust = 0, vjust = .5, width = 0.32, height = 0.32)
+        
+        
         #///////////////////////////////////////////////////////////////////////////////////////////////////////
         
-                
+        
         # draw flag and title based on whether country name takes one or two rows
         if(!(current_country %in% c("BiH", "N. Macedonia"))) {
                 
-                country_profile <- ggdraw(country_profile) +
-                        
-                        # draw flag
-                        draw_image(country_profile_flag_png, x = .4455, y = .862, hjust = 0, vjust = .5, width = 0.07, height = 0.07) +
-                        
-                        # draw title
-                        draw_label(label = current_country_full_name, color = "#002F6C", size = 20, angle = 0,
-                                   fontface = "bold", fontfamily = "Calibri",
-                                   x = .13, y = .91, hjust = 0, vjust = 1) +
-                        draw_label(label = "Resilience Index: 2020 Country Profile", color = "#002F6C", size = 10, angle = 0,
-                                   fontface = "plain", fontfamily = "Calibri",
-                                   x = .13, y = .862, hjust = 0, vjust = .5)
-        }
-
-        if(current_country %in% c("BiH", "N. Macedonia")) {
-        
-                country_profile <- ggdraw(country_profile) +
+                #  for some, word refuses to save as pdf when index_title = "Foreign Malign Influence Resilience Inde", but
+                # will save as pdf when index_title = "Foreign Malign Influence Resilience Ind"
+                # somehow the single extra character, and any additional, creates a "failure to export due to unexpected error" in word
+                # no change when dropping the flag
+                # could be a size limit on draw_image, and any single image over the limit has a bug preventing saving as pdf
                 
+                index_title <- "Malign Influence Resilience Index"
+                # index_title_part_2 <- "Index"
+                country_profile_title <- str_c("FY ", as.character(current_fy), " Country Profile")
+                
+                country_profile <- ggdraw(country_profile) +
+                        
                         # draw flag
-                        draw_image(country_profile_flag_png, x = .4455, y = .862, hjust = 0, vjust = .5, width = 0.07, height = 0.07) +
+                        draw_image(country_profile_flag_png, x = .4455, y = .822, hjust = 0, vjust = .5, width = 0.07, height = 0.07) +
                         
                         
                         # draw title
                         draw_label(label = current_country_full_name, color = "#002F6C", size = 20, angle = 0,
                                    fontface = "bold", fontfamily = "Calibri",
-                                   x = .13, y = .91, hjust = 0, vjust = 1) +
-                        draw_label(label = "Resilience Index: 2020 Country Profile", color = "#002F6C", size = 10, angle = 0,
+                                   x = .16, y = .91, hjust = 0, vjust = 1) +
+                        draw_label(label = index_title, color = "#002F6C", size = 10, angle = 0,
                                    fontface = "plain", fontfamily = "Calibri",
-                                   x = .13, y = .82, hjust = 0, vjust = .5)
+                                   x = .16, y = .862, hjust = 0, vjust = .5) +
+                        # note that index_title_part_2 appears good in word doc as the coordinates below, but it's too close when saved as pdf
+                        # draw_label(label = index_title_part_2, color = "#002F6C", size = 10, angle = 0,
+                        #            fontface = "plain", fontfamily = "Calibri",
+                        #            x = .44, y = .862, hjust = 0, vjust = .5) +
+                        # draw_label(label = index_title_part_2, color = "#002F6C", size = 10, angle = 0,
+                        #            fontface = "plain", fontfamily = "Calibri",
+                        #            x = .445, y = .862, hjust = 0, vjust = .5) +
+                        draw_label(label = country_profile_title, color = "#002F6C", size = 10, angle = 0,
+                                   fontface = "plain", fontfamily = "Calibri",
+                                   x = .16, y = .832, hjust = 0, vjust = .5)
         }
         
-        # inspect
-        # country_profile
+        if(current_country %in% c("BiH", "N. Macedonia")) {
+                
+                #  for some, word refuses to save as pdf when index_title = "Foreign Malign Influence Resilience Inde", but
+                # will save as pdf when index_title = "Foreign Malign Influence Resilience Ind"
+                # somehow the single extra character, and any additional, creates a "failure to export due to unexpected error" in word
+                # no change when dropping the flag
+                # could be a size limit on draw_image, and any single image over the limit has a bug preventing saving as pdf
+                
+                index_title <- "Malign Influence Resilience Index"
+                # index_title_part_2 <- "Index"
+                country_profile_title <- str_c("FY ", as.character(current_fy), " Country Profile")
+                
+                
+                country_profile <- ggdraw(country_profile) +
+                        
+                        # draw flag
+                        draw_image(country_profile_flag_png, x = .4455, y = .862, hjust = 0, vjust = .5, width = 0.07, height = 0.07) +
+                        
+                        # draw title
+                        draw_label(label = current_country_full_name, color = "#002F6C", size = 20, angle = 0,
+                                   fontface = "bold", fontfamily = "Calibri",
+                                   x = .16, y = .91, hjust = 0, vjust = 1) +
+                        draw_label(label = index_title, color = "#002F6C", size = 10, angle = 0,
+                                   fontface = "plain", fontfamily = "Calibri",
+                                   x = .16, y = .82, hjust = 0, vjust = .5) +
+                        # note that index_title_part_2 appears good in word doc as the coordinates below, but it's too close when saved as pdf
+                        # draw_label(label = index_title_part_2, color = "#002F6C", size = 10, angle = 0,
+                        #            fontface = "plain", fontfamily = "Calibri",
+                        #            x = .44, y = .862, hjust = 0, vjust = .5) +
+                        # draw_label(label = index_title_part_2, color = "#002F6C", size = 10, angle = 0,
+                        #            fontface = "plain", fontfamily = "Calibri",
+                        #            x = .445, y = .82, hjust = 0, vjust = .5) +
+                        draw_label(label = country_profile_title, color = "#002F6C", size = 10, angle = 0,
+                                   fontface = "plain", fontfamily = "Calibri",
+                                   x = .16, y = .792, hjust = 0, vjust = .5) 
+        }
+        
+        
+        #///////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        # add classification label
+        country_profile <- ggdraw(country_profile) +
+  
+                # on usaid laptop
+                # draw_label(label = "USG INTERNAL // FOR OFFICIAL USE ONLY", color = "#333333", size = 5, angle = 0,
+                #            fontface = "plain", fontfamily = "Calibri",
+                #            x = .5, y = .002, hjust = .5, vjust = .5)
+                
+                # on personal laptop
+                draw_label(label = "USG INTERNAL // FOR OFFICIAL USE ONLY", color = "#333333", size = 5, angle = 0,
+                           fontface = "plain", fontfamily = "Calibri",
+                           x = .5, y = .004, hjust = .5, vjust = .5)
+        
+        # draw_label(label = "Financial health", color = "#333333", size = 5, angle = 0,
+        #            fontface = "plain", fontfamily = "Calibri",
+        #            x = .205, y = obj_4_dot_plot_sub_obj_4_2 + .008, hjust = .5, vjust = .5)
+        
+       
         
         
         #//////////////////////////////////////////////////////////////////////////////////////////////////
         
+        
+        # inspect
+        # country_profile
         
         # save chart as emf
         filename <- tempfile(fileext = ".emf")

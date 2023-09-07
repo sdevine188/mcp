@@ -7,6 +7,8 @@ library(rlang)
 library(haven)
 library(fs)
 library(officer)
+library(janitor)
+library(ggridges)
 library(devEMF)
 library(ggrepel)
 library(rvest)
@@ -24,18 +26,13 @@ library(openxlsx)
 
 
 # setwd
+# setwd("C:/Users/Stephen/Desktop/usaid/mcp/malign_influence")
 setwd("C:/Users/sdevine/Desktop/usaid/mcp/malign_influence")
 options(scipen = 999)
 
 
 #//////////////////////////////////////
 
-
-# load get_variation_functions()
-current_wd <- getwd()
-setwd("C:/Users/sdevine/Desktop/R/assorted_helper_scripts")
-source("get_variation_functions.R")
-setwd(current_wd)
 
 # load add_group_index()
 current_wd <- getwd()
@@ -88,7 +85,7 @@ setwd(current_wd)
 country_crosswalk
 country_crosswalk %>% glimpse()
 country_crosswalk %>% nrow() # 219
-country_crosswalk %>% ncol() # 13
+country_crosswalk %>% ncol() # 14
 country_crosswalk %>% count(country) %>% arrange(desc(n))
 
 
@@ -97,7 +94,7 @@ country_crosswalk %>% count(country) %>% arrange(desc(n))
 
 # get country_crosswalk_expanded to have a country record for each year
 country_crosswalk_expanded <- expand_grid(country = country_crosswalk %>% pull(country), 
-                                          year = seq(from = 2001, to = 2020, by = 1)) %>%
+                                          year = seq(from = 2001, to = 2021, by = 1)) %>%
         left_join(., country_crosswalk, by = "country")
 
 
@@ -107,8 +104,8 @@ country_crosswalk_expanded <- expand_grid(country = country_crosswalk %>% pull(c
 # inspect
 country_crosswalk_expanded
 country_crosswalk_expanded %>% glimpse()
-country_crosswalk_expanded %>% nrow() # 4380
-country_crosswalk_expanded %>% ncol() # 14
+country_crosswalk_expanded %>% nrow() # 4599
+country_crosswalk_expanded %>% ncol() # 15
 country_crosswalk_expanded %>% count(country) %>% distinct(n)
 
 country_crosswalk %>% glimpse()
@@ -123,7 +120,7 @@ country_crosswalk %>% count(mcp_grouping)
 
 
 # read in fmir_framework ####
-fmir_framework <- read_excel(path = "data/fmir/framework/foreign_malign_influence_resilience_framework_20220307.xlsx",
+fmir_framework <- read_excel(path = "data/fmir/framework/foreign_malign_influence_resilience_framework_20230217.xlsx",
                              sheet = "Sheet1", skip = 4) %>% 
         rename(obj = Objective,
                obj_short_name = `Objective short name`,
@@ -161,8 +158,8 @@ fmir_framework <- read_excel(path = "data/fmir/framework/foreign_malign_influenc
 # inspect
 fmir_framework
 fmir_framework %>% glimpse()
-fmir_framework %>% nrow() # 65
-fmir_framework %>% ncol() # 14
+fmir_framework %>% nrow() # 69
+fmir_framework %>% ncol() # 17
 
 fmir_framework %>% count(obj, obj_num)
 fmir_framework %>% count(sub_obj, sub_obj_num)
@@ -209,7 +206,7 @@ sub_obj_1_1_vdem_judicial_constraints_on_exec <- vdem %>% select(country_name, y
 # inspect
 sub_obj_1_1_vdem_judicial_constraints_on_exec
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% glimpse()
-sub_obj_1_1_vdem_judicial_constraints_on_exec %>% nrow() # 3564
+sub_obj_1_1_vdem_judicial_constraints_on_exec %>% nrow() # 3743
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% ncol() # 5
 
 var_info("v2x_jucon")
@@ -246,14 +243,14 @@ sub_obj_1_1_vdem_judicial_constraints_on_exec <- sub_obj_1_1_vdem_judicial_const
 # inspect
 sub_obj_1_1_vdem_judicial_constraints_on_exec
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% glimpse()
-sub_obj_1_1_vdem_judicial_constraints_on_exec %>% nrow() # 900
+sub_obj_1_1_vdem_judicial_constraints_on_exec %>% nrow() # 945
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% ncol() # 30
 
 # check country/year
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% distinct(country) %>% nrow() # 45
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
-sub_obj_1_1_vdem_judicial_constraints_on_exec %>% count(year)
+sub_obj_1_1_vdem_judicial_constraints_on_exec %>% count(year) %>% print(n = nrow(.))
 
 # check values
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% 
@@ -269,7 +266,7 @@ sub_obj_1_1_vdem_judicial_constraints_on_exec %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_1_vdem_judicial_constraints_on_exec %>% group_by(indicator_name) %>% 
@@ -336,6 +333,9 @@ sub_obj_1_1_vdem_leg_constraints_on_exec <- vdem %>% select(country_name, year, 
 # inspect
 sub_obj_1_1_vdem_leg_constraints_on_exec
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% glimpse()
+sub_obj_1_1_vdem_leg_constraints_on_exec %>% nrow() # 3743
+sub_obj_1_1_vdem_leg_constraints_on_exec %>% ncol() # 5
+
 var_info("v2xlg_legcon")
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% arrange(desc(values))
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% skim()
@@ -365,20 +365,23 @@ sub_obj_1_1_vdem_leg_constraints_on_exec <- sub_obj_1_1_vdem_leg_constraints_on_
 # inspect
 sub_obj_1_1_vdem_leg_constraints_on_exec
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% glimpse()
+sub_obj_1_1_vdem_leg_constraints_on_exec %>% nrow() # 945
+sub_obj_1_1_vdem_leg_constraints_on_exec %>% ncol() # 34
+
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% distinct(country) %>% nrow() # 45
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
-sub_obj_1_1_vdem_leg_constraints_on_exec %>% count(year)
+sub_obj_1_1_vdem_leg_constraints_on_exec %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% filter(indicator_name == "sub_obj_1_1_vdem_leg_constraints_on_exec") %>% skim(values)
 
 # plot
 sub_obj_1_1_vdem_leg_constraints_on_exec %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
-        filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 # inspect summary stats on indicators
@@ -408,14 +411,14 @@ sub_obj_1_1_vdem_leg_constraints_on_exec <- read.csv(file = "data/fmir/sub_obj_1
 # note all variables must first be converted to character, since some have "#N/A" and some dont, 
 # and pivot wont combine numeric and character columns
 # note that wgi data skips 2001, so here 2001 is imputed as midpoint between 2000 and 2002 values
-sub_obj_1_1_wgi_rule_of_law <- read_excel(path = "data/world_bank/wgidataset.xlsx", sheet = "RuleofLaw", skip = 14) %>%
+sub_obj_1_1_wgi_rule_of_law <- read_excel(path = "data/world_bank/wgidataset_20230115.xlsx", sheet = "RuleofLaw", skip = 14) %>%
         rename(country_name = `Country/Territory`) %>%
         select(-Code) %>% mutate_all(.funs = as.character) %>%
         pivot_longer(cols = -country_name, names_to = "var", values_to = "values") %>%
         mutate(var = case_when(str_detect(string = var, pattern = "^Estimate") ~ "estimate",
                                TRUE ~ var)) %>%
         filter(var == "estimate") %>% 
-        mutate(year = rep(c(1996, 1998, 2000, seq(from = 2002, to = 2020, by = 1)), times = 214),
+        mutate(year = rep(c(1996, 1998, 2000, seq(from = 2002, to = 2021, by = 1)), times = 214),
                values = case_when(values == "#N/A" ~ NA_character_, 
                                   TRUE ~ values),
                values = as.numeric(values),
@@ -429,8 +432,8 @@ sub_obj_1_1_wgi_rule_of_law <- read_excel(path = "data/world_bank/wgidataset.xls
                                         country_name == "United States" ~ "U.S.",
                                         TRUE ~ country_name),
                high_value_is_good_outcome_flag = 1,
-               indicator_name = "sub_obj_1_1_wgi_rule_of_law") %>%
-        pivot_wider(id_cols = -c(year, values), names_from = year, values_from = values) %>%
+               indicator_name = "wgi_gov_effectiveness") %>%
+        pivot_wider(names_from = year, values_from = values) %>%
         mutate(`2001` = ((`2002` - `2000`) / 2) + `2000`) %>%
         pivot_longer(cols = -c(country_name, var, high_value_is_good_outcome_flag, indicator_name), 
                      names_to = "year", values_to = "values") %>%
@@ -444,7 +447,7 @@ sub_obj_1_1_wgi_rule_of_law <- read_excel(path = "data/world_bank/wgidataset.xls
 # inspect
 sub_obj_1_1_wgi_rule_of_law
 sub_obj_1_1_wgi_rule_of_law %>% glimpse()
-sub_obj_1_1_wgi_rule_of_law %>% nrow() # 4280
+sub_obj_1_1_wgi_rule_of_law %>% nrow() # 4494
 sub_obj_1_1_wgi_rule_of_law %>% ncol() # 6
 
 sub_obj_1_1_wgi_rule_of_law %>% arrange(desc(values))
@@ -486,13 +489,13 @@ sub_obj_1_1_wgi_rule_of_law <- sub_obj_1_1_wgi_rule_of_law %>%
 # inspect
 sub_obj_1_1_wgi_rule_of_law
 sub_obj_1_1_wgi_rule_of_law %>% glimpse()
-sub_obj_1_1_wgi_rule_of_law %>% nrow() # 900
-sub_obj_1_1_wgi_rule_of_law %>% ncol() # 30
+sub_obj_1_1_wgi_rule_of_law %>% nrow() # 945
+sub_obj_1_1_wgi_rule_of_law %>% ncol() # 35
 
 sub_obj_1_1_wgi_rule_of_law %>% distinct(country) %>% nrow() # 45
 sub_obj_1_1_wgi_rule_of_law %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_1_wgi_rule_of_law %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
-sub_obj_1_1_wgi_rule_of_law %>% count(year)
+sub_obj_1_1_wgi_rule_of_law %>% count(year) %>% print(n = nrow(.))
 
 # check values
 # no missing values for any country
@@ -527,39 +530,25 @@ sub_obj_1_1_wgi_rule_of_law %>% group_by(indicator_name) %>%
 
 
 # test values
-test_values_sub_obj_1_1_wgi_rule_of_law <- function() {
+test_wgi_rule_of_law_values <- function() {
         
         # 1
-        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% 
-                             filter(country == "Albania", year == 2017) %>%
+        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% filter(country == "Serbia", year == 2020) %>% 
                              pull(values),
-                     expected = -0.404323071241379)
+                     expected = -0.100547984242439)
         
         # 2
-        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% 
-                             filter(country == "Kosovo", year == 2002) %>%
+        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% filter(country == "Albania", year == 2018) %>% 
                              pull(values),
-                     expected = -0.0457720831036568)
+                     expected = -0.395619302988052)
         
         # 3
-        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
+        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% filter(country == "Kosovo", year == 2017) %>% 
                              pull(values),
-                     expected = -0.371262550354004)
-        
-        # 4
-        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% 
-                             filter(country == "Portugal", year == 2019) %>%
-                             pull(values),
-                     expected = 1.13851773738861)
-        
-        # 5
-        expect_equal(object = sub_obj_1_1_wgi_rule_of_law %>% 
-                             filter(country == "Serbia", year == 2020) %>%
-                             pull(values),
-                     expected = -0.184857979416847)
+                     expected = -0.416558086872101)
 }
-test_values_sub_obj_1_1_wgi_rule_of_law()
+
+test_wgi_rule_of_law_values()
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -577,25 +566,28 @@ sub_obj_1_1_wgi_rule_of_law <- read_csv(file = "data/fmir/sub_obj_1_1_wgi_rule_o
 
 # load sub_obj_1_1_fh_judicial_framework_and_indep ####
 
-# note the data loaded is eda's version which manually added FY2021 report data on actual-year 2020, which was
-# not included in the downloadable spreadsheet on FH's website (despite it being named "All Data - Nations in Transit, 2005-2020")
-# and confirmed that FH 2021 report pdg pg 27 has tables showing historical values up to report-year 2021, which confirm that
-# spreadsheet (Report) Year = 2020 is not the latest data from 2021 report
-# not sure why FH hasn't updated the dataset with (Report) Year = 2021 records reflecting actual year 2020 though...
-# note freedom house downloadable spreadsheet lists Year = 2020, but that means report-year, not actual-year
-# so eda's spreadsheet also lags the Year variable by 1, to create the "Data Year" variable, which is used by MCP
-# quote from FH methodology website: "Nations in Transit 2021 covers events from January 1 through December 31, 2020."
+
 # https://freedomhouse.org/reports/nations-transit/nations-transit-methodology
 # https://freedomhouse.org/report/nations-transit
 
-sub_obj_1_1_fh_judicial_framework_and_indep <- read_excel(path = "data/freedom_house/NationsinTransit--FreedomHouse--1996 to 2020.xlsx",
-                                                          sheet = "Data") %>% 
-        rename(country_name = `Country name`, year = `Data Year`, democracy_score = `Democracy Score`,
+# note that higher scores are better
+# quote from FH methodology website: "Nations in Transit 2021 covers events from January 1 through December 31, 2020."
+
+
+# note that democracy_percentage is used by mcp as "democratic reforms"
+# it is calculated by min-max on democracy score, and democracy score is the average of the individual indicators
+# eg macedonia in 2004 (report_year 2005)
+# (4.10714285714286 - 1) / (7 - 1)
+
+sub_obj_1_1_fh_judicial_framework_and_indep <- read_excel(path = "data/freedom_house/All_Data_Nations_in_Transit_NIT_2005-2022_For_website.xlsx",
+                                                          sheet = "NIT 2005-2022") %>% 
+        rename(country_name = Country, report_year = Year, democracy_score = `Democracy Score`,
                judicial_framework_and_indep = `Judicial Framework and Independence`,
                electoral_process = `Electoral Process`,
                civil_society = `Civil Society`,
                regime_class = `Regime Classification`) %>%
         mutate(values = judicial_framework_and_indep,
+               year = report_year - 1,
                high_value_is_good_outcome_flag = 1,
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
@@ -615,8 +607,10 @@ sub_obj_1_1_fh_judicial_framework_and_indep <- read_excel(path = "data/freedom_h
 # inspect
 sub_obj_1_1_fh_judicial_framework_and_indep
 sub_obj_1_1_fh_judicial_framework_and_indep %>% glimpse()
-sub_obj_1_1_fh_judicial_framework_and_indep %>% nrow() # 692
+sub_obj_1_1_fh_judicial_framework_and_indep %>% nrow() # 522
 sub_obj_1_1_fh_judicial_framework_and_indep %>% ncol() # 4
+
+sub_obj_1_1_fh_judicial_framework_and_indep %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_1_fh_judicial_framework_and_indep %>% count(country_name) %>% print(n = nrow(.)) # 29
 sub_obj_1_1_fh_judicial_framework_and_indep %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_1_fh_judicial_framework_and_indep %>% arrange(values) %>% distinct(country_name)
@@ -651,8 +645,8 @@ sub_obj_1_1_fh_judicial_framework_and_indep <- sub_obj_1_1_fh_judicial_framework
 # inspect
 sub_obj_1_1_fh_judicial_framework_and_indep
 sub_obj_1_1_fh_judicial_framework_and_indep %>% glimpse()
-sub_obj_1_1_fh_judicial_framework_and_indep %>% nrow() # 900
-sub_obj_1_1_fh_judicial_framework_and_indep %>% ncol() # 29
+sub_obj_1_1_fh_judicial_framework_and_indep %>% nrow() # 945
+sub_obj_1_1_fh_judicial_framework_and_indep %>% ncol() # 34
 
 # check country/year
 sub_obj_1_1_fh_judicial_framework_and_indep %>% count(country) %>% print(n = nrow(.))
@@ -747,7 +741,7 @@ sub_obj_1_1_fh_judicial_framework_and_indep <- read_csv(file = "data/fmir/sub_ob
 
 # note the data loaded is eda's version which manually added FY2021 report data on actual-year 2020, which was
 # not included in the downloadable spreadsheet on FH's website (despite it being named "All Data - Nations in Transit, 2005-2020")
-# and confirmed that FH 2021 report pdg pg 27 has tables showing historical values up to report-year 2021, which confirm that
+# and confirmed that FH 2021 report pdf pg 27 has tables showing historical values up to report-year 2021, which confirm that
 # spreadsheet (Report) Year = 2020 is not the latest data from 2021 report
 # not sure why FH hasn't updated the dataset with (Report) Year = 2021 records reflecting actual year 2020 though...
 # note freedom house downloadable spreadsheet lists Year = 2020, but that means report-year, not actual-year
@@ -756,13 +750,16 @@ sub_obj_1_1_fh_judicial_framework_and_indep <- read_csv(file = "data/fmir/sub_ob
 # https://freedomhouse.org/reports/nations-transit/nations-transit-methodology
 # https://freedomhouse.org/report/nations-transit
 
-sub_obj_1_1_fh_national_democratic_gov <- read_excel(path = "data/freedom_house/NationsinTransit--FreedomHouse--1996 to 2020.xlsx", sheet = "Data") %>% 
-        rename(country_name = `Country name`, year = `Data Year`, democracy_score = `Democracy Score`,
+sub_obj_1_1_fh_national_democratic_gov <- read_excel(path = "data/freedom_house/All_Data_Nations_in_Transit_NIT_2005-2022_For_website.xlsx",
+                                                     sheet = "NIT 2005-2022") %>% 
+        rename(country_name = Country, report_year = Year, democracy_score = `Democracy Score`,
                national_democratic_gov = `National Democratic Governance`,
+               judicial_framework_and_indep = `Judicial Framework and Independence`,
                electoral_process = `Electoral Process`,
                civil_society = `Civil Society`,
                regime_class = `Regime Classification`) %>%
         mutate(values = national_democratic_gov,
+               year = report_year - 1,
                high_value_is_good_outcome_flag = 1,
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
@@ -782,8 +779,10 @@ sub_obj_1_1_fh_national_democratic_gov <- read_excel(path = "data/freedom_house/
 # inspect
 sub_obj_1_1_fh_national_democratic_gov
 sub_obj_1_1_fh_national_democratic_gov %>% glimpse()
-sub_obj_1_1_fh_national_democratic_gov %>% nrow() # 692
+sub_obj_1_1_fh_national_democratic_gov %>% nrow() # 522
 sub_obj_1_1_fh_national_democratic_gov %>% ncol() # 4
+
+sub_obj_1_1_fh_national_democratic_gov %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_1_fh_national_democratic_gov %>% count(country_name) %>% print(n = nrow(.)) # 29
 sub_obj_1_1_fh_national_democratic_gov %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_1_fh_national_democratic_gov %>% arrange(values) %>% distinct(country_name)
@@ -819,8 +818,8 @@ sub_obj_1_1_fh_national_democratic_gov <- sub_obj_1_1_fh_national_democratic_gov
 # inspect
 sub_obj_1_1_fh_national_democratic_gov
 sub_obj_1_1_fh_national_democratic_gov %>% glimpse()
-sub_obj_1_1_fh_national_democratic_gov %>% nrow() # 900
-sub_obj_1_1_fh_national_democratic_gov %>% ncol() # 29
+sub_obj_1_1_fh_national_democratic_gov %>% nrow() # 945
+sub_obj_1_1_fh_national_democratic_gov %>% ncol() # 34
 
 # check country/year
 sub_obj_1_1_fh_national_democratic_gov %>% count(country) %>% print(n = nrow(.))
@@ -924,13 +923,16 @@ sub_obj_1_1_fh_national_democratic_gov <- read_csv(file = "data/fmir/sub_obj_1_1
 # https://freedomhouse.org/reports/nations-transit/nations-transit-methodology
 # https://freedomhouse.org/report/nations-transit
 
-sub_obj_1_1_fh_local_democratic_gov <- read_excel(path = "data/freedom_house/NationsinTransit--FreedomHouse--1996 to 2020.xlsx", sheet = "Data") %>% 
-        rename(country_name = `Country name`, year = `Data Year`, democracy_score = `Democracy Score`,
+sub_obj_1_1_fh_local_democratic_gov <- read_excel(path = "data/freedom_house/All_Data_Nations_in_Transit_NIT_2005-2022_For_website.xlsx",
+                                                  sheet = "NIT 2005-2022") %>% 
+        rename(country_name = Country, report_year = Year, democracy_score = `Democracy Score`,
                local_democratic_gov = `Local Democratic Governance`,
+               judicial_framework_and_indep = `Judicial Framework and Independence`,
                electoral_process = `Electoral Process`,
                civil_society = `Civil Society`,
                regime_class = `Regime Classification`) %>%
         mutate(values = local_democratic_gov,
+               year = report_year - 1,
                high_value_is_good_outcome_flag = 1,
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
@@ -950,8 +952,10 @@ sub_obj_1_1_fh_local_democratic_gov <- read_excel(path = "data/freedom_house/Nat
 # inspect
 sub_obj_1_1_fh_local_democratic_gov
 sub_obj_1_1_fh_local_democratic_gov %>% glimpse()
-sub_obj_1_1_fh_local_democratic_gov %>% nrow() # 692
+sub_obj_1_1_fh_local_democratic_gov %>% nrow() # 522
 sub_obj_1_1_fh_local_democratic_gov %>% ncol() # 4
+
+sub_obj_1_1_fh_local_democratic_gov %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_1_fh_local_democratic_gov %>% count(country_name) %>% print(n = nrow(.)) # 29
 sub_obj_1_1_fh_local_democratic_gov %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_1_fh_local_democratic_gov %>% arrange(values) %>% distinct(country_name)
@@ -987,8 +991,8 @@ sub_obj_1_1_fh_local_democratic_gov <- sub_obj_1_1_fh_local_democratic_gov %>%
 # inspect
 sub_obj_1_1_fh_local_democratic_gov
 sub_obj_1_1_fh_local_democratic_gov %>% glimpse()
-sub_obj_1_1_fh_local_democratic_gov %>% nrow() # 900
-sub_obj_1_1_fh_local_democratic_gov %>% ncol() # 29
+sub_obj_1_1_fh_local_democratic_gov %>% nrow() # 945
+sub_obj_1_1_fh_local_democratic_gov %>% ncol() # 34
 
 # check country/year
 sub_obj_1_1_fh_local_democratic_gov %>% count(country) %>% print(n = nrow(.))
@@ -1079,6 +1083,115 @@ sub_obj_1_1_fh_local_democratic_gov <- read_csv(file = "data/fmir/sub_obj_1_1_fh
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
+# load sub_obj_1_1_vdem_rule_of_law ####
+sub_obj_1_1_vdem_rule_of_law <- vdem %>% select(country_name, year, v2x_rule) %>%
+        filter(year >= 2001) %>% 
+        rename(sub_obj_1_1_vdem_rule_of_law = "v2x_rule") %>%
+        pivot_longer(cols = sub_obj_1_1_vdem_rule_of_law, names_to = "indicator_name", values_to = "values") %>%
+        mutate(high_value_is_good_outcome_flag = 1) %>%
+        mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Burma/Myanmar" ~ "Burma",
+                                        country_name == "Cape Verde" ~ "Cabo Verde",
+                                        country_name == "Czech Republic" ~ "Czechia",
+                                        country_name == "Democratic Republic of the Congo" ~ "Congo (Kinshasa)",
+                                        country_name == "Hong Kong" ~ "Hong Kong SAR, China",
+                                        country_name == "Ivory Coast" ~ "Cote d'Ivoire",
+                                        country_name == "North Korea" ~ "Korea, North",
+                                        country_name == "North Macedonia" ~ "N. Macedonia",
+                                        country_name == "Palestine/West Bank" ~ "West Bank and Gaza",
+                                        country_name == "Papal States" ~ "Holy See",
+                                        country_name == "Republic of the Congo" ~ "Congo (Brazzaville)",
+                                        country_name == "Republic of Vietnam" ~ "Vietnam",
+                                        country_name == "South Korea" ~ "Korea, South",
+                                        country_name == "The Gambia" ~ "Gambia, The",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States of America" ~ "U.S.",
+                                        TRUE ~ country_name))
+
+
+#/////////////////
+
+
+# inspect
+sub_obj_1_1_vdem_rule_of_law
+sub_obj_1_1_vdem_rule_of_law %>% glimpse()
+sub_obj_1_1_vdem_rule_of_law %>% nrow() # 3743
+sub_obj_1_1_vdem_rule_of_law %>% ncol() # 5
+
+var_info("v2x_rule")
+sub_obj_1_1_vdem_rule_of_law %>% count(year) %>% print(n = nrow(.))
+sub_obj_1_1_vdem_rule_of_law %>% arrange(desc(values)) %>% distinct(country_name)
+sub_obj_1_1_vdem_rule_of_law %>% arrange(values) %>% distinct(country_name)
+sub_obj_1_1_vdem_rule_of_law %>% skim()
+
+# inspect country names
+sub_obj_1_1_vdem_rule_of_law %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
+        distinct(country_name) %>% arrange(country_name)
+sub_obj_1_1_vdem_rule_of_law %>% 
+        filter(str_detect(string = country_name, pattern = regex("yemen", ignore_case = TRUE))) %>%
+        distinct(country_name)
+country_crosswalk %>% filter(str_detect(string = country, pattern = regex("gamb", ignore_case = TRUE))) %>% select(country)
+
+
+#/////////////////
+
+
+# join country_crosswalk and fmir_framework
+sub_obj_1_1_vdem_rule_of_law <- sub_obj_1_1_vdem_rule_of_law %>% 
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        left_join(., fmir_framework, by = "indicator_name") 
+
+
+#/////////////////
+
+
+# inspect
+sub_obj_1_1_vdem_rule_of_law
+sub_obj_1_1_vdem_rule_of_law %>% glimpse()
+sub_obj_1_1_vdem_rule_of_law %>% nrow() # 945
+sub_obj_1_1_vdem_rule_of_law %>% ncol() # 34
+
+sub_obj_1_1_vdem_rule_of_law %>% distinct(country) %>% nrow() # 45
+sub_obj_1_1_vdem_rule_of_law %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
+sub_obj_1_1_vdem_rule_of_law %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
+sub_obj_1_1_vdem_rule_of_law %>% count(year)
+sub_obj_1_1_vdem_rule_of_law %>% filter(indicator_name == "sub_obj_1_1_vdem_rule_of_law") %>% skim(values)
+sub_obj_1_1_vdem_rule_of_law %>% filter(is.na(values), year >= 2009, year <= 2019) %>%
+        count(country, year) %>% print(n = nrow(.))
+sub_obj_1_1_vdem_rule_of_law %>% group_by(year) %>% skim(values)
+
+
+# plot
+sub_obj_1_1_vdem_rule_of_law %>% 
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
+        # filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
+
+# inspect summary stats on indicators
+sub_obj_1_1_vdem_rule_of_law %>% group_by(indicator_name) %>% 
+        mutate(year_start = min(year, na.rm = TRUE), year_end = max(year, na.rm = TRUE),
+               missing_flag = case_when(is.na(values) ~ 1, TRUE ~ 0),
+               missing_pct = mean(missing_flag, na.rm = TRUE)) %>% 
+        distinct(indicator_name, year_start, year_end, missing_pct)
+
+
+#/////////////////
+
+
+# read/write
+# sub_obj_1_1_vdem_rule_of_law %>% write_csv(file = "data/fmir/sub_obj_1_1_vdem_rule_of_law.csv")
+sub_obj_1_1_vdem_rule_of_law <- read_csv(file = "data/fmir/sub_obj_1_1_vdem_rule_of_law.csv")
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
 # load sub_obj_1_2_vdem_civil_society ####
 sub_obj_1_2_vdem_civil_society <- vdem %>% select(country_name, year, v2xcs_ccsi) %>%
         filter(year >= 2001) %>% 
@@ -1111,7 +1224,11 @@ sub_obj_1_2_vdem_civil_society <- vdem %>% select(country_name, year, v2xcs_ccsi
 # inspect
 sub_obj_1_2_vdem_civil_society
 sub_obj_1_2_vdem_civil_society %>% glimpse()
+sub_obj_1_2_vdem_civil_society %>% nrow() # 3743
+sub_obj_1_2_vdem_civil_society %>% ncol() # 5
+
 var_info("v2xcs_ccsi")
+sub_obj_1_2_vdem_civil_society %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_2_vdem_civil_society %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_2_vdem_civil_society %>% arrange(values) %>% distinct(country_name)
 sub_obj_1_2_vdem_civil_society %>% skim()
@@ -1141,6 +1258,9 @@ sub_obj_1_2_vdem_civil_society <- sub_obj_1_2_vdem_civil_society %>%
 # inspect
 sub_obj_1_2_vdem_civil_society
 sub_obj_1_2_vdem_civil_society %>% glimpse()
+sub_obj_1_2_vdem_civil_society %>% nrow() # 945
+sub_obj_1_2_vdem_civil_society %>% ncol() # 34
+
 sub_obj_1_2_vdem_civil_society %>% distinct(country) %>% nrow() # 45
 sub_obj_1_2_vdem_civil_society %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_2_vdem_civil_society %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -1154,11 +1274,11 @@ sub_obj_1_2_vdem_civil_society %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_1_2_vdem_civil_society %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_2_vdem_civil_society %>% group_by(indicator_name) %>% 
@@ -1224,7 +1344,7 @@ sub_obj_1_2_fhi_csosi_overall <- read_excel(path = "data/fhi_360_csosi/CSOSI-Sco
 # inspect
 sub_obj_1_2_fhi_csosi_overall
 sub_obj_1_2_fhi_csosi_overall %>% glimpse()
-sub_obj_1_2_fhi_csosi_overall %>% nrow() # 1640
+sub_obj_1_2_fhi_csosi_overall %>% nrow() # 1722
 sub_obj_1_2_fhi_csosi_overall %>% ncol() # 5
 
 sub_obj_1_2_fhi_csosi_overall %>% arrange(desc(values))
@@ -1263,8 +1383,8 @@ sub_obj_1_2_fhi_csosi_overall <- sub_obj_1_2_fhi_csosi_overall %>%
 # inspect
 sub_obj_1_2_fhi_csosi_overall
 sub_obj_1_2_fhi_csosi_overall %>% glimpse()
-sub_obj_1_2_fhi_csosi_overall %>% nrow() # 900
-sub_obj_1_2_fhi_csosi_overall %>% ncol() # 29
+sub_obj_1_2_fhi_csosi_overall %>% nrow() # 945
+sub_obj_1_2_fhi_csosi_overall %>% ncol() # 34
 
 sub_obj_1_2_fhi_csosi_overall %>% distinct(country) %>% nrow() # 45
 sub_obj_1_2_fhi_csosi_overall %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
@@ -1357,13 +1477,16 @@ sub_obj_1_2_fhi_csosi_overall <- read_csv(file = "data/fmir/sub_obj_1_2_fhi_csos
 # quote from FH methodology website: "Nations in Transit 2021 covers events from January 1 through December 31, 2020."
 # https://freedomhouse.org/reports/nations-transit/nations-transit-methodology
 # https://freedomhouse.org/report/nations-transit
-sub_obj_1_3_fh_electoral_process <- read_excel(path = "data/freedom_house/NationsinTransit--FreedomHouse--1996 to 2020.xlsx", sheet = "Data") %>% 
-        rename(country_name = `Country name`, year = `Data Year`, democracy_score = `Democracy Score`,
+sub_obj_1_3_fh_electoral_process <- read_excel(path = "data/freedom_house/All_Data_Nations_in_Transit_NIT_2005-2022_For_website.xlsx",
+                                               sheet = "NIT 2005-2022") %>% 
+        rename(country_name = Country, report_year = Year, democracy_score = `Democracy Score`,
+               local_democratic_gov = `Local Democratic Governance`,
                judicial_framework_and_indep = `Judicial Framework and Independence`,
                electoral_process = `Electoral Process`,
                civil_society = `Civil Society`,
                regime_class = `Regime Classification`) %>%
         mutate(values = electoral_process,
+               year = report_year - 1,
                high_value_is_good_outcome_flag = 1,
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
@@ -1383,8 +1506,10 @@ sub_obj_1_3_fh_electoral_process <- read_excel(path = "data/freedom_house/Nation
 # inspect
 sub_obj_1_3_fh_electoral_process
 sub_obj_1_3_fh_electoral_process %>% glimpse()
-sub_obj_1_3_fh_electoral_process %>% nrow() # 692
+sub_obj_1_3_fh_electoral_process %>% nrow() # 522
 sub_obj_1_3_fh_electoral_process %>% ncol() # 4
+
+sub_obj_1_3_fh_electoral_process %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_3_fh_electoral_process %>% count(country_name) %>% print(n = nrow(.)) # 29
 sub_obj_1_3_fh_electoral_process %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_3_fh_electoral_process %>% arrange(values) %>% distinct(country_name)
@@ -1420,8 +1545,8 @@ sub_obj_1_3_fh_electoral_process <- sub_obj_1_3_fh_electoral_process %>%
 # inspect
 sub_obj_1_3_fh_electoral_process
 sub_obj_1_3_fh_electoral_process %>% glimpse()
-sub_obj_1_3_fh_electoral_process %>% nrow() # 900
-sub_obj_1_3_fh_electoral_process %>% ncol() # 29
+sub_obj_1_3_fh_electoral_process %>% nrow() # 945
+sub_obj_1_3_fh_electoral_process %>% ncol() # 34
 
 # check country/year
 sub_obj_1_3_fh_electoral_process %>% count(country) %>% print(n = nrow(.))
@@ -1451,8 +1576,8 @@ sub_obj_1_3_fh_electoral_process %>% filter(year >= 2005) %>% group_by(country) 
 
 # plot
 sub_obj_1_3_fh_electoral_process %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
@@ -1544,6 +1669,10 @@ sub_obj_1_3_vdem_electoral_democracy <- vdem %>% select(country_name, year, v2x_
 # inspect
 sub_obj_1_3_vdem_electoral_democracy
 sub_obj_1_3_vdem_electoral_democracy %>% glimpse()
+sub_obj_1_3_vdem_electoral_democracy %>% nrow() # 3743
+sub_obj_1_3_vdem_electoral_democracy %>% ncol() # 5
+
+sub_obj_1_3_vdem_electoral_democracy %>% count(year) %>% print(n = nrow(.))
 var_info("v2x_polyarchy")
 sub_obj_1_3_vdem_electoral_democracy %>% arrange(values)
 sub_obj_1_3_vdem_electoral_democracy %>% arrange(desc(values))
@@ -1574,6 +1703,9 @@ sub_obj_1_3_vdem_electoral_democracy <- sub_obj_1_3_vdem_electoral_democracy %>%
 # inspect
 sub_obj_1_3_vdem_electoral_democracy
 sub_obj_1_3_vdem_electoral_democracy %>% glimpse()
+sub_obj_1_3_vdem_electoral_democracy %>% nrow() # 945
+sub_obj_1_3_vdem_electoral_democracy %>% ncol() # 34
+
 sub_obj_1_3_vdem_electoral_democracy %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_electoral_democracy %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_electoral_democracy %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -1587,11 +1719,11 @@ sub_obj_1_3_vdem_electoral_democracy %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_1_3_vdem_electoral_democracy %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_electoral_democracy %>% group_by(indicator_name) %>% 
@@ -1646,9 +1778,13 @@ sub_obj_1_3_vdem_political_polarization <- vdem %>% select(country_name, year, v
 # inspect
 sub_obj_1_3_vdem_political_polarization
 sub_obj_1_3_vdem_political_polarization %>% glimpse()
+sub_obj_1_3_vdem_political_polarization %>% nrow() # 3743
+sub_obj_1_3_vdem_political_polarization %>% ncol() # 5
+
+sub_obj_1_3_vdem_political_polarization %>% count(year) %>% print(n = nrow(.))
 var_info("v2cacamps")
-sub_obj_1_3_vdem_political_polarization %>% arrange(desc(values)) %>% distinct(country_name)
-sub_obj_1_3_vdem_political_polarization %>% arrange(values) %>% distinct(country_name)
+sub_obj_1_3_vdem_political_polarization %>% arrange(desc(values)) %>% distinct(country_name) %>% print(n = 50)
+sub_obj_1_3_vdem_political_polarization %>% arrange(values) %>% distinct(country_name) %>% print(n = 50)
 sub_obj_1_3_vdem_political_polarization %>% skim()
 
 # inspect country names
@@ -1676,6 +1812,10 @@ sub_obj_1_3_vdem_political_polarization <- sub_obj_1_3_vdem_political_polarizati
 # inspect
 sub_obj_1_3_vdem_political_polarization
 sub_obj_1_3_vdem_political_polarization %>% glimpse()
+sub_obj_1_3_vdem_political_polarization %>% nrow() # 945
+sub_obj_1_3_vdem_political_polarization %>% ncol() # 34
+
+
 sub_obj_1_3_vdem_political_polarization %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_political_polarization %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_political_polarization %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -1687,11 +1827,11 @@ sub_obj_1_3_vdem_political_polarization %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_1_3_vdem_political_polarization %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_political_polarization %>% group_by(indicator_name) %>% 
@@ -1746,9 +1886,13 @@ sub_obj_1_3_vdem_political_violence <- vdem %>% select(country_name, year, v2cav
 # inspect
 sub_obj_1_3_vdem_political_violence
 sub_obj_1_3_vdem_political_violence %>% glimpse()
+sub_obj_1_3_vdem_political_violence %>% nrow() # 3743
+sub_obj_1_3_vdem_political_violence %>% ncol() # 5
+
+sub_obj_1_3_vdem_political_violence %>% count(year) %>% print(n = nrow(.))
 var_info("v2caviol")
-sub_obj_1_3_vdem_political_violence %>% filter(year == 2019) %>% arrange(desc(values)) %>% distinct(country_name)
-sub_obj_1_3_vdem_political_violence %>% filter(year == 2019) %>% arrange(values) %>% distinct(country_name)
+sub_obj_1_3_vdem_political_violence %>% arrange(desc(values)) %>% distinct(country_name)
+sub_obj_1_3_vdem_political_violence %>% arrange(values) %>% distinct(country_name)
 sub_obj_1_3_vdem_political_violence %>% skim()
 
 # inspect country names
@@ -1776,6 +1920,9 @@ sub_obj_1_3_vdem_political_violence <- sub_obj_1_3_vdem_political_violence %>%
 # inspect
 sub_obj_1_3_vdem_political_violence
 sub_obj_1_3_vdem_political_violence %>% glimpse()
+sub_obj_1_3_vdem_political_violence %>% nrow() # 945
+sub_obj_1_3_vdem_political_violence %>% ncol() # 34
+
 sub_obj_1_3_vdem_political_violence %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_political_violence %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_political_violence %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -1791,7 +1938,7 @@ sub_obj_1_3_vdem_political_violence %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_political_violence %>% group_by(indicator_name) %>% 
@@ -1846,9 +1993,13 @@ sub_obj_1_3_vdem_mobilization_for_autocracy <- vdem %>% select(country_name, yea
 # inspect
 sub_obj_1_3_vdem_mobilization_for_autocracy
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% glimpse()
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% nrow() # 3743
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% ncol() # 5
+
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% count(year) %>% print(n = nrow(.))
 var_info("v2caautmob")
-sub_obj_1_3_vdem_mobilization_for_autocracy %>% arrange(desc(values)) %>% distinct(country)
-sub_obj_1_3_vdem_mobilization_for_autocracy %>% arrange(values) %>% distinct(country)
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% arrange(desc(values)) %>% distinct(country_name)
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% arrange(values) %>% distinct(country_name)
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% skim()
 
 # inspect country names
@@ -1876,6 +2027,9 @@ sub_obj_1_3_vdem_mobilization_for_autocracy <- sub_obj_1_3_vdem_mobilization_for
 # inspect
 sub_obj_1_3_vdem_mobilization_for_autocracy
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% glimpse()
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% nrow() # 945
+sub_obj_1_3_vdem_mobilization_for_autocracy %>% ncol() # 34
+
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -1888,10 +2042,10 @@ sub_obj_1_3_vdem_mobilization_for_autocracy %>% group_by(year) %>% skim(values)
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
-        # filter(mcp_grouping == "E&E graduates") %>%
+        filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_mobilization_for_autocracy %>% group_by(indicator_name) %>% 
@@ -1946,8 +2100,13 @@ sub_obj_1_3_vdem_gov_cyber_sec_capacity <- vdem %>% select(country_name, year, v
 # inspect
 sub_obj_1_3_vdem_gov_cyber_sec_capacity
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% glimpse()
+sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% nrow() # 3743
+sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% ncol() # 5
+
+sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% count(year) %>% print(n = nrow(.))
 var_info("v2smgovcapsec")
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% arrange(desc(values))
+sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% arrange(values)
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% skim()
 
 # inspect country names
@@ -1975,6 +2134,9 @@ sub_obj_1_3_vdem_gov_cyber_sec_capacity <- sub_obj_1_3_vdem_gov_cyber_sec_capaci
 # inspect
 sub_obj_1_3_vdem_gov_cyber_sec_capacity
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% glimpse()
+sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% nrow() # 945
+sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% ncol() # 34
+
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -1985,11 +2147,11 @@ sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_gov_cyber_sec_capacity %>% group_by(indicator_name) %>% 
@@ -2044,8 +2206,13 @@ sub_obj_1_3_vdem_political_party_cyber_sec_capacity <- vdem %>% select(country_n
 # inspect
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% glimpse()
+sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% nrow() # 3743
+sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% ncol() # 5
+
+sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% count(year) %>% print(n = nrow(.))
 var_info("v2smpolcap")
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% arrange(desc(values))
+sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% arrange(values)
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% skim()
 
 # inspect country names
@@ -2073,6 +2240,9 @@ sub_obj_1_3_vdem_political_party_cyber_sec_capacity <- sub_obj_1_3_vdem_politica
 # inspect
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% glimpse()
+sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% nrow() # 945
+sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% ncol() # 34
+
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -2083,11 +2253,11 @@ sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% group_by(year) %>% skim(
 # plot
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_political_party_cyber_sec_capacity %>% group_by(indicator_name) %>% 
@@ -2142,6 +2312,10 @@ sub_obj_1_3_vdem_foreign_gov_dissem_false_info <- vdem %>% select(country_name, 
 # inspect
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% glimpse()
+sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% nrow() # 3743
+sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% ncol() # 5
+
+sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% count(year) %>% print(n = nrow(.))
 var_info("v2smfordom")
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% arrange(values) %>% distinct(country_name)
@@ -2172,6 +2346,9 @@ sub_obj_1_3_vdem_foreign_gov_dissem_false_info <- sub_obj_1_3_vdem_foreign_gov_d
 # inspect
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% glimpse()
+sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% nrow() # 945
+sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% ncol() # 34
+
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -2181,12 +2358,12 @@ sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% group_by(year) %>% skim(value
 
 # plot
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_foreign_gov_dissem_false_info %>% group_by(indicator_name) %>% 
@@ -2241,6 +2418,10 @@ sub_obj_1_3_vdem_foreign_gov_advertising <- vdem %>% select(country_name, year, 
 # inspect
 sub_obj_1_3_vdem_foreign_gov_advertising
 sub_obj_1_3_vdem_foreign_gov_advertising %>% glimpse()
+sub_obj_1_3_vdem_foreign_gov_advertising %>% nrow() # 3743
+sub_obj_1_3_vdem_foreign_gov_advertising %>% ncol() # 5
+
+sub_obj_1_3_vdem_foreign_gov_advertising %>% count(year) %>% print(n = nrow(.))
 var_info("v2smforads")
 sub_obj_1_3_vdem_foreign_gov_advertising %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_1_3_vdem_foreign_gov_advertising %>% arrange(values) %>% distinct(country_name)
@@ -2271,6 +2452,9 @@ sub_obj_1_3_vdem_foreign_gov_advertising <- sub_obj_1_3_vdem_foreign_gov_adverti
 # inspect
 sub_obj_1_3_vdem_foreign_gov_advertising
 sub_obj_1_3_vdem_foreign_gov_advertising %>% glimpse()
+sub_obj_1_3_vdem_foreign_gov_advertising %>% nrow() # 945
+sub_obj_1_3_vdem_foreign_gov_advertising %>% ncol() # 34
+
 sub_obj_1_3_vdem_foreign_gov_advertising %>% distinct(country) %>% nrow() # 45
 sub_obj_1_3_vdem_foreign_gov_advertising %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 sub_obj_1_3_vdem_foreign_gov_advertising %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
@@ -2281,12 +2465,12 @@ sub_obj_1_3_vdem_foreign_gov_advertising %>% group_by(year) %>% skim(values)
 
 # plot
 sub_obj_1_3_vdem_foreign_gov_advertising %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_1_3_vdem_foreign_gov_advertising %>% group_by(indicator_name) %>% 
@@ -2304,13 +2488,12 @@ sub_obj_1_3_vdem_foreign_gov_advertising %>% group_by(indicator_name) %>%
 sub_obj_1_3_vdem_foreign_gov_advertising <- read_csv(file = "data/fmir/sub_obj_1_3_vdem_foreign_gov_advertising.csv")
 
 
-
 #/////////////////////////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# load sub_obj_1_3_icews_socio_political_hostility_from_russia ####
+# load sub_obj_1_3_icews_socio_political_hostility_with_russia ####
 
 # https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/28075
 
@@ -2318,8 +2501,6 @@ sub_obj_1_3_vdem_foreign_gov_advertising <- read_csv(file = "data/fmir/sub_obj_1
 # the docs note that stories and events can be double-counted (syndicated stories, etc)
 # the docs caveat that intensity can't distinguish between 1 dead and 1000 dead, 
 # though they say high-magnitude events tend to have more stories/events
-
-# note that dataverse website states 2020 file only covers through end of april 2020
 
 
 #/////////////////////////
@@ -2424,7 +2605,7 @@ sub_obj_1_3_vdem_foreign_gov_advertising <- read_csv(file = "data/fmir/sub_obj_1
 # note added country name variations used in icews
 country_list <- country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% pull(country)
 country_list <- c(country_list, "Moldova, Republic of", "Czech Republic", "the former Yugoslav Republic of Macedonia",
-                  "United States", "United Kingdom", "Russian Federation")
+                  "United States", "United Kingdom", "Russian Federation", "Bosnia and Herzegovina")
 country_list
 
 # get country_list_collapsed for regex
@@ -2452,16 +2633,16 @@ read_tsv(file = "data/icews/data/events.2010.20150313084533.tab") %>%
         # read_tsv(file = "data/icews/data/events.2019.20200427085336.tab") %>%
         # read_tsv(file = "data/icews/data/events.2020.20200506093336.tab") %>%
         
-        # look at all records where source/target_name has regex match to country_list_collapsed
-        # filter(str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) | 
-        #        str_detect(string = `Target Name`, pattern = regex(country_list_collapsed))) %>%
-        
-        # look at only records where source/target_name has regex match to country_list_collapsed, and 
-        # source/target_country does not exactly equal an element from country_list
-        filter((str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) &
-                        !(`Source Country` %in% country_list)) | 
-                       (str_detect(string = `Target Name`, pattern = regex(country_list_collapsed)) &
-                                !(`Target Country` %in% country_list))) %>%
+# look at all records where source/target_name has regex match to country_list_collapsed
+# filter(str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) | 
+#        str_detect(string = `Target Name`, pattern = regex(country_list_collapsed))) %>%
+
+# look at only records where source/target_name has regex match to country_list_collapsed, and 
+# source/target_country does not exactly equal an element from country_list
+filter((str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) &
+                !(`Source Country` %in% country_list)) | 
+               (str_detect(string = `Target Name`, pattern = regex(country_list_collapsed)) &
+                        !(`Target Country` %in% country_list))) %>%
         
         # look specifically for cases where Russia is cited but the source/target_country doesn't = "Russian Federation"
         # filter(str_detect(string = `Source Name`, pattern = regex("Russia")) |
@@ -2478,194 +2659,222 @@ read_tsv(file = "data/icews/data/events.2010.20150313084533.tab") %>%
 
 
 # load icews data by year
-icews_source_country_russia_2010 <- read_tsv(file = "data/icews/data/events.2010.20150313084533.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2010 %>% glimpse()
-icews_source_country_russia_2010_names <- names(icews_source_country_russia_2010)
-
-icews_source_country_russia_2011 <- read_tsv(file = "data/icews/data/events.2011.20150313084656.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2011 %>% glimpse()
+icews_source_target_country_russia_2010 <- read_tsv(file = "data/icews/data/events.2010.20150313084533.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2010 %>% glimpse()
+icews_source_target_country_russia_2010_names <- names(icews_source_target_country_russia_2010)
 
 
-icews_source_country_russia_2012 <- read_tsv(file = "data/icews/data/events.2012.20150313084811.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2012 %>% glimpse()
+icews_source_target_country_russia_2011 <- read_tsv(file = "data/icews/data/events.2011.20150313084656.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation")) 
+icews_source_target_country_russia_2011 %>% glimpse()
 
 
-icews_source_country_russia_2013 <- read_tsv(file = "data/icews/data/events.2013.20150313084929.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2013 %>% glimpse()
+icews_source_target_country_russia_2012 <- read_tsv(file = "data/icews/data/events.2012.20150313084811.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2012 %>% glimpse()
 
 
-icews_source_country_russia_2014 <- read_tsv(file = "data/icews/data/events.2014.20160121105408.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2014 %>% glimpse()
+icews_source_target_country_russia_2013 <- read_tsv(file = "data/icews/data/events.2013.20150313084929.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2013 %>% glimpse()
 
 
-icews_source_country_russia_2015 <- read_tsv(file = "data/icews/data/events.2015.20180710092545.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2015 %>% glimpse()
+icews_source_target_country_russia_2014 <- read_tsv(file = "data/icews/data/events.2014.20160121105408.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2014 %>% glimpse()
 
 
-icews_source_country_russia_2016 <- read_tsv(file = "data/icews/data/events.2016.20180710092843.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-# note 308 parsing failures regarding source name and target name; can ignore
-icews_source_country_russia_2016 %>% glimpse()
+icews_source_target_country_russia_2015 <- read_tsv(file = "data/icews/data/events.2015.20180710092545.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2015 %>% glimpse()
 
 
-icews_source_country_russia_2017 <- read_tsv(file = "data/icews/data/Events.2017.20201119.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-# note 92 parsing failures regarding longitude etc, can ignore
-icews_source_country_russia_2017 %>% glimpse()
+icews_source_target_country_russia_2016 <- read_tsv(file = "data/icews/data/events.2016.20180710092843.tsv") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2016 %>% glimpse()
 
 
-icews_source_country_russia_2018 <- read_tsv(file = "data/icews/data/events.2018.20200427084805.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2018 %>% glimpse()
+icews_source_target_country_russia_2017 <- read_tsv(file = "data/icews/data/Events.2017.20201119.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2017 %>% glimpse()
 
 
-icews_source_country_russia_2019 <- read_tsv(file = "data/icews/data/events.2019.20200427085336.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-# note 9 parsing failtures regarding target name; can ignore
-icews_source_country_russia_2019 %>% glimpse()
+icews_source_target_country_russia_2018 <- read_tsv(file = "data/icews/data/events.2018.20200427084805.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2018 %>% glimpse()
 
 
-icews_source_country_russia_2020 <- read_tsv(file = "data/icews/data/events.2020.20200506093336.tab") %>%
-        filter(`Source Country` == "Russian Federation")
-icews_source_country_russia_2020 %>% glimpse()
+icews_source_target_country_russia_2019 <- read_tsv(file = "data/icews/data/events.2019.20200427085336.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation"))
+icews_source_target_country_russia_2019 %>% glimpse()
+
+
+icews_source_target_country_russia_2020 <- read_tsv(file = "data/icews/data/events.2020.20220623.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation")) %>%
+        mutate(`CAMEO Code` = as.character(`CAMEO Code`))
+icews_source_target_country_russia_2020 %>% glimpse()
+
+
+icews_source_target_country_russia_2021 <- read_tsv(file = "data/icews/data/events.2021.20220623.tab") %>%
+        filter((`Source Country` == "Russian Federation" & `Target Country` %in% country_list) |
+                       (`Source Country` %in% country_list & `Target Country` == "Russian Federation")) %>%
+        mutate(`CAMEO Code` = as.character(`CAMEO Code`))
+icews_source_target_country_russia_2021 %>% glimpse()
 
 
 #//////////////////////////////
 
 
-# test_icews_source_country_russia_variables_and_dates
-test_icews_source_country_russia_variables_and_dates <- function() {
+# test_icews_source_target_country_russia_variables_and_dates
+test_icews_source_target_country_russia_variables_and_dates <- function() {
         
         # 2010
-        # get icews_source_country_russia_2010_names as the initial reference of what variables each icews year datafile should have
+        # get icews_source_target_country_russia_2010_names as the initial reference of what variables each icews year datafile should have
         # before running bind_rows()
-        icews_source_country_russia_2010_names <- names(icews_source_country_russia_2010)
-        expect_equal(object = icews_source_country_russia_2010 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        icews_source_target_country_russia_2010_names <- names(icews_source_target_country_russia_2010)
+        expect_equal(object = icews_source_target_country_russia_2010 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2010)
         
         # 2011
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2011)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2011)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2011 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2011 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2011)
         
         # 2012
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2012)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2012)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2012 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2012 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2012)
         
         # 2013
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2013)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2013)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2013 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2013 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2013)
         
         # 2014
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2014)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2014)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2014 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2014 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2014)
         
         # 2015
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2015)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2015)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2015 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2015 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2015)
         
         # 2016
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2016)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2016)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2016 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2016 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2016)
         
         # 2017
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2017)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2017)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2017 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2017 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2017)
         
         # 2018
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2018)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2018)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2018 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2018 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2018)
         
         # 2019
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2019)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2019)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2019 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2019 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2019)
         
         # 2020
-        expect_equal(object = tibble(names = names(icews_source_country_russia_2020)) %>% 
-                             bind_cols(tibble(names_2010 = icews_source_country_russia_2010_names)) %>%
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2020)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
                              mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
                                                                 TRUE ~ 0)) %>% 
                              distinct(name_match_flag) %>% pull(name_match_flag),
                      expected = 1)
-        expect_equal(object = icews_source_country_russia_2020 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+        expect_equal(object = icews_source_target_country_russia_2020 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2020)
         
+        # 2021
+        expect_equal(object = tibble(names = names(icews_source_target_country_russia_2021)) %>% 
+                             bind_cols(tibble(names_2010 = icews_source_target_country_russia_2010_names)) %>%
+                             mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
+                                                                TRUE ~ 0)) %>% 
+                             distinct(name_match_flag) %>% pull(name_match_flag),
+                     expected = 1)
+        expect_equal(object = icews_source_target_country_russia_2021 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+                     expected = 2021)
+        
         # confirm that no story_id ever has events classified in multiple years 
-        expect_equal(object = icews_source_country_russia_2010 %>% 
-                             bind_rows(., icews_source_country_russia_2011) %>%
-                             bind_rows(., icews_source_country_russia_2012) %>%
-                             bind_rows(., icews_source_country_russia_2013) %>%
-                             bind_rows(., icews_source_country_russia_2014) %>%
-                             bind_rows(., icews_source_country_russia_2015) %>%
-                             bind_rows(., icews_source_country_russia_2016) %>%
-                             bind_rows(., icews_source_country_russia_2017) %>%
-                             bind_rows(., icews_source_country_russia_2018) %>%
-                             bind_rows(., icews_source_country_russia_2019) %>%
-                             bind_rows(., icews_source_country_russia_2020) %>%
+        expect_equal(object = icews_source_target_country_russia_2010 %>% 
+                             bind_rows(., icews_source_target_country_russia_2011) %>%
+                             bind_rows(., icews_source_target_country_russia_2012) %>%
+                             bind_rows(., icews_source_target_country_russia_2013) %>%
+                             bind_rows(., icews_source_target_country_russia_2014) %>%
+                             bind_rows(., icews_source_target_country_russia_2015) %>%
+                             bind_rows(., icews_source_target_country_russia_2016) %>%
+                             bind_rows(., icews_source_target_country_russia_2017) %>%
+                             bind_rows(., icews_source_target_country_russia_2018) %>%
+                             bind_rows(., icews_source_target_country_russia_2019) %>%
+                             bind_rows(., icews_source_target_country_russia_2020) %>%
+                             bind_rows(., icews_source_target_country_russia_2021) %>%
                              mutate(year = year(`Event Date`)) %>%
                              distinct(year, `Story ID`) %>% count(`Story ID`) %>% distinct(n) %>% pull(n),
                      expected = 1)
 }
-test_icews_source_country_russia_variables_and_dates()
+test_icews_source_target_country_russia_variables_and_dates()
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2676,17 +2885,18 @@ test_icews_source_country_russia_variables_and_dates()
 # in the raw data a higher sum_intensity_from_russia value indicates a bad outcome, 
 # the normalization flips the sign so ukraine's
 # large negative raw value can get a high normalized value, so that it gets the largest logged value
-sub_obj_1_3_icews_socio_political_hostility_from_russia <- icews_source_country_russia_2010 %>% 
-        bind_rows(., icews_source_country_russia_2011) %>%
-        bind_rows(., icews_source_country_russia_2012) %>%
-        bind_rows(., icews_source_country_russia_2013) %>%
-        bind_rows(., icews_source_country_russia_2014) %>%
-        bind_rows(., icews_source_country_russia_2015) %>%
-        bind_rows(., icews_source_country_russia_2016) %>%
-        bind_rows(., icews_source_country_russia_2017) %>%
-        bind_rows(., icews_source_country_russia_2018) %>%
-        bind_rows(., icews_source_country_russia_2019) %>%
-        bind_rows(., icews_source_country_russia_2020) %>%
+sub_obj_1_3_icews_socio_political_hostility_with_russia <- icews_source_target_country_russia_2010 %>% 
+        bind_rows(., icews_source_target_country_russia_2011) %>%
+        bind_rows(., icews_source_target_country_russia_2012) %>%
+        bind_rows(., icews_source_target_country_russia_2013) %>%
+        bind_rows(., icews_source_target_country_russia_2014) %>%
+        bind_rows(., icews_source_target_country_russia_2015) %>%
+        bind_rows(., icews_source_target_country_russia_2016) %>%
+        bind_rows(., icews_source_target_country_russia_2017) %>%
+        bind_rows(., icews_source_target_country_russia_2018) %>%
+        bind_rows(., icews_source_target_country_russia_2019) %>%
+        bind_rows(., icews_source_target_country_russia_2020) %>%
+        bind_rows(., icews_source_target_country_russia_2021) %>%
         rename(event_id = `Event ID`, 
                event_date = `Event Date`,
                source_name = `Source Name`,
@@ -2709,6 +2919,10 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia <- icews_source_country_
                longitude = Longitude) %>%
         mutate(country_name = target_country) %>%
         mutate(year = year(event_date),
+               country_name = case_when(source_country == "Russian Federation" ~ target_country,
+                                        target_country == "Russian Federation" ~ source_country),
+               counterpart_name = case_when(source_country == "Russian Federation" ~ source_country,
+                                            target_country == "Russian Federation" ~ target_country),
                cameo_bin = str_sub(string = cameo_code, start = 1, end = 2),
                cameo_bin_desc = case_when(cameo_bin == "01" ~ "Make public statement",
                                           cameo_bin == "02" ~ "Appeal",
@@ -2732,7 +2946,7 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia <- icews_source_country_
                                           cameo_bin == "20" ~ "Use unconventional mass violence"),
                cameo_bin = as.numeric(cameo_bin),
                high_value_is_good_outcome_flag = 0,
-               indicator_name = "sub_obj_1_3_icews_socio_political_hostility_from_russia",
+               indicator_name = "sub_obj_1_3_icews_socio_political_hostility_with_russia",
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "Moldova, Republic of" ~ "Moldova",
                                         country_name == "Czech Republic" ~ "Czechia",
@@ -2740,61 +2954,98 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia <- icews_source_country_
                                         country_name == "United States" ~ "U.S.",
                                         country_name == "United Kingdom" ~ "U.K.",
                                         country_name == "Russian Federation" ~ "Russia",
-                                        TRUE ~ country_name))
+                                        TRUE ~ country_name),
+               counterpart_name = case_when(counterpart_name == "Russian Federation" ~ "Russia",
+                                            TRUE ~ counterpart_name)) %>%
+        distinct()
 
 
 #////////////////////////
 
 
 # inspect
-sub_obj_1_3_icews_socio_political_hostility_from_russia
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% glimpse()
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% nrow() # 368004
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% ncol() # 26
+sub_obj_1_3_icews_socio_political_hostility_with_russia
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% glimpse()
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% nrow() # 424724
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% ncol() # 26
 
-# records are unique at the event_id/event_date level, so each record is a unique event_id/event_date
+# after calling distinct, records are unique at the event_id/event_date level, so each record is a unique event_id/event_date
 # note the ICEWS readme data dictionary says that story_id is unique internal indicator specifying news story
 # but there can be multiple records in data for a given story_id (max is 42 records for one story_id)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% nrow() # 368004
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(event_id, event_date) %>% nrow() # 368004
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(event_id, event_date, story_id) %>% nrow() # 368004
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(story_id) %>% nrow() # 241103
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(story_id) %>% arrange(desc(n))
-        
-# confirm that no story_id ever has multiple years 
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% distinct(year, story_id) %>% count(story_id) %>% arrange(desc(n))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% nrow() # 424724
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(event_id) %>% arrange(desc(n)) # 424,662
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(event_id, event_date) %>% nrow() # 424724
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(event_id, event_date, story_id) %>% nrow() # 424724
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(story_id) %>% nrow() # 237665
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(story_id) %>% arrange(desc(n))
 
-# inspect partial data for 2020
-# result: will drop and impute 2020
-# for 2020, since 4 months of data are covered, could approximate a full year by multiple 4 months * 3, but it's a stretch
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-        distinct(year, story_id) %>% count(year)
+# confirm that no story ever has multiple years 
+# note however that 62 event_id do show up in records with two different years - can ignore though
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(year, story_id) %>% count(story_id) %>% arrange(desc(n))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(year, event_id) %>% count(event_id) %>% arrange(desc(n))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(year, event_id) %>% count(event_id) %>%
+        filter(n > 1)
 
 # check values
 # no missing values for intensity
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(year)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% distinct(story_id, year) %>% count(year)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(source_country) %>% arrange(desc(n))
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(country_name) %>% arrange(desc(n))
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
+# noticeable drop in event_id count in 2020, then spike in 2021, and also steep increase from 2010 to 2014
+# could indicate unrepresentative sampling across years, or could indicate true increase in count of russia-related stories
+# 2021 spike is likely pre-invasion preparations, and 2014 peak is likely initial ukraine invasion - not sure about 2020 drop
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(year)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(event_id, year) %>% count(year)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(story_id, year) %>% count(year)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(event_id, year) %>% count(year) %>%
+        ggplot(data = ., mapping = aes(x = year, y = n)) + geom_line(size = 1)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% distinct(story_id, year) %>% count(year) %>%
+        ggplot(data = ., mapping = aes(x = year, y = n)) + geom_line(size = 1)
+
+# inspect negative intensity events
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
+        filter(intensity < 0) %>%
+        distinct(event_id, year) %>% count(year)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
+        filter(intensity < 0) %>%
+        distinct(event_id, year) %>% count(year) %>%
+        ggplot(data = ., mapping = aes(x = year, y = n)) + geom_line(size = 1)
+
+# check countries
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(source_country) %>% arrange(desc(n)) %>%
+        print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(target_country) %>% arrange(desc(n)) %>%
+        print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(country_name) %>% arrange(desc(n)) %>%
+        print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(counterpart_name) %>% arrange(desc(n))
+
+
+#///////////////////////
+
+
+# cameo
+
+# note that new 2020 and 2021 files have weird values for cameo_bin and caemo_bin_desc
+# but since this analysis doesn't use cameo_bin, and since new plover methodology is forthcoming, not worth time to debug
+
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         filter(cameo_bin < 9) %>%
         # filter(cameo_bin > 9) %>%
         count(event_text) %>% arrange(desc(n)) %>% print(n = 50)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(publisher) %>% arrange(desc(n)) %>% print(n = 50)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(country_name != "Russia") %>%
-        count(publisher) %>% arrange(desc(n)) %>% print(n = 50)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(cameo_code)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(cameo_bin, cameo_bin_desc) 
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(cameo_bin, cameo_bin_desc) %>% arrange(desc(n))
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% group_by(cameo_bin, cameo_bin_desc) %>% skim(intensity)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(publisher) %>% arrange(desc(n)) %>% print(n = 50)
+
+
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(cameo_code)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(cameo_bin, cameo_bin_desc) %>% print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(cameo_bin, cameo_bin_desc) %>% arrange(desc(n))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
+        filter(is.na(cameo_bin_desc)) %>% count(year)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% group_by(cameo_bin, cameo_bin_desc) %>% skim(intensity)
 
 # note that intensity gets more positive going from 1 to 8, then 9-20 tend to decrease in line with cameo_bin
 # note that cameo_bin 1, 2, 9, 10 also have some negative intensity values reflecting hostility
 # because the categories are more neutral/generic (make public statement, appeal, investigate, demand)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         ggplot(data = ., mapping = aes(x = factor(cameo_bin), y = intensity)) + geom_boxplot()
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         filter(intensity < 0, cameo_bin <= 10) %>%
         select(story_id, event_id, event_text, cameo_code, cameo_bin, cameo_bin_desc, intensity, country_name, source_country) %>%
         arrange(cameo_bin) %>% 
@@ -2805,21 +3056,21 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
 
 
 # inspect country names
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name) %>% print(n = nrow(.))
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-        anti_join(., sub_obj_1_3_icews_socio_political_hostility_from_russia, by = c("country" = "country_name")) %>% 
+        anti_join(., sub_obj_1_3_icews_socio_political_hostility_with_russia, by = c("country" = "country_name")) %>% 
         distinct(country) %>% arrange(country)
 
 # check specific country
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         filter(str_detect(string = country_name, pattern = regex("czech", ignore_case = TRUE))) %>%
         count(country_name)
 
 # inspect missing country_name
 # not an issue, when country_name is missing the target_name and event_location_country don't seem to add value
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% filter(is.na(country_name)) %>%
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% filter(is.na(country_name)) %>%
         select(country_name, target_name, event_location_country, year, cameo_bin) %>%
         # count(target_name) %>% 
         count(event_location_country) %>%
@@ -2839,11 +3090,10 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia %>% filter(is.na(country
 # and the broader disinfo concept will be measured separately for sub_obj_2_2
 # note that cameo_bin 1, 2, 9, 10 also have some negative intensity values reflecting hostility
 # because the categories are more neutral/generic (make public statement, appeal, investigate, demand)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(year <= 2019) %>%
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         # filter(cameo_bin >= 11) %>%
         filter(intensity < 0) %>%
-        select(country_name, year, source_country, cameo_bin, cameo_bin_desc, intensity, event_text) %>%
+        select(country_name, year, counterpart_name, cameo_bin, cameo_bin_desc, intensity, event_text) %>%
         filter(country_name %in% c("Albania", "BiH", "Kosovo", "N. Macedonia", "Serbia",
                                    "Ukraine", "Moldova", "Belarus", 
                                    "Armenia", "Azerbaijan", "Georgia")) %>%
@@ -2855,88 +3105,44 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
         # filter(country_name == "Ukraine") %>% count(cameo_bin_desc) %>% arrange(desc(n))
         
         filter(country_name %in% c("Ukraine", "Armenia", "Kosovo")) %>%
-
-        distinct(country_name, year, source_country, avg_intensity, sum_intensity) %>% print(n = nrow(.))
+        
+        # distinct(country_name, year, counterpart_name, avg_intensity, sum_intensity) %>% print(n = nrow(.))
         
         # group_by(country_name) %>% skim(avg_intensity)
         # group_by(country_name) %>% skim(sum_intensity)
         
         # ggplot(data = ., mapping = aes(x = year, y = avg_intensity, color = country_name)) +
         ggplot(data = ., mapping = aes(x = year, y = sum_intensity, color = country_name)) +
-        geom_line()
-        
-        # ggplot(data = ., mapping = aes(x = country_name, y = avg_intensity)) +
-        # geom_boxplot()
+        geom_line(size = 1)
 
-
-#//////////////////////////////
-
-
-# inspect armenia, which shows a sharp turn towards negative intensity in 2015, which is odd
-# because armenia and russia were largely cooperating 
-# https://en.wikipedia.org/wiki/Armenia%E2%80%93Russia_relations#Developments_since_2013
-# https://en.wikipedia.org/wiki/Nagorno-Karabakh_conflict#2014_clashes_and_helicopter_shootdown
-# https://www.nytimes.com/2015/02/01/world/asia/clashes-intensify-between-armenia-and-azerbaijan-over-disputed-land.html
-# but it seems like the icews algorithm might have looked at news articles describing events where
-# russia was decrying armenian-azerbaijan fighting in NK, and incorrectly coded it as hostility from russia
-# note that armenia in 2014 had only 5 negative events (sum is -25), but 133 positive events, meanwhile
-# kosovo in 2014 had only 7 positive events and 4 negative events (sum is -16)
-
-# result: will stay with hostility measured as sum_intensity of events where intensity < 0 (will not use net sum_intensity)
-# in theory, using net_sum_intensity, instead of filtering down to just intensity < 0 then summing,
-# could better capture how armenia's relationship was russia was net positive in 2015, esp compared to kosovo
-# but that measure would have it's own problems, due to lots of positive events with ukraine/russia, that would result
-# in kosovo and armenia having more measured hositility from russia than ukraine in 2015 and 2019
-# which seems worse and harder to accept
-
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        select(country_name, year, source_country, cameo_bin, cameo_bin_desc, intensity, event_text) %>%
-        
-        filter(country_name == "Armenia") %>%
-        # filter(country_name == "Kosovo") %>%
-        
-        # group_by(country_name, year) %>% mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
-        # ungroup() %>% distinct(country_name, year, sum_intensity)
-        
-        filter(intensity < 0, year == 2015) %>% select(country_name, year, source_country, cameo_bin_desc, event_text, intensity)
-        # filter(intensity > 0, year == 2014) %>% select(country_name, year, source_country, cameo_bin_desc, event_text, intensity)
-        
-        filter(year == 2015) %>%
-        group_by(country_name, year, cameo_bin, cameo_bin_desc, event_text) %>% 
-        mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
-        ungroup() %>% distinct(country_name, year, cameo_bin, cameo_bin_desc, event_text, sum_intensity) %>% 
-        arrange(desc(sum_intensity)) %>% print(n = nrow(.))
-
-        
-
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        select(country_name, year, source_name, source_sectors, source_country, 
-               target_name, target_sectors, target_country, event_text, cameo_code, intensity)
+# ggplot(data = ., mapping = aes(x = country_name, y = avg_intensity)) +
+# geom_boxplot()
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# filter down to exclude partial data for 2020
 # filter to intensity < 0
 # (which is recommended in icews doc appendix d - see quoted notes above)
 # "hosttotals: Summing the intensity values of all events in the filtered event set with a negative value"
 # note that cameo_bin 1, 2, 9, 10 also have some negative intensity values reflecting hostility
 # because the categories are more neutral/generic (make public statement, appeal, investigate, demand)
 # aggregate to get sum_intensity per country/year, 
-# drop russia since it has the highest sum_intensity and will swamp the normalization
+# drop russia and US since they have the highest sum_intensity and will swamp the normalization
 # join country_crosswalk_expanded and fmir_framework
 # note that high_value_is_good_outcome_flag = 1 because the normalization flips the sign so ukraine's
 # large negative raw value can get a high normalized value, so that it gets the largest logged value
-sub_obj_1_3_icews_socio_political_hostility_from_russia <- sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(intensity < 0, country_name != "Russia", year <= 2019) %>%
-        select(country_name, year, source_country, cameo_bin, cameo_bin_desc, intensity, event_text) %>%
-        group_by(country_name, year) %>% mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
+sub_obj_1_3_icews_socio_political_hostility_with_russia <- sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
+        filter(intensity < 0, 
+               !(country_name %in% c("Russia", "U.S."))) %>%
+        select(country_name, year, counterpart_name, cameo_bin, cameo_bin_desc, intensity, event_text) %>%
+        group_by(country_name, year) %>% 
+        mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
         ungroup() %>%
-        distinct(country_name, year, source_country, sum_intensity) %>%
+        distinct(country_name, year, counterpart_name, sum_intensity) %>%
         left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
                   by = c("country" = "country_name", "year" = "year")) %>%
-        mutate(indicator_name = "sub_obj_1_3_icews_socio_political_hostility_from_russia",
+        mutate(indicator_name = "sub_obj_1_3_icews_socio_political_hostility_with_russia",
                high_value_is_good_outcome_flag = 0) %>%
         left_join(., fmir_framework, by = "indicator_name")
 
@@ -2945,18 +3151,18 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia <- sub_obj_1_3_icews_soc
 
 
 # inspect
-sub_obj_1_3_icews_socio_political_hostility_from_russia
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% glimpse()
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% nrow() # 900
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% ncol() # 31
+sub_obj_1_3_icews_socio_political_hostility_with_russia
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% glimpse()
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% nrow() # 945
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% ncol() # 35
 
 # check values
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(year) # 20
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% count(country) %>% nrow() # 45
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% skim(sum_intensity)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% arrange(sum_intensity) %>% 
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(year) %>% print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% count(country) %>% nrow() # 45
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% skim(sum_intensity)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% arrange(sum_intensity) %>% 
         select(country, year, sum_intensity)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
         filter(country == "Russia") %>% select(country, year, indicator_name, sum_intensity)
 
 
@@ -2965,227 +3171,399 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
 
 # inspect country/years that have no stories about hostility from russia
 
-# note that icews data is only included for 2010-2019, so values will be NA for earlier years
+# note that icews data is only included for 2010-2021, so values will be NA for earlier years
 # all countries (except russia) have at least one year with russian_hostility_stories 
 # aside from russia, luxembourg is missing most years (9 of 10 years)
-# note there are no russian-hostility-stories for e&e presence countries (among several other non-presence countries): 
-# Albania (2011-2016, 2019), BiH (2011-2014, 2016, 2019, 2020), 
-# Kosovo (2013), N. Macedonia (2010-2014, 2016, 2017, 2019),
-# Serbia (2015, 2018)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-        filter(year >= 2010, year <= 2019, is.na(sum_intensity)) %>%
-        count(country, year) %>% select(-n) %>% count(country) %>% arrange(desc(n)) 
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-        filter(year >= 2010, year <= 2019) %>%
+# note there are no russian-hostility-stories for following e&e presence countries (among several other non-presence countries): 
+# Albania (2011-2013, 2019), BiH (2012, 2013, 2016), 
+# Kosovo (2013), N. Macedonia (2010-2012, 2014, 2016-2017, 2019-2020),
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        filter(year >= 2010) %>%
+        filter(is.na(sum_intensity)) %>%
+        count(country, year) %>% print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        filter(year >= 2010) %>%
+        filter(is.na(sum_intensity)) %>%
+        count(country, year) %>% select(-n) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        filter(year >= 2010) %>%
         group_by(country) %>% skim(sum_intensity) %>% as_tibble() %>% arrange(numeric.mean)
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-        filter(year >= 2010, year <= 2019) %>%
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        filter(year >= 2010) %>%
         group_by(country) %>% skim(sum_intensity) %>% as_tibble() %>% arrange(desc(numeric.mean))
-
-# inspect country/year with no sum_intensity
-# given the sporadic nature of country/year with no russian-hostility-stories, 
-# which indicates stories about hostility from russia towards these countries
-# are sometimes written but not for given year, and it's not a blanket lack of coverage or failure of country to report data, 
-# then it seems best to assign them a sum_intensity value - 0 reflecting the lack of measured hostility from russia
-# the alternative is to leave the sum_intensity NA, resulting in NA log_normalized_sum_intensity,
-# and then cause them to be imputed, but that seems wrong
-# if there were no stories with measured hostility from russia toward a country, then it effectively has zero measured hostility
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(year >= 2010, year <= 2019) %>%
-        filter(!is.na(sum_intensity)) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(year >= 2010, year <= 2019) %>%
-        filter(is.na(sum_intensity)) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(year >= 2010, year <= 2019) %>%
-        filter(is.na(sum_intensity)) %>% count(country, year) %>% print(n = nrow(.)) # 113
-
-# note that before manually setting sum_intensity = 0 to those country/year with no russian-hostility-stories
-# there are no country/years with exactly sum_intensity = 0
-# the check after making this manual update below will show 113 country/year records with sum_intensity = 0
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(sum_intensity == 0) %>% nrow() # 0
 
 
 #/////////////////
 
 
-# inspect replacing sum_intensity with log normalized sum_intensity to 
+# inspect replacing sum_intensity with log_normalized_sum_intensity or annual_rob_std_log_normalized_sum_intensity 
 # avoid ukraine swamping the other countries
 # note that the normalization is set to 1 - normalized_score, even though originally higher scores are better because
 # this flips the alignment so that the lowest (most negative) sum_intensity values (ukraine) get the highest normalized values
 # which is necessary so that when taking the log, the distance is compressed at higher end of scale where ukraine
 # is far above other countries; .01 is added to avoid taking log of 0 and getting -Inf
-# result: log normalized sum_intensity is better, avoiding swamping but still showing significant spike for ukraine
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-        select(country, year, sum_intensity) %>%
+# result: annual_rob_std_log_normalized_sum_intensity is better, avoiding swamping but still showing significant spike for ukraine
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        select(country, mcp_grouping, year, sum_intensity) %>%
         
-        mutate(sum_intensity = case_when(year >= 2010 & year <= 2019 & is.na(sum_intensity) ~ 0,
-                                         TRUE ~ sum_intensity)) %>%
-        # filter(country == "Albania")
+        filter(year >= 2010) %>%
         
         mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
                max_sum_intensity = max(sum_intensity, na.rm = TRUE),
                normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
                                                         (max_sum_intensity - min_sum_intensity))) + .01,
                log_normalized_sum_intensity = log(normalized_sum_intensity)) %>%
-        filter(country %in% (country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-                                     pull(country))) %>%
-        # filter(country %in% (country_crosswalk %>% filter(mcp_grouping %in% c("E&E graduates")) %>%
-        #                              pull(country))) %>%
-        # filter(country %in% (country_crosswalk %>% filter(mcp_grouping %in% c("CARs")) %>%
-        #                              pull(country))) %>%
-        # filter(country %in% (country_crosswalk %>% filter(mcp_grouping %in% c("EU-15")) %>%
-        #                              pull(country))) %>%
-        # filter(country %in% (country_crosswalk %>% filter(mcp_grouping %in% c("U.S.")) %>%
-        #                              pull(country))) %>%
+        group_by(year) %>%
+        mutate(annual_median_log_normalized_sum_intensity = median(log_normalized_sum_intensity, na.rm = TRUE),
+               annual_iqr_log_normalized_sum_intensity = IQR(log_normalized_sum_intensity, na.rm = TRUE),
+               annual_rob_std_log_normalized_sum_intensity = (log_normalized_sum_intensity - annual_median_log_normalized_sum_intensity) /
+                       annual_iqr_log_normalized_sum_intensity) %>%
+        ungroup() %>%
+        
+        arrange(year) %>%
+        # filter(country == "Albania")
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        # filter(mcp_grouping %in% c("E&E Balkans")) %>%
+        # filter(mcp_grouping %in% c("E&E Eurasia")) %>%
+        
         # arrange(sum_intensity)
         # arrange(desc(sum_intensity))
         # skim(values, sum_intensity, normalized_sum_intensity, log_normalized_sum_intensity)
-
+        
         # plot values
-        # ggplot(data = ., mapping = aes(x = year, y = sum_intensity, color = country)) + geom_line()
-        ggplot(data = ., mapping = aes(x = year, y = log_normalized_sum_intensity, color = country)) + geom_line()
+        # ggplot(data = ., mapping = aes(x = year, y = sum_intensity, color = country)) + geom_line(size = 1)
+        # ggplot(data = ., mapping = aes(x = year, y = log_normalized_sum_intensity, color = country)) + geom_line(size = 1)
+        ggplot(data = ., mapping = aes(x = year, y = annual_rob_std_log_normalized_sum_intensity, color = country)) + geom_line(size = 1)
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# first manually assign sum_intensity = 0 to those country/years with zero measured russian-hostility-stories
-# then get log normalized sum_intensity and assign it to "values" as final measure for this indicator
-sub_obj_1_3_icews_socio_political_hostility_from_russia <- sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-        mutate(sum_intensity = case_when(year >= 2010 & year <= 2019 & is.na(sum_intensity) ~ 0,
-                                         TRUE ~ sum_intensity)) %>%
-        mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
-               max_sum_intensity = max(sum_intensity, na.rm = TRUE),
-               normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
-                                                        (max_sum_intensity - min_sum_intensity))) + .01,
-               log_normalized_sum_intensity = log(normalized_sum_intensity),
-               values = log_normalized_sum_intensity)
+# get annual_rob_std_log_normalized_sum_intensity and assign it to "values" as final measure for this indicator
+sub_obj_1_3_icews_socio_political_hostility_with_russia <- sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        # mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
+        #        max_sum_intensity = max(sum_intensity, na.rm = TRUE),
+        #        normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) /
+        #                                                 (max_sum_intensity - min_sum_intensity))) + .01,
+        #        log_normalized_sum_intensity = log(normalized_sum_intensity)) %>%
+        group_by(year) %>%
+        mutate(
+                min_sum_intensity = min(sum_intensity, na.rm = TRUE),
+                max_sum_intensity = max(sum_intensity, na.rm = TRUE),
+                normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
+                                                         (max_sum_intensity - min_sum_intensity))) + .01,
+                log_normalized_sum_intensity = log(normalized_sum_intensity),
+                annual_median_log_normalized_sum_intensity = median(log_normalized_sum_intensity, na.rm = TRUE),
+                annual_iqr_log_normalized_sum_intensity = IQR(log_normalized_sum_intensity, na.rm = TRUE),
+                annual_rob_std_log_normalized_sum_intensity = (log_normalized_sum_intensity - annual_median_log_normalized_sum_intensity) /
+                        annual_iqr_log_normalized_sum_intensity) %>%
+        ungroup() %>%
+        mutate(values = annual_rob_std_log_normalized_sum_intensity)
 
 
 #///////////////////
 
 
 # inspect
-sub_obj_1_3_icews_socio_political_hostility_from_russia
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% glimpse()
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% nrow() # 900
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% ncol() # 36
+sub_obj_1_3_icews_socio_political_hostility_with_russia
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% glimpse()
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% nrow() # 945
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% ncol() # 43
 
 # check values
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% skim(values, log_normalized_sum_intensity)
-# note that all 113 country/year records identified in inspection above as having no russian-hostility-stories have
-# now been assigned sum_intensity = 0
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% filter(sum_intensity == 0) %>% 
-        select(country, year, sum_intensity, normalized_sum_intensity, log_normalized_sum_intensity) %>% 
-        print(n = nrow(.)) # 113
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        filter(sum_intensity == 0) %>% nrow() # 113
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% skim(values, annual_rob_std_log_normalized_sum_intensity)
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+        filter(year >= 2010) %>%
+        # arrange(desc(annual_rob_std_log_normalized_sum_intensity)) %>%
+        arrange(annual_rob_std_log_normalized_sum_intensity) %>%
+        select(country, year, sum_intensity, min_sum_intensity, max_sum_intensity, log_normalized_sum_intensity,
+               annual_median_log_normalized_sum_intensity, annual_iqr_log_normalized_sum_intensity,
+               annual_rob_std_log_normalized_sum_intensity)
 
 
 #///////////////////
 
 
 # plot
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% 
+        filter(year >= 2010) %>%
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #///////////////////
 
 
-# test values for sub_obj_1_3_icews_socio_political_hostility_from_russia
-test_values_sub_obj_1_3_icews_socio_political_hostility_from_russia <- function() {
+# test values for sub_obj_1_3_icews_socio_political_hostility_with_russia
+test_values_sub_obj_1_3_icews_socio_political_hostility_with_russia <- function() {
         
-        # albania in 2010 (which had > 1 russian_hostility_stories)
-        sum_intensity_from_raw_tbl <- icews_source_country_russia_2010 %>% filter(`Target Country` == "Albania",
-                                                                                  Intensity < 0) %>%
-                mutate(sum_intensity = sumNA(Intensity, na.rm = TRUE)) %>% slice(1) 
-        sum_intensity_from_raw <- ifelse(sum_intensity_from_raw_tbl %>% nrow() == 0, 0, 
-                                         sum_intensity_from_raw_tbl %>% pull(sum_intensity))
-        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-                             filter(country == "Albania", year == 2010) %>% pull(sum_intensity),
-                     expected = sum_intensity_from_raw)
+        # albania in 2010 
+        current_country <- "Albania"
+        annual_rob_std_log_normalized_sum_intensity <- icews_source_target_country_russia_2010 %>% 
+                distinct() %>%
+                rename(source_country = `Source Country`, 
+                       target_country = `Target Country`,
+                       intensity = Intensity,
+                       event_date = `Event Date`) %>%
+                mutate(year = year(event_date),
+                       country_name = case_when(source_country == "Russian Federation" ~ target_country,
+                                                target_country == "Russian Federation" ~ source_country),
+                       counterpart_name = case_when(source_country == "Russian Federation" ~ source_country,
+                                                    target_country == "Russian Federation" ~ target_country),
+                       country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                country_name == "Moldova, Republic of" ~ "Moldova",
+                                                country_name == "Czech Republic" ~ "Czechia",
+                                                country_name == "the former Yugoslav Republic of Macedonia" ~ "N. Macedonia",
+                                                country_name == "United States" ~ "U.S.",
+                                                country_name == "United Kingdom" ~ "U.K.",
+                                                country_name == "Russian Federation" ~ "Russia",
+                                                TRUE ~ country_name)) %>%
+                filter(!(country_name %in% c("Russia", "U.S.")),
+                       intensity < 0, 
+                       (source_country == "Russian Federation" & target_country %in% country_list) |
+                               (source_country %in% country_list & target_country == "Russian Federation")) %>%
+                group_by(country_name) %>%
+                mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
+                slice(1) %>%
+                ungroup() %>%
+                mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
+                       max_sum_intensity = max(sum_intensity, na.rm = TRUE),
+                       normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
+                                                                (max_sum_intensity - min_sum_intensity))) + .01,
+                       log_normalized_sum_intensity = log(normalized_sum_intensity)) %>%
+                group_by(year) %>%
+                mutate(annual_median_log_normalized_sum_intensity = median(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_iqr_log_normalized_sum_intensity = IQR(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_rob_std_log_normalized_sum_intensity = (log_normalized_sum_intensity - annual_median_log_normalized_sum_intensity) /
+                               annual_iqr_log_normalized_sum_intensity) %>%
+                ungroup() %>%
+                filter(country_name == current_country) %>%
+                select(country_name, year, intensity, sum_intensity, min_sum_intensity, max_sum_intensity,
+                       normalized_sum_intensity, log_normalized_sum_intensity,
+                       annual_median_log_normalized_sum_intensity,
+                       annual_iqr_log_normalized_sum_intensity,
+                       annual_rob_std_log_normalized_sum_intensity) %>%
+                pull(annual_rob_std_log_normalized_sum_intensity) 
+        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+                             filter(country == current_country, year == 2010) %>% 
+                             select(country, year, sum_intensity, min_sum_intensity, max_sum_intensity,
+                                    normalized_sum_intensity, log_normalized_sum_intensity,
+                                    annual_median_log_normalized_sum_intensity,
+                                    annual_iqr_log_normalized_sum_intensity,
+                                    annual_rob_std_log_normalized_sum_intensity) %>%
+                             pull(annual_rob_std_log_normalized_sum_intensity),
+                     expected = annual_rob_std_log_normalized_sum_intensity)
         
-        # albania in 2011 (which had no russian_hostility_stories)
-        sum_intensity_from_raw_tbl <- icews_source_country_russia_2011 %>% filter(`Target Country` == "Albania",
-                                                    Intensity < 0) %>%
-                mutate(sum_intensity = sumNA(Intensity, na.rm = TRUE)) %>% slice(1) 
-        sum_intensity_from_raw <- ifelse(sum_intensity_from_raw_tbl %>% nrow() == 0, 0, 
-                                         sum_intensity_from_raw_tbl %>% pull(sum_intensity))
-        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-                             filter(country == "Albania", year == 2011) %>% pull(sum_intensity),
-                     expected = sum_intensity_from_raw)
-        
-        # belarus in 2017
-        sum_intensity_from_raw_tbl <- icews_source_country_russia_2017 %>% filter(`Target Country` == "Belarus",
-                                                                                  Intensity < 0) %>%
-                mutate(sum_intensity = sumNA(Intensity, na.rm = TRUE)) %>% slice(1) 
-        sum_intensity_from_raw <- ifelse(sum_intensity_from_raw_tbl %>% nrow() == 0, 0, 
-                                         sum_intensity_from_raw_tbl %>% pull(sum_intensity))
-        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-                             filter(country == "Belarus", year == 2017) %>% pull(sum_intensity),
-                     expected = sum_intensity_from_raw)
+        # belarus in 2016
+        current_country <- "Belarus"
+        annual_rob_std_log_normalized_sum_intensity <- icews_source_target_country_russia_2016 %>% 
+                distinct() %>%
+                rename(source_country = `Source Country`, 
+                       target_country = `Target Country`,
+                       intensity = Intensity,
+                       event_date = `Event Date`) %>%
+                mutate(year = year(event_date),
+                       country_name = case_when(source_country == "Russian Federation" ~ target_country,
+                                                target_country == "Russian Federation" ~ source_country),
+                       counterpart_name = case_when(source_country == "Russian Federation" ~ source_country,
+                                                    target_country == "Russian Federation" ~ target_country),
+                       country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                country_name == "Moldova, Republic of" ~ "Moldova",
+                                                country_name == "Czech Republic" ~ "Czechia",
+                                                country_name == "the former Yugoslav Republic of Macedonia" ~ "N. Macedonia",
+                                                country_name == "United States" ~ "U.S.",
+                                                country_name == "United Kingdom" ~ "U.K.",
+                                                country_name == "Russian Federation" ~ "Russia",
+                                                TRUE ~ country_name)) %>%
+                filter(!(country_name %in% c("Russia", "U.S.")),
+                       intensity < 0, 
+                       (source_country == "Russian Federation" & target_country %in% country_list) |
+                               (source_country %in% country_list & target_country == "Russian Federation")) %>%
+                group_by(country_name) %>%
+                mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
+                slice(1) %>%
+                ungroup() %>%
+                mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
+                       max_sum_intensity = max(sum_intensity, na.rm = TRUE),
+                       normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
+                                                                (max_sum_intensity - min_sum_intensity))) + .01,
+                       log_normalized_sum_intensity = log(normalized_sum_intensity)) %>%
+                group_by(year) %>%
+                mutate(annual_median_log_normalized_sum_intensity = median(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_iqr_log_normalized_sum_intensity = IQR(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_rob_std_log_normalized_sum_intensity = (log_normalized_sum_intensity - annual_median_log_normalized_sum_intensity) /
+                               annual_iqr_log_normalized_sum_intensity) %>%
+                ungroup() %>%
+                filter(country_name == current_country) %>%
+                select(country_name, year, intensity, sum_intensity, min_sum_intensity, max_sum_intensity,
+                       normalized_sum_intensity, log_normalized_sum_intensity,
+                       annual_median_log_normalized_sum_intensity,
+                       annual_iqr_log_normalized_sum_intensity,
+                       annual_rob_std_log_normalized_sum_intensity) %>%
+                pull(annual_rob_std_log_normalized_sum_intensity) 
+        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+                             filter(country == current_country, year == 2016) %>% 
+                             select(country, year, sum_intensity, min_sum_intensity, max_sum_intensity,
+                                    normalized_sum_intensity, log_normalized_sum_intensity,
+                                    annual_median_log_normalized_sum_intensity,
+                                    annual_iqr_log_normalized_sum_intensity,
+                                    annual_rob_std_log_normalized_sum_intensity) %>%
+                             pull(annual_rob_std_log_normalized_sum_intensity),
+                     expected = annual_rob_std_log_normalized_sum_intensity)
         
         # ukraine in 2014
-        sum_intensity_from_raw_tbl <- icews_source_country_russia_2014 %>% filter(`Target Country` == "Ukraine",
-                                                                                  Intensity < 0) %>%
-                mutate(sum_intensity = sumNA(Intensity, na.rm = TRUE)) %>% slice(1) 
-        sum_intensity_from_raw <- ifelse(sum_intensity_from_raw_tbl %>% nrow() == 0, 0, 
-                                         sum_intensity_from_raw_tbl %>% pull(sum_intensity))
-        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-                             filter(country == "Ukraine", year == 2014) %>% pull(sum_intensity),
-                     expected = sum_intensity_from_raw)
+        current_country <- "Ukraine"
+        annual_rob_std_log_normalized_sum_intensity <- icews_source_target_country_russia_2014 %>% 
+                distinct() %>%
+                rename(source_country = `Source Country`, 
+                       target_country = `Target Country`,
+                       intensity = Intensity,
+                       event_date = `Event Date`) %>%
+                mutate(year = year(event_date),
+                       country_name = case_when(source_country == "Russian Federation" ~ target_country,
+                                                target_country == "Russian Federation" ~ source_country),
+                       counterpart_name = case_when(source_country == "Russian Federation" ~ source_country,
+                                                    target_country == "Russian Federation" ~ target_country),
+                       country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                country_name == "Moldova, Republic of" ~ "Moldova",
+                                                country_name == "Czech Republic" ~ "Czechia",
+                                                country_name == "the former Yugoslav Republic of Macedonia" ~ "N. Macedonia",
+                                                country_name == "United States" ~ "U.S.",
+                                                country_name == "United Kingdom" ~ "U.K.",
+                                                country_name == "Russian Federation" ~ "Russia",
+                                                TRUE ~ country_name)) %>%
+                filter(!(country_name %in% c("Russia", "U.S.")),
+                       intensity < 0, 
+                       (source_country == "Russian Federation" & target_country %in% country_list) |
+                               (source_country %in% country_list & target_country == "Russian Federation")) %>%
+                group_by(country_name) %>%
+                mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
+                slice(1) %>%
+                ungroup() %>%
+                mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
+                       max_sum_intensity = max(sum_intensity, na.rm = TRUE),
+                       normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
+                                                                (max_sum_intensity - min_sum_intensity))) + .01,
+                       log_normalized_sum_intensity = log(normalized_sum_intensity)) %>%
+                group_by(year) %>%
+                mutate(annual_median_log_normalized_sum_intensity = median(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_iqr_log_normalized_sum_intensity = IQR(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_rob_std_log_normalized_sum_intensity = (log_normalized_sum_intensity - annual_median_log_normalized_sum_intensity) /
+                               annual_iqr_log_normalized_sum_intensity) %>%
+                ungroup() %>%
+                filter(country_name == current_country) %>%
+                select(country_name, year, intensity, sum_intensity, min_sum_intensity, max_sum_intensity,
+                       normalized_sum_intensity, log_normalized_sum_intensity,
+                       annual_median_log_normalized_sum_intensity,
+                       annual_iqr_log_normalized_sum_intensity,
+                       annual_rob_std_log_normalized_sum_intensity) %>%
+                pull(annual_rob_std_log_normalized_sum_intensity) 
+        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+                             filter(country == current_country, year == 2014) %>% 
+                             select(country, year, sum_intensity, min_sum_intensity, max_sum_intensity,
+                                    normalized_sum_intensity, log_normalized_sum_intensity,
+                                    annual_median_log_normalized_sum_intensity,
+                                    annual_iqr_log_normalized_sum_intensity,
+                                    annual_rob_std_log_normalized_sum_intensity) %>%
+                             pull(annual_rob_std_log_normalized_sum_intensity),
+                     expected = annual_rob_std_log_normalized_sum_intensity)
         
-        # us in 2019
-        sum_intensity_from_raw_tbl <- icews_source_country_russia_2019 %>% filter(`Target Country` == "United States",
-                                                                                  Intensity < 0) %>%
-                mutate(sum_intensity = sumNA(Intensity, na.rm = TRUE)) %>% slice(1) 
-        sum_intensity_from_raw <- ifelse(sum_intensity_from_raw_tbl %>% nrow() == 0, 0, 
-                                         sum_intensity_from_raw_tbl %>% pull(sum_intensity))
-        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
-                             filter(country == "U.S.", year == 2019) %>% pull(sum_intensity),
-                     expected = sum_intensity_from_raw)
+        # serbia in 2021
+        current_country <- "Serbia"
+        annual_rob_std_log_normalized_sum_intensity <- icews_source_target_country_russia_2021 %>% 
+                distinct() %>%
+                rename(source_country = `Source Country`, 
+                       target_country = `Target Country`,
+                       intensity = Intensity,
+                       event_date = `Event Date`) %>%
+                mutate(year = year(event_date),
+                       country_name = case_when(source_country == "Russian Federation" ~ target_country,
+                                                target_country == "Russian Federation" ~ source_country),
+                       counterpart_name = case_when(source_country == "Russian Federation" ~ source_country,
+                                                    target_country == "Russian Federation" ~ target_country),
+                       country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                country_name == "Moldova, Republic of" ~ "Moldova",
+                                                country_name == "Czech Republic" ~ "Czechia",
+                                                country_name == "the former Yugoslav Republic of Macedonia" ~ "N. Macedonia",
+                                                country_name == "United States" ~ "U.S.",
+                                                country_name == "United Kingdom" ~ "U.K.",
+                                                country_name == "Russian Federation" ~ "Russia",
+                                                TRUE ~ country_name)) %>%
+                filter(!(country_name %in% c("Russia", "U.S.")),
+                       intensity < 0, 
+                       (source_country == "Russian Federation" & target_country %in% country_list) |
+                               (source_country %in% country_list & target_country == "Russian Federation")) %>%
+                group_by(country_name) %>%
+                mutate(sum_intensity = sumNA(intensity, na.rm = TRUE)) %>%
+                slice(1) %>%
+                ungroup() %>%
+                mutate(min_sum_intensity = min(sum_intensity, na.rm = TRUE),
+                       max_sum_intensity = max(sum_intensity, na.rm = TRUE),
+                       normalized_sum_intensity = (1 - ((sum_intensity - min_sum_intensity) / 
+                                                                (max_sum_intensity - min_sum_intensity))) + .01,
+                       log_normalized_sum_intensity = log(normalized_sum_intensity)) %>%
+                group_by(year) %>%
+                mutate(annual_median_log_normalized_sum_intensity = median(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_iqr_log_normalized_sum_intensity = IQR(log_normalized_sum_intensity, na.rm = TRUE),
+                       annual_rob_std_log_normalized_sum_intensity = (log_normalized_sum_intensity - annual_median_log_normalized_sum_intensity) /
+                               annual_iqr_log_normalized_sum_intensity) %>%
+                ungroup() %>%
+                filter(country_name == current_country) %>%
+                select(country_name, year, intensity, sum_intensity, min_sum_intensity, max_sum_intensity,
+                       normalized_sum_intensity, log_normalized_sum_intensity,
+                       annual_median_log_normalized_sum_intensity,
+                       annual_iqr_log_normalized_sum_intensity,
+                       annual_rob_std_log_normalized_sum_intensity) %>%
+                pull(annual_rob_std_log_normalized_sum_intensity) 
+        expect_equal(object = sub_obj_1_3_icews_socio_political_hostility_with_russia %>%
+                             filter(country == current_country) %>%
+                             filter(year == 2021) %>% 
+                             select(country, year, sum_intensity, min_sum_intensity, max_sum_intensity,
+                                    normalized_sum_intensity, log_normalized_sum_intensity,
+                                    annual_median_log_normalized_sum_intensity,
+                                    annual_iqr_log_normalized_sum_intensity,
+                                    annual_rob_std_log_normalized_sum_intensity) %>%
+                             pull(annual_rob_std_log_normalized_sum_intensity),
+                     expected = annual_rob_std_log_normalized_sum_intensity)
 }
-test_values_sub_obj_1_3_icews_socio_political_hostility_from_russia()
+test_values_sub_obj_1_3_icews_socio_political_hostility_with_russia()
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
 # remove icews yearly files
-rm(icews_source_country_russia_2010)
-rm(icews_source_country_russia_2011)
-rm(icews_source_country_russia_2012)
-rm(icews_source_country_russia_2013)
-rm(icews_source_country_russia_2014)
-rm(icews_source_country_russia_2015)
-rm(icews_source_country_russia_2016)
-rm(icews_source_country_russia_2017)
-rm(icews_source_country_russia_2018)
-rm(icews_source_country_russia_2019)
-rm(icews_source_country_russia_2020)
+rm(icews_source_target_country_russia_2010)
+rm(icews_source_target_country_russia_2011)
+rm(icews_source_target_country_russia_2012)
+rm(icews_source_target_country_russia_2013)
+rm(icews_source_target_country_russia_2014)
+rm(icews_source_target_country_russia_2015)
+rm(icews_source_target_country_russia_2016)
+rm(icews_source_target_country_russia_2017)
+rm(icews_source_target_country_russia_2018)
+rm(icews_source_target_country_russia_2019)
+rm(icews_source_target_country_russia_2020)
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
 # read/write
-# sub_obj_1_3_icews_socio_political_hostility_from_russia %>% write_csv(file = "data/fmir/sub_obj_1_3_icews_socio_political_hostility_from_russia.csv")
-sub_obj_1_3_icews_socio_political_hostility_from_russia <- read.csv(file = "data/fmir/sub_obj_1_3_icews_socio_political_hostility_from_russia.csv") %>%
+# sub_obj_1_3_icews_socio_political_hostility_with_russia %>% write_csv(file = "data/fmir/sub_obj_1_3_icews_socio_political_hostility_with_russia.csv")
+sub_obj_1_3_icews_socio_political_hostility_with_russia <- read.csv(file = "data/fmir/sub_obj_1_3_icews_socio_political_hostility_with_russia.csv") %>%
         as_tibble()
 
 # inspect
-sub_obj_1_3_icews_socio_political_hostility_from_russia
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% glimpse()
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% nrow() # 900
-sub_obj_1_3_icews_socio_political_hostility_from_russia %>% ncol() # 36
+sub_obj_1_3_icews_socio_political_hostility_with_russia
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% glimpse()
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% nrow() # 945
+sub_obj_1_3_icews_socio_political_hostility_with_russia %>% ncol() # 43
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3254,13 +3632,13 @@ sub_obj_1_3_nato_membership <- sub_obj_1_3_nato_membership %>%
 # inspect
 sub_obj_1_3_nato_membership
 sub_obj_1_3_nato_membership %>% glimpse()
-sub_obj_1_3_nato_membership %>% nrow() # 900
-sub_obj_1_3_nato_membership %>% ncol() # 34
+sub_obj_1_3_nato_membership %>% nrow() # 945
+sub_obj_1_3_nato_membership %>% ncol() # 38
 
 # check country/year
 sub_obj_1_3_nato_membership %>% count(country) %>% print(n = nrow(.))
 sub_obj_1_3_nato_membership %>% distinct(country) %>% nrow() # 45
-sub_obj_1_3_nato_membership %>% count(year)
+sub_obj_1_3_nato_membership %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_3_nato_membership %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 
 # check specific country
@@ -3292,7 +3670,7 @@ sub_obj_1_3_nato_membership <- sub_obj_1_3_nato_membership %>%
         fill(first_year_in_nato_since_2010, .direction = "updown") %>%
         fill(last_year_in_nato_since_2010, .direction = "updown") %>%
         ungroup() %>%
-        mutate(nato_member_flag = case_when(year >= first_year_in_nato_since_2010 & 
+        mutate(nato_member_flag = case_when((year >= first_year_in_nato_since_2010) & 
                                                     (is.na(last_year_in_nato_since_2010) | year <= last_year_in_nato_since_2010) ~ 1,
                                             TRUE ~ 0),
                values = nato_member_flag)
@@ -3304,8 +3682,8 @@ sub_obj_1_3_nato_membership <- sub_obj_1_3_nato_membership %>%
 # inspect
 sub_obj_1_3_nato_membership
 sub_obj_1_3_nato_membership %>% glimpse()
-sub_obj_1_3_nato_membership %>% nrow() # 900
-sub_obj_1_3_nato_membership %>% ncol() # 36
+sub_obj_1_3_nato_membership %>% nrow() # 945
+sub_obj_1_3_nato_membership %>% ncol() # 40
 
 # check country/year
 sub_obj_1_3_nato_membership %>% count(country) %>% print(n = nrow(.))
@@ -3341,8 +3719,8 @@ sub_obj_1_3_nato_membership %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line() +
-        scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line(size = 1) +
+        scale_x_continuous(breaks = seq(from = 2010, to = 2021, by = 1))
 
 
 #////////////////
@@ -3395,8 +3773,8 @@ sub_obj_1_3_nato_membership <- read.csv(file = "data/fmir/sub_obj_1_3_nato_membe
 # inspect
 sub_obj_1_3_nato_membership
 sub_obj_1_3_nato_membership %>% glimpse()
-sub_obj_1_3_nato_membership %>% nrow() # 900
-sub_obj_1_3_nato_membership %>% ncol() # 36
+sub_obj_1_3_nato_membership %>% nrow() # 945
+sub_obj_1_3_nato_membership %>% ncol() # 40
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3423,8 +3801,8 @@ sub_obj_1_3_csto_membership <- read_excel(path = "data/csto/csto_membership_2022
 # inspect
 sub_obj_1_3_csto_membership
 sub_obj_1_3_csto_membership %>% glimpse()
-sub_obj_1_3_csto_membership %>% nrow() # 7
-sub_obj_1_3_csto_membership %>% ncol() # 9
+sub_obj_1_3_csto_membership %>% nrow() # 8
+sub_obj_1_3_csto_membership %>% ncol() # 10
 
 # test that year_joined_is_before_or_equal_to_first_year_since_2010
 expect_equal(object = sub_obj_1_3_csto_membership %>% 
@@ -3463,8 +3841,8 @@ sub_obj_1_3_csto_membership <- sub_obj_1_3_csto_membership %>%
 # inspect
 sub_obj_1_3_csto_membership
 sub_obj_1_3_csto_membership %>% glimpse()
-sub_obj_1_3_csto_membership %>% nrow() # 900
-sub_obj_1_3_csto_membership %>% ncol() # 34
+sub_obj_1_3_csto_membership %>% nrow() # 945
+sub_obj_1_3_csto_membership %>% ncol() # 39
 
 # check country/year
 sub_obj_1_3_csto_membership %>% count(country) %>% print(n = nrow(.))
@@ -3474,19 +3852,25 @@ sub_obj_1_3_csto_membership %>% distinct(country, mcp_grouping, ee_region_flag) 
 
 # check specific country
 sub_obj_1_3_csto_membership %>% 
-        select(country, year, first_year_in_csto_since_2010, last_year_in_csto_since_2010) %>%
+        select(country, year, first_year_in_csto_since_2010, last_year_in_csto_since_2010, membership_status) %>%
         group_by(country) %>%
         fill(first_year_in_csto_since_2010, .direction = "updown") %>%
         fill(last_year_in_csto_since_2010, .direction = "updown") %>%
+        fill(membership_status, .direction = "updown") %>%
         ungroup() %>%
-        mutate(csto_member_flag = case_when(year >= first_year_in_csto_since_2010 &
-                                                    (is.na(last_year_in_csto_since_2010) | year <= last_year_in_csto_since_2010) ~ 1,
+        mutate(csto_member_flag = case_when((year >= first_year_in_csto_since_2010) & 
+                                                    ((is.na(last_year_in_csto_since_2010) | year <= last_year_in_csto_since_2010)) &
+                                                    membership_status == "full_member" ~ 1,
+                                            (year >= first_year_in_csto_since_2010) & 
+                                                    ((is.na(last_year_in_csto_since_2010) | year <= last_year_in_csto_since_2010)) &
+                                                    membership_status == "observer" ~ .5,
                                             TRUE ~ 0),
                values = csto_member_flag) %>%
-        # filter(country == "Armenia")
-        # filter(country == "Russia")
-        filter(country == "Uzbekistan")
-        # filter(country == "Armenia")
+        filter(country == "Serbia") %>%
+        # filter(country == "Russia") %>%
+        # filter(country == "Uzbekistan") %>%
+        # filter(country == "Armenia") %>%
+        print(n = nrow(.))
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3500,9 +3884,14 @@ sub_obj_1_3_csto_membership <- sub_obj_1_3_csto_membership %>%
         group_by(country) %>%
         fill(first_year_in_csto_since_2010, .direction = "updown") %>%
         fill(last_year_in_csto_since_2010, .direction = "updown") %>%
+        fill(membership_status, .direction = "updown") %>%
         ungroup() %>%
-        mutate(csto_member_flag = case_when(year >= first_year_in_csto_since_2010 & 
-                                                    (is.na(last_year_in_csto_since_2010) | year <= last_year_in_csto_since_2010) ~ 1,
+        mutate(csto_member_flag = case_when((year >= first_year_in_csto_since_2010) & 
+                                                    (is.na(last_year_in_csto_since_2010) | year <= last_year_in_csto_since_2010) &
+                                                    membership_status == "full_member" ~ 1,
+                                            (year >= first_year_in_csto_since_2010) & 
+                                                    (is.na(last_year_in_csto_since_2010) | year <= last_year_in_csto_since_2010) &
+                                                    membership_status == "observer" ~ .5,
                                             TRUE ~ 0),
                values = csto_member_flag)
 
@@ -3513,13 +3902,13 @@ sub_obj_1_3_csto_membership <- sub_obj_1_3_csto_membership %>%
 # inspect
 sub_obj_1_3_csto_membership
 sub_obj_1_3_csto_membership %>% glimpse()
-sub_obj_1_3_csto_membership %>% nrow() # 900
-sub_obj_1_3_csto_membership %>% ncol() # 36
+sub_obj_1_3_csto_membership %>% nrow() # 945
+sub_obj_1_3_csto_membership %>% ncol() # 41
 
 # check country/year
 sub_obj_1_3_csto_membership %>% count(country) %>% print(n = nrow(.))
 sub_obj_1_3_csto_membership %>% distinct(country) %>% nrow() # 45
-sub_obj_1_3_csto_membership %>% count(year)
+sub_obj_1_3_csto_membership %>% count(year) %>% print(n = nrow(.))
 sub_obj_1_3_csto_membership %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
 
 # check specific country
@@ -3527,9 +3916,10 @@ sub_obj_1_3_csto_membership %>%
         # filter(country == "Albania") %>%
         # filter(country == "Russia") %>%
         # filter(country == "Uzbekistan") %>%
-        # filter(country == "Armenia") %>%
-        filter(country == "Belarus") %>%
-        select(country, year, first_year_in_csto_since_2010, last_year_in_csto_since_2010, csto_member_flag, values) 
+        filter(country == "Serbia") %>%
+        # filter(country == "Belarus") %>%
+        select(country, year, first_year_in_csto_since_2010, last_year_in_csto_since_2010, csto_member_flag, values) %>%
+        print(n = nrow(.))
 
 # check csto_member_flag
 sub_obj_1_3_csto_membership %>% skim(csto_member_flag, values)
@@ -3544,14 +3934,14 @@ sub_obj_1_3_csto_membership %>%
 
 # plot
 sub_obj_1_3_csto_membership %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line() +
-        scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line(size = 1) +
+        scale_x_continuous(breaks = seq(from = 2010, to = 2021, by = 1))
 
 
 #////////////////
@@ -3579,6 +3969,11 @@ test_values_sub_obj_1_3_csto_membership <- function() {
         expect_equal(object = sub_obj_1_3_csto_membership %>% filter(country == "France") %>%
                              distinct(values) %>% pull(values),
                      expected = 0)
+        
+        # serbia
+        expect_equal(object = sub_obj_1_3_csto_membership %>% filter(country == "Serbia", year >= 2013) %>%
+                             distinct(values) %>% pull(values),
+                     expected = .5)
 }
 test_values_sub_obj_1_3_csto_membership()
 
@@ -3594,8 +3989,8 @@ sub_obj_1_3_csto_membership <- read.csv(file = "data/fmir/sub_obj_1_3_csto_membe
 # inspect
 sub_obj_1_3_csto_membership
 sub_obj_1_3_csto_membership %>% glimpse()
-sub_obj_1_3_csto_membership %>% nrow() # 900
-sub_obj_1_3_csto_membership %>% ncol() # 36
+sub_obj_1_3_csto_membership %>% nrow() # 945
+sub_obj_1_3_csto_membership %>% ncol() # 41
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3626,7 +4021,7 @@ sub_obj_1_3_russian_military_presence <- read_excel(path = "data/russian_militar
 # inspect
 sub_obj_1_3_russian_military_presence
 sub_obj_1_3_russian_military_presence %>% glimpse()
-sub_obj_1_3_russian_military_presence %>% nrow() # 8
+sub_obj_1_3_russian_military_presence %>% nrow() # 9
 sub_obj_1_3_russian_military_presence %>% ncol() # 7
 
 
@@ -3658,8 +4053,8 @@ sub_obj_1_3_russian_military_presence <- sub_obj_1_3_russian_military_presence %
 # inspect
 sub_obj_1_3_russian_military_presence
 sub_obj_1_3_russian_military_presence %>% glimpse()
-sub_obj_1_3_russian_military_presence %>% nrow() # 900
-sub_obj_1_3_russian_military_presence %>% ncol() # 34
+sub_obj_1_3_russian_military_presence %>% nrow() # 945
+sub_obj_1_3_russian_military_presence %>% ncol() # 36
 
 # check country/year
 sub_obj_1_3_russian_military_presence %>% count(country) %>% print(n = nrow(.))
@@ -3681,7 +4076,9 @@ sub_obj_1_3_russian_military_presence %>%
         # filter(country == "Armenia")
         # filter(country == "Russia")
         # filter(country == "Uzbekistan")
-        filter(country == "Belarus")
+        # filter(country == "Belarus")
+        filter(country == "Azerbaijan")
+        
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -3708,8 +4105,8 @@ sub_obj_1_3_russian_military_presence <- sub_obj_1_3_russian_military_presence %
 # inspect
 sub_obj_1_3_russian_military_presence
 sub_obj_1_3_russian_military_presence %>% glimpse()
-sub_obj_1_3_russian_military_presence %>% nrow() # 900
-sub_obj_1_3_russian_military_presence %>% ncol() # 34
+sub_obj_1_3_russian_military_presence %>% nrow() # 945
+sub_obj_1_3_russian_military_presence %>% ncol() # 38
 
 # check country/year
 sub_obj_1_3_russian_military_presence %>% count(country) %>% print(n = nrow(.))
@@ -3723,8 +4120,10 @@ sub_obj_1_3_russian_military_presence %>%
         # filter(country == "Russia") %>%
         # filter(country == "Uzbekistan") %>%
         # filter(country == "Armenia") %>%
-        filter(country == "Belarus") %>%
-        select(country, year, first_year_w_presence_since_2010, last_year_w_presence_since_2010, presence_flag, values) 
+        # filter(country == "Belarus") %>%
+        filter(country == "Azerbaijan") %>%
+        select(country, year, first_year_w_presence_since_2010, last_year_w_presence_since_2010, presence_flag, values) %>%
+        print(n = nrow(.))
 
 # check csto_member_flag
 sub_obj_1_3_russian_military_presence %>% skim(presence_flag, values)
@@ -3739,13 +4138,13 @@ sub_obj_1_3_russian_military_presence %>%
 
 # plot
 sub_obj_1_3_russian_military_presence %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line() +
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line(size = 1) +
         scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
 
 
@@ -3898,8 +4297,8 @@ sub_obj_1_3_russian_supported_breach_of_territorial_integrity <- sub_obj_1_3_rus
 # inspect
 sub_obj_1_3_russian_supported_breach_of_territorial_integrity
 sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% glimpse()
-sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% nrow() # 900
-sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% ncol() # 36
+sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% nrow() # 945
+sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% ncol() # 40
 
 # check country/year
 sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% count(country) %>% print(n = nrow(.))
@@ -3913,7 +4312,8 @@ sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>%
         filter(country == "Ukraine") %>%
         # filter(country == "Georgia") %>%
         # filter(country == "Belarus") %>%
-        select(country, year, first_year_w_breach_since_2010, last_year_w_breach_since_2010, breach_flag, values) 
+        select(country, year, first_year_w_breach_since_2010, last_year_w_breach_since_2010, breach_flag, values) %>%
+        print(n = nrow(.))
 
 # check breach_flag
 sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% skim(breach_flag, values)
@@ -3934,8 +4334,8 @@ sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line() +
-        scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line(size = 1) +
+        scale_x_continuous(breaks = seq(from = 2010, to = 2021, by = 1))
 
 
 #////////////////
@@ -4000,7 +4400,7 @@ sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% ncol() # 36
 
 # load sub_obj_2_1_msi_professional_journalism ####
 
-# for reference, the new VIBE dataset will replace MSI, but VIBE only has 2021 data
+# for reference, the new VIBE dataset will replace MSI, but VIBE only has 2020-2021 condition_year data
 # below is the crosswalk of old MSI dimensions to new VICE dimensions from VIBE's report (also in methodology section on dashboard)
 # https://vibe.irex.org/
 # https://www.irex.org/sites/default/files/pdf/vibrant-information-barometer-2021.pdf
@@ -4021,6 +4421,8 @@ sub_obj_1_3_russian_supported_breach_of_territorial_integrity %>% ncol() # 36
 # https://www.irex.org/sites/default/files/pdf/media-sustainability-index-europe-eurasia-2019-full.pdf
 # https://vibe.irex.org/
 
+# note that MSI had 21 countries, VIBE had 13 in condition_year 2020, and 18 in condition_year 2021
+
 # note that raw irex_msi data was copy/pasted together
 sub_obj_2_1_msi_professional_journalism <- read_excel(path = "data/irex_msi/irex_msi_data_cleaned.xlsx", sheet = "Sheet1") %>%
         mutate(report_year = year,
@@ -4031,19 +4433,21 @@ sub_obj_2_1_msi_professional_journalism <- read_excel(path = "data/irex_msi/irex
                professional_journalism = `Obj. 2`,
                plurality_of_news = `Obj. 3`,
                business_management = `Obj. 4`,
-               supporting_institutions = `Obj. 5`) %>% 
+               supporting_institutions = `Obj. 5`,
+               msi_overall = "Average") %>% 
         rename(sub_obj_2_1_msi_professional_journalism = "professional_journalism") %>%
         select(country_name, year, report_year, sub_obj_2_1_msi_professional_journalism) %>% 
         pivot_longer(cols = -c(country_name, year, report_year), names_to = "indicator_name", values_to = "values") %>%
         mutate(values = values * 10,
-                high_value_is_good_outcome_flag = 1,
-                country_name = case_when(country_name == "Bosnia & Herzegovina" ~ "BiH",
+               high_value_is_good_outcome_flag = 1,
+               country_name = case_when(country_name == "Bosnia & Herzegovina" ~ "BiH",
                                         country_name == "Macedonia" ~ "N. Macedonia",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
-                                        TRUE ~ country_name))
+                                        TRUE ~ country_name)) %>%
+        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag)
 
 # get vibe
-vibe_principle_1_info_quality <- read_excel(path = "data/irex_msi/vibe-scores-2021.xlsx", sheet = "VIBE 2021", skip = 1) %>%
+vibe_principle_1_info_quality <- read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2021", skip = 1) %>%
         rename(country_name = "...1", values = `Principle 1`) %>%
         filter(country_name != "Country Name") %>%
         select(country_name, values) %>%
@@ -4056,7 +4460,23 @@ vibe_principle_1_info_quality <- read_excel(path = "data/irex_msi/vibe-scores-20
                                         country_name == "Macedonia" ~ "N. Macedonia",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
                                         TRUE ~ country_name)) %>%
-        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag)
+        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag) %>%
+        bind_rows(.,
+                  read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2022", skip = 1) %>%
+                          rename(country_name = "...1", values = `Principle 1`) %>%
+                          filter(country_name != "Country Name") %>%
+                          select(country_name, values) %>%
+                          mutate(report_year = 2022,
+                                 year = 2021,
+                                 values = as.numeric(values),
+                                 indicator_name = "sub_obj_2_1_msi_professional_journalism",
+                                 high_value_is_good_outcome_flag = 1,
+                                 country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                          country_name == "Macedonia" ~ "N. Macedonia",
+                                                          country_name == "North Macedonia" ~ "N. Macedonia",
+                                                          country_name == "Kazahkstan" ~ "Kazakhstan",
+                                                          TRUE ~ country_name)) %>%
+                          select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag))
 
 
 # combine msi and vibe
@@ -4071,10 +4491,10 @@ sub_obj_2_1_msi_professional_journalism <- sub_obj_2_1_msi_professional_journali
 # note msi has 20 countries for 2001-2007, then 21 countries for 2008-2019
 sub_obj_2_1_msi_professional_journalism
 sub_obj_2_1_msi_professional_journalism %>% glimpse()
-sub_obj_2_1_msi_professional_journalism %>% nrow() # 385
+sub_obj_2_1_msi_professional_journalism %>% nrow() # 403
 sub_obj_2_1_msi_professional_journalism %>% ncol() # 6
 
-
+sub_obj_2_1_msi_professional_journalism %>% count(country_name) # 21
 sub_obj_2_1_msi_professional_journalism %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_msi_professional_journalism %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_1_msi_professional_journalism %>% skim()
@@ -4106,8 +4526,8 @@ sub_obj_2_1_msi_professional_journalism <- sub_obj_2_1_msi_professional_journali
 # inspect
 sub_obj_2_1_msi_professional_journalism
 sub_obj_2_1_msi_professional_journalism %>% glimpse()
-sub_obj_2_1_msi_professional_journalism %>% nrow() # 900
-sub_obj_2_1_msi_professional_journalism %>% ncol() # 31
+sub_obj_2_1_msi_professional_journalism %>% nrow() # 945
+sub_obj_2_1_msi_professional_journalism %>% ncol() # 35
 
 # check country/year
 sub_obj_2_1_msi_professional_journalism %>% count(country) %>% print(n = nrow(.))
@@ -4158,48 +4578,44 @@ sub_obj_2_1_msi_professional_journalism %>% group_by(country) %>% skim(values)
 
 
 # impute 2019 values as midpoint of 2018 MSI and 2020 VIBE
-# manually assign the CARs the eurasia avg, since this will avoid it's earlier MSI values from being extended during imputation 
-# to fill all the missing VIBE values 
+# note, now that VIBE has 2021 values for CARs, they will get 2018-2021 interpolated values for missing 2019/2020 values
 sub_obj_2_1_msi_professional_journalism <- sub_obj_2_1_msi_professional_journalism %>%
         mutate(values_2018 = case_when(year == 2018 ~ values, 
                                        TRUE ~ NA_real_),
                values_2020 = case_when(year == 2020 ~ values, 
+                                       TRUE ~ NA_real_),
+               values_2021 = case_when(year == 2021 ~ values, 
                                        TRUE ~ NA_real_)) %>%
         group_by(country) %>% 
         fill(values_2018, .direction = "updown") %>%
         fill(values_2020, .direction = "updown") %>%
+        fill(values_2021, .direction = "updown") %>%
         ungroup() %>%
-        mutate(values = case_when(year == 2019 ~ ((values_2020 - values_2018) / 2) + values_2018,
-                                  TRUE ~ values)) %>%
-        group_by(mcp_grouping, year) %>%
-        mutate(regional_annual_avg = mean(values, na.rm = TRUE)) %>%
-        ungroup() %>%
-        mutate(eurasia_annual_avg = case_when(mcp_grouping == "E&E Eurasia" ~ regional_annual_avg,
-                                       TRUE ~ NA_real_)) %>%
-        group_by(year) %>% 
-        fill(eurasia_annual_avg, .direction = "updown") %>%
-        ungroup() %>%
-        mutate(values = case_when(mcp_grouping == "CARs" & year >= 2019 & is.na(values) ~ eurasia_annual_avg,
-                                  TRUE ~ values))
+        mutate(values = case_when((year == 2019) & (mcp_grouping != "CARs") & (is.na(values)) ~ 
+                                          ((values_2020 - values_2018) / 2) + values_2018,
+                                  (year == 2019) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3) + values_2018,
+                                  (year == 2020) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3)*2 + values_2018,
+                                  TRUE ~ values)) 
         
         
-
-
 #/////////////////////
 
 
 # inspect
 sub_obj_2_1_msi_professional_journalism
 sub_obj_2_1_msi_professional_journalism %>% glimpse()
-sub_obj_2_1_msi_professional_journalism %>% nrow() # 900
-sub_obj_2_1_msi_professional_journalism %>% ncol() # 35
+sub_obj_2_1_msi_professional_journalism %>% nrow() # 945
+sub_obj_2_1_msi_professional_journalism %>% ncol() # 38
 
 # inspect
 sub_obj_2_1_msi_professional_journalism %>%
-        select(country, mcp_grouping, year, values, values_2018, values_2020, regional_annual_avg, eurasia_annual_avg) %>% 
+        select(country, mcp_grouping, year, values, values_2018, values_2020, values_2021) %>% 
         filter(mcp_grouping != "EU-15") %>% 
         filter(mcp_grouping == "CARs") %>%
-        print(n = 30) 
+        filter(year >= 2010) %>%
+        print(n = 50) 
 
 
 #/////////////////////
@@ -4213,7 +4629,7 @@ sub_obj_2_1_msi_professional_journalism %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() +
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) +
         scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
 
 
@@ -4255,9 +4671,15 @@ test_values_sub_obj_2_1_msi_professional_journalism <- function() {
         
         # 6
         expect_equal(object = sub_obj_2_1_msi_professional_journalism %>% 
+                             filter(country == "Tajikistan", year == 2019) %>%
+                             pull(values),
+                     expected = ((14 - (1.7 * 10)) / 3) + (1.7 * 10))
+        
+        # 6
+        expect_equal(object = sub_obj_2_1_msi_professional_journalism %>% 
                              filter(country == "Tajikistan", year == 2020) %>%
                              pull(values),
-                     expected = mean(c(21, 11, 18, 18, 20, 20)))
+                     expected = ((14 - (1.7 * 10)) / 3)*2 + (1.7 * 10))
 }
 test_values_sub_obj_2_1_msi_professional_journalism()
 
@@ -4277,7 +4699,7 @@ sub_obj_2_1_msi_professional_journalism <- read_csv(file = "data/fmir/sub_obj_2_
 
 # load sub_obj_2_1_aiddata_content_producers ####
 
-sub_obj_2_1_aiddata_content_producers <- read_csv(file = "data/aiddata/mrmi/usaid_mrmiprelim09162021.csv") %>% 
+sub_obj_2_1_aiddata_content_producers <- read_csv(file = "data/aiddata/mrmi/mrmi_dataset.csv") %>% 
         rename(country_name = country) %>% 
         mutate(values = I_cp,
                indicator_name = "sub_obj_2_1_aiddata_content_producers",
@@ -4294,16 +4716,15 @@ sub_obj_2_1_aiddata_content_producers <- read_csv(file = "data/aiddata/mrmi/usai
 # inspect
 sub_obj_2_1_aiddata_content_producers
 sub_obj_2_1_aiddata_content_producers %>% glimpse()
-sub_obj_2_1_aiddata_content_producers %>% nrow() # 170
-sub_obj_2_1_aiddata_content_producers %>% ncol() # 9
+sub_obj_2_1_aiddata_content_producers %>% nrow() # 187
+sub_obj_2_1_aiddata_content_producers %>% ncol() # 18
 
 # check values
 sub_obj_2_1_aiddata_content_producers %>% count(year)
-sub_obj_2_1_aiddata_content_producers %>% count(country_name)
+sub_obj_2_1_aiddata_content_producers %>% count(country_name) # 17
 sub_obj_2_1_aiddata_content_producers %>% skim(values, I_cp)
 
 # check county names
-# note FD index does not have data for kosovo, or monetenegro
 sub_obj_2_1_aiddata_content_producers %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name)
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% 
@@ -4334,8 +4755,8 @@ sub_obj_2_1_aiddata_content_producers <- sub_obj_2_1_aiddata_content_producers %
 # inspect
 sub_obj_2_1_aiddata_content_producers
 sub_obj_2_1_aiddata_content_producers %>% glimpse()
-sub_obj_2_1_aiddata_content_producers %>% nrow() # 900
-sub_obj_2_1_aiddata_content_producers %>% ncol() # 34
+sub_obj_2_1_aiddata_content_producers %>% nrow() # 945
+sub_obj_2_1_aiddata_content_producers %>% ncol() # 47
 
 # inspect
 sub_obj_2_1_aiddata_content_producers %>% distinct(country) %>% nrow() # 45
@@ -4344,7 +4765,7 @@ sub_obj_2_1_aiddata_content_producers %>% count(indicator_name) # 900 (20 years 
 sub_obj_2_1_aiddata_content_producers %>% count(year)
 
 # check values
-# Missing all values (2010-2019) for U.S., EU-15, Russia, and E&E graduates (except Moldova)
+# Missing all values (2010-2019) for U.S., EU-15, Russia, and E&E graduates (except Montenegro)
 sub_obj_2_1_aiddata_content_producers %>% skim(values, I_cp)
 sub_obj_2_1_aiddata_content_producers %>% filter(is.na(values)) %>% count(country) %>% 
         arrange(desc(n)) %>% print(n = nrow(.))
@@ -4361,11 +4782,11 @@ sub_obj_2_1_aiddata_content_producers %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_2_1_aiddata_content_producers %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
-        filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -4378,31 +4799,31 @@ test_values_sub_obj_2_1_aiddata_content_producers <- function() {
         expect_equal(object = sub_obj_2_1_aiddata_content_producers %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(values),
-                     expected = 70.014862)
+                     expected = 73.974716)
         
         # 2
         expect_equal(object = sub_obj_2_1_aiddata_content_producers %>% 
                              filter(country == "Kosovo", year == 2016) %>%
                              pull(values),
-                     expected = 71.859406)
+                     expected = 74.264008)
         
         # 3
         expect_equal(object = sub_obj_2_1_aiddata_content_producers %>% 
                              filter(country == "Belarus", year == 2010) %>%
                              pull(values),
-                     expected = 19.973078)
+                     expected = 31.808813)
         
         # 4
         expect_equal(object = sub_obj_2_1_aiddata_content_producers %>% 
-                             filter(country == "Moldova", year == 2019) %>%
+                             filter(country == "Moldova", year == 2020) %>%
                              pull(values),
-                     expected = 69.71653)
+                     expected = 65.839996)
         
         # 5
         expect_equal(object = sub_obj_2_1_aiddata_content_producers %>% 
                              filter(country == "Serbia", year == 2013) %>%
                              pull(values),
-                     expected = 68.040215)
+                     expected = 64.495369)
 }
 test_values_sub_obj_2_1_aiddata_content_producers()
 
@@ -4418,8 +4839,8 @@ sub_obj_2_1_aiddata_content_producers <- read.csv(file = "data/fmir/sub_obj_2_1_
 # inspect
 sub_obj_2_1_aiddata_content_producers
 sub_obj_2_1_aiddata_content_producers %>% glimpse()
-sub_obj_2_1_aiddata_content_producers %>% nrow() # 900
-sub_obj_2_1_aiddata_content_producers %>% ncol() # 34
+sub_obj_2_1_aiddata_content_producers %>% nrow() # 945
+sub_obj_2_1_aiddata_content_producers %>% ncol() # 47
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -4459,6 +4880,10 @@ sub_obj_2_1_vdem_media_critical <- vdem %>% select(country_name, year, v2mecrit)
 # inspect
 sub_obj_2_1_vdem_media_critical
 sub_obj_2_1_vdem_media_critical %>% glimpse()
+sub_obj_2_1_vdem_media_critical %>% nrow() # 3743
+sub_obj_2_1_vdem_media_critical %>% ncol() # 5
+
+sub_obj_2_1_vdem_media_critical %>% count(year) %>% print(n = nrow(.))        
 var_info("v2mecrit")
 sub_obj_2_1_vdem_media_critical %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_media_critical %>% arrange(values) %>% distinct(country_name)
@@ -4489,8 +4914,8 @@ sub_obj_2_1_vdem_media_critical <- sub_obj_2_1_vdem_media_critical %>%
 # inspect
 sub_obj_2_1_vdem_media_critical
 sub_obj_2_1_vdem_media_critical %>% glimpse()
-sub_obj_2_1_vdem_media_critical %>% nrow() # 900
-sub_obj_2_1_vdem_media_critical %>% ncol() # 29
+sub_obj_2_1_vdem_media_critical %>% nrow() # 945
+sub_obj_2_1_vdem_media_critical %>% ncol() # 34
 
 # check country/year
 sub_obj_2_1_vdem_media_critical %>% distinct(country) %>% nrow() # 45
@@ -4504,11 +4929,11 @@ sub_obj_2_1_vdem_media_critical %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_2_1_vdem_media_critical %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_media_critical %>% group_by(indicator_name) %>% 
@@ -4563,6 +4988,10 @@ sub_obj_2_1_vdem_media_bias <- vdem %>% select(country_name, year, v2mebias) %>%
 # inspect
 sub_obj_2_1_vdem_media_bias
 sub_obj_2_1_vdem_media_bias %>% glimpse()
+sub_obj_2_1_vdem_media_bias %>% nrow() # 3743
+sub_obj_2_1_vdem_media_bias %>% ncol() # 5
+
+sub_obj_2_1_vdem_media_bias %>% count(year) %>% print(n = nrow(.))
 var_info("v2mebias")
 sub_obj_2_1_vdem_media_bias %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_media_bias %>% arrange(values) %>% distinct(country_name)
@@ -4593,8 +5022,8 @@ sub_obj_2_1_vdem_media_bias <- sub_obj_2_1_vdem_media_bias %>%
 # inspect
 sub_obj_2_1_vdem_media_bias
 sub_obj_2_1_vdem_media_bias %>% glimpse()
-sub_obj_2_1_vdem_media_bias %>% nrow() # 900
-sub_obj_2_1_vdem_media_bias %>% ncol() # 29
+sub_obj_2_1_vdem_media_bias %>% nrow() # 945
+sub_obj_2_1_vdem_media_bias %>% ncol() # 34
 
 # check country/year
 sub_obj_2_1_vdem_media_bias %>% distinct(country) %>% nrow() # 45
@@ -4607,12 +5036,12 @@ sub_obj_2_1_vdem_media_bias %>% group_by(year) %>% skim(values)
 
 # plot
 sub_obj_2_1_vdem_media_bias %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_media_bias %>% group_by(indicator_name) %>% 
@@ -4667,6 +5096,10 @@ sub_obj_2_1_vdem_media_corrupt <- vdem %>% select(country_name, year, v2mecorrpt
 # inspect
 sub_obj_2_1_vdem_media_corrupt
 sub_obj_2_1_vdem_media_corrupt %>% glimpse()
+sub_obj_2_1_vdem_media_corrupt %>% nrow() # 3743
+sub_obj_2_1_vdem_media_corrupt %>% ncol() # 5
+
+sub_obj_2_1_vdem_media_corrupt %>% count(year) %>% print(n = nrow(.))
 var_info("v2mecorrpt")
 sub_obj_2_1_vdem_media_corrupt %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_media_corrupt %>% arrange(values) %>% distinct(country_name)
@@ -4697,8 +5130,8 @@ sub_obj_2_1_vdem_media_corrupt <- sub_obj_2_1_vdem_media_corrupt %>%
 # inspect
 sub_obj_2_1_vdem_media_corrupt
 sub_obj_2_1_vdem_media_corrupt %>% glimpse()
-sub_obj_2_1_vdem_media_corrupt %>% nrow() # 900
-sub_obj_2_1_vdem_media_corrupt %>% ncol() # 29
+sub_obj_2_1_vdem_media_corrupt %>% nrow() # 945
+sub_obj_2_1_vdem_media_corrupt %>% ncol() # 34
 
 # check country/year
 sub_obj_2_1_vdem_media_corrupt %>% distinct(country) %>% nrow() # 45
@@ -4712,11 +5145,11 @@ sub_obj_2_1_vdem_media_corrupt %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_2_1_vdem_media_corrupt %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_media_corrupt %>% group_by(indicator_name) %>% 
@@ -4771,9 +5204,10 @@ sub_obj_2_1_vdem_foreign_gov_dissem_false_info <- vdem %>% select(country_name, 
 # inspect
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% glimpse()
-sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% nrow() # 3564
+sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% nrow() # 3743
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% ncol() # 5
 
+sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% count(year) %>% print(n = nrow(.))
 var_info("v2smfordom")
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% arrange(values) %>% distinct(country_name)
@@ -4804,8 +5238,8 @@ sub_obj_2_1_vdem_foreign_gov_dissem_false_info <- sub_obj_2_1_vdem_foreign_gov_d
 # inspect
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% glimpse()
-sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% nrow() # 900
-sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% ncol() # 30
+sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% nrow() # 945
+sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% ncol() # 34
 
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% distinct(country) %>% nrow() # 45
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
@@ -4816,12 +5250,12 @@ sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% group_by(year) %>% skim(value
 
 # plot
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% group_by(indicator_name) %>% 
@@ -4841,8 +5275,8 @@ sub_obj_2_1_vdem_foreign_gov_dissem_false_info <- read_csv(file = "data/fmir/sub
 # inspect
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info
 sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% glimpse()
-sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% nrow() # 900
-sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% ncol() # 30
+sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% nrow() # 945
+sub_obj_2_1_vdem_foreign_gov_dissem_false_info %>% ncol() # 34
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -4882,9 +5316,10 @@ sub_obj_2_1_vdem_foreign_gov_advertising <- vdem %>% select(country_name, year, 
 # inspect
 sub_obj_2_1_vdem_foreign_gov_advertising
 sub_obj_2_1_vdem_foreign_gov_advertising %>% glimpse()
-sub_obj_2_1_vdem_foreign_gov_advertising %>% nrow() # 3564
+sub_obj_2_1_vdem_foreign_gov_advertising %>% nrow() # 3743
 sub_obj_2_1_vdem_foreign_gov_advertising %>% ncol() # 5
 
+sub_obj_2_1_vdem_foreign_gov_advertising %>% count(year) %>% print(n = nrow(.))
 var_info("v2smforads")
 sub_obj_2_1_vdem_foreign_gov_advertising %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_foreign_gov_advertising %>% arrange(values) %>% distinct(country_name)
@@ -4915,8 +5350,8 @@ sub_obj_2_1_vdem_foreign_gov_advertising <- sub_obj_2_1_vdem_foreign_gov_adverti
 # inspect
 sub_obj_2_1_vdem_foreign_gov_advertising
 sub_obj_2_1_vdem_foreign_gov_advertising %>% glimpse()
-sub_obj_2_1_vdem_foreign_gov_advertising %>% nrow() # 900
-sub_obj_2_1_vdem_foreign_gov_advertising %>% ncol() # 30
+sub_obj_2_1_vdem_foreign_gov_advertising %>% nrow() # 945
+sub_obj_2_1_vdem_foreign_gov_advertising %>% ncol() # 34
 
 sub_obj_2_1_vdem_foreign_gov_advertising %>% distinct(country) %>% nrow() # 45
 sub_obj_2_1_vdem_foreign_gov_advertising %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
@@ -4933,7 +5368,7 @@ sub_obj_2_1_vdem_foreign_gov_advertising %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_foreign_gov_advertising %>% group_by(indicator_name) %>% 
@@ -4954,8 +5389,8 @@ sub_obj_2_1_vdem_foreign_gov_advertising <- read_csv(file = "data/fmir/sub_obj_2
 # inspect
 sub_obj_2_1_vdem_foreign_gov_advertising
 sub_obj_2_1_vdem_foreign_gov_advertising %>% glimpse()
-sub_obj_2_1_vdem_foreign_gov_advertising %>% nrow() # 900
-sub_obj_2_1_vdem_foreign_gov_advertising %>% ncol() # 30
+sub_obj_2_1_vdem_foreign_gov_advertising %>% nrow() # 945
+sub_obj_2_1_vdem_foreign_gov_advertising %>% ncol() # 34
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -4995,9 +5430,10 @@ sub_obj_2_1_vdem_gov_dissem_false_info_domestically <- vdem %>% select(country_n
 # inspect
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% glimpse()
-sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% nrow() # 3564
+sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% nrow() # 3743
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% ncol() # 5
 
+sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% count(year) %>% print(n = nrow(.))
 var_info("v2smgovdom")
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% arrange(values) %>% distinct(country_name)
@@ -5028,8 +5464,8 @@ sub_obj_2_1_vdem_gov_dissem_false_info_domestically <- sub_obj_2_1_vdem_gov_diss
 # inspect
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% glimpse()
-sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% nrow() # 900
-sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% ncol() # 30
+sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% nrow() # 945
+sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% ncol() # 34
 
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% distinct(country) %>% nrow() # 45
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
@@ -5046,7 +5482,7 @@ sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% group_by(indicator_name) %>% 
@@ -5066,8 +5502,8 @@ sub_obj_2_1_vdem_gov_dissem_false_info_domestically <- read_csv(file = "data/fmi
 # inspect
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically
 sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% glimpse()
-sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% nrow() # 900
-sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% ncol() # 30
+sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% nrow() # 945
+sub_obj_2_1_vdem_gov_dissem_false_info_domestically %>% ncol() # 34
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -5107,9 +5543,10 @@ sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically <- vdem %>% se
 # inspect
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% glimpse()
-sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% nrow() # 3564
+sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% nrow() # 3743
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% ncol() # 5
 
+sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% count(year) %>% print(n = nrow(.))
 var_info("v2smpardom")
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% arrange(values) %>% distinct(country_name)
@@ -5140,8 +5577,8 @@ sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically <- sub_obj_2_1
 # inspect
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% glimpse()
-sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% nrow() # 900
-sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% ncol() # 30
+sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% nrow() # 945
+sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% ncol() # 34
 
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% distinct(country) %>% nrow() # 45
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
@@ -5154,11 +5591,11 @@ sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% group_by(y
 # plot
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
-        filter(mcp_grouping == "E&E graduates") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% group_by(indicator_name) %>% 
@@ -5172,14 +5609,15 @@ sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% group_by(i
 
 
 # read/write
-# sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% write_csv(file = "data/fmir/sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically.csv")
+# sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% 
+        # write_csv(file = "data/fmir/sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically.csv")
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically <- read_csv(file = "data/fmir/sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically.csv")
 
 # inspect
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically
 sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% glimpse()
-sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% nrow() # 900
-sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% ncol() # 30
+sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% nrow() # 945
+sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% ncol() # 34
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -5300,7 +5738,7 @@ sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically %>% ncol() # 3
 # for sub_1_3_icews_socio_political_hostility_from_russia
 country_list <- country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% pull(country)
 country_list <- c(country_list, "Moldova, Republic of", "Czech Republic", "the former Yugoslav Republic of Macedonia",
-                  "United States", "United Kingdom", "Russian Federation")
+                  "United States", "United Kingdom", "Russian Federation", "Bosnia and Herzegovina")
 country_list
 country_list %>% length() # 51
 
@@ -5329,16 +5767,16 @@ read_tsv(file = "data/icews/data/events.2010.20150313084533.tab") %>%
         # read_tsv(file = "data/icews/data/events.2019.20200427085336.tab") %>%
         # read_tsv(file = "data/icews/data/events.2020.20200506093336.tab") %>%
         
-        # look at all records where source/target_name has regex match to country_list_collapsed
-        # filter(str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) | 
-        #        str_detect(string = `Target Name`, pattern = regex(country_list_collapsed))) %>%
+# look at all records where source/target_name has regex match to country_list_collapsed
+# filter(str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) | 
+#        str_detect(string = `Target Name`, pattern = regex(country_list_collapsed))) %>%
 
-        # look at only records where source/target_name has regex match to country_list_collapsed, and 
-        # source/target_country does not exactly equal an element from country_list
-        filter((str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) &
-                        !(`Source Country` %in% country_list)) | 
-                       (str_detect(string = `Target Name`, pattern = regex(country_list_collapsed)) &
-                                !(`Target Country` %in% country_list))) %>%
+# look at only records where source/target_name has regex match to country_list_collapsed, and 
+# source/target_country does not exactly equal an element from country_list
+filter((str_detect(string = `Source Name`, pattern = regex(country_list_collapsed)) &
+                !(`Source Country` %in% country_list)) | 
+               (str_detect(string = `Target Name`, pattern = regex(country_list_collapsed)) &
+                        !(`Target Country` %in% country_list))) %>%
         
         # look specifically for cases where Russia is cited but the source/target_country doesn't = "Russian Federation"
         # filter(str_detect(string = `Source Name`, pattern = regex("Russia")) |
@@ -5384,7 +5822,7 @@ icews_ee_region_2015 <- read_tsv(file = "data/icews/data/events.2015.20180710092
 icews_ee_region_2015 %>% glimpse()
 
 
-icews_ee_region_2016 <- read_tsv(file = "data/icews/data/events.2016.20180710092843.tab") %>%
+icews_ee_region_2016 <- read_tsv(file = "data/icews/data/events.2016.20180710092843.tsv") %>%
         filter(`Source Country` %in% country_list | `Target Country` %in% country_list)
 icews_ee_region_2016 %>% glimpse()
 
@@ -5404,9 +5842,16 @@ icews_ee_region_2019 <- read_tsv(file = "data/icews/data/events.2019.20200427085
 icews_ee_region_2019 %>% glimpse()
 
 
-icews_ee_region_2020 <- read_tsv(file = "data/icews/data/events.2020.20200506093336.tab") %>%
-        filter(`Source Country` %in% country_list | `Target Country` %in% country_list)
+icews_ee_region_2020 <- read_tsv(file = "data/icews/data/events.2020.20220623.tab") %>%
+        filter(`Source Country` %in% country_list | `Target Country` %in% country_list) %>%
+        mutate(`CAMEO Code` = as.character(`CAMEO Code`))
 icews_ee_region_2020 %>% glimpse()
+
+
+icews_ee_region_2021 <- read_tsv(file = "data/icews/data/events.2021.20220623.tab") %>%
+        filter(`Source Country` %in% country_list | `Target Country` %in% country_list) %>%
+        mutate(`CAMEO Code` = as.character(`CAMEO Code`))
+icews_ee_region_2021 %>% glimpse()
 
 
 #//////////////////////////////
@@ -5509,6 +5954,15 @@ test_icews_ee_region_variables_and_dates <- function() {
         expect_equal(object = icews_ee_region_2020 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
                      expected = 2020)
         
+        # 2021
+        expect_equal(object = tibble(names = names(icews_ee_region_2021)) %>% bind_cols(tibble(names_2010 = icews_ee_region_2010_names)) %>%
+                             mutate(name_match_flag = case_when(names == names_2010 ~ 1, 
+                                                                TRUE ~ 0)) %>% 
+                             distinct(name_match_flag) %>% pull(name_match_flag),
+                     expected = 1)
+        expect_equal(object = icews_ee_region_2021 %>% mutate(year = year(`Event Date`)) %>% count(year) %>% pull(year),
+                     expected = 2021)
+        
         # confirm that no story_id ever has events classified in multiple years 
         expect_equal(object = icews_ee_region_2010 %>% 
                              bind_rows(., icews_ee_region_2011) %>%
@@ -5521,6 +5975,7 @@ test_icews_ee_region_variables_and_dates <- function() {
                              bind_rows(., icews_ee_region_2018) %>%
                              bind_rows(., icews_ee_region_2019) %>%
                              bind_rows(., icews_ee_region_2020) %>%
+                             bind_rows(., icews_ee_region_2021) %>%
                              mutate(year = year(`Event Date`)) %>%
                              distinct(year, `Story ID`) %>% count(`Story ID`) %>% distinct(n) %>% pull(n),
                      expected = 1)
@@ -5543,6 +5998,7 @@ icews <- icews_ee_region_2010 %>%
         bind_rows(., icews_ee_region_2018) %>%
         bind_rows(., icews_ee_region_2019) %>%
         bind_rows(., icews_ee_region_2020) %>%
+        bind_rows(., icews_ee_region_2021) %>%
         rename(event_id = `Event ID`, 
                event_date = `Event Date`,
                source_name = `Source Name`,
@@ -5612,15 +6068,15 @@ icews <- icews_ee_region_2010 %>%
 # inspect
 icews
 icews %>% glimpse()
-icews %>% nrow() # 2756697
+icews %>% nrow() # 3178049
 icews %>% ncol() # 25
 
 # inspect values
-# note there are 219937 records (7%) with NA for either source/target_country
+# note there are 259461 records (8%) with NA for either source/target_country
 # these NA values are not problematic though, since they could reasonably be stories where "the world" is the 
 # generalized source or target actor, and so no specific country is listed
 icews %>% 
-        filter(is.na(source_country) | is.na(target_country)) %>% nrow() # 219937
+        filter(is.na(source_country) | is.na(target_country)) %>% nrow() # 259461
 icews %>% filter(is.na(source_country) | is.na(target_country)) %>%
         count(source_country, target_country) %>% arrange(desc(n))
 
@@ -5684,7 +6140,8 @@ icews <- icews %>%
                 "RIA Novosti"
                 # "The Moscow Times",
                 # "The Moscow News",
-        ))
+        )) %>%
+        distinct()
 
 
 #////////////////////////
@@ -5693,22 +6150,23 @@ icews <- icews %>%
 # inspect
 icews
 icews %>% glimpse()
-icews %>% nrow() # 257138 (~9.3% of 2.7 mil total stories about ee_region countries)
+icews %>% nrow() # 277059 (~8.7% of 3.1 mil total stories about ee_region countries)
 icews %>% ncol() # 25
 
-# records are unique at the event_id/event_date level, so each record is a unique event_id/event_date
+# note that prior to calling distinct, records are almost unique at event_id/event_date, only 64 dupes; 
+# will call distinct in code above, which then leads to unique records at event_id/event_date level
 # note the ICEWS readme data dictionary says that story_id is unique internal indicator specifying news story
 # but there can be multiple event records in data for a given story_id (max is 42 event records for one story_id)
-icews %>% nrow() # 257138
-icews %>% count(event_id, event_date) %>% nrow() # 257138
-icews %>% count(event_id, event_date, story_id) %>% nrow() # 257138
-icews %>% count(story_id) %>% nrow() # 118104
+icews %>% nrow() # 277059
+icews %>% count(event_id, event_date) %>% nrow() # 277059
+icews %>% count(event_id, event_date, story_id) %>% nrow() # 277059
+icews %>% count(story_id) %>% nrow() # 127370
 icews %>% count(story_id) %>% arrange(desc(n))
 icews %>% count(story_id) %>% 
         ggplot(data = ., mapping = aes(x = n)) + geom_histogram()
 
-# note that itar has stories from 2010-2020 (except 2017); ria novosti from 2010-2014, and 
-# rossiya segodnya from 2015-2020 (except 2017)
+# note that itar has stories from 2010-2021 (except 2017); ria novosti from 2010-2014, and 
+# rossiya segodnya from 2015-2019 (except 2017)
 # there is a large overall increase from 2014 to 2015 because rossiya published many more stories in 2015 than novosti did in 2014
 # but to some extent the creation of rossiya as a national champion may have truly resulted in more stories being published
 # and reflect a generally increased russian push to operate in information warfare space;
@@ -5746,6 +6204,88 @@ icews_ee_region_2017_raw %>%
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
+# save icews records from russian state media
+# icews %>% write_csv("data/icews/data/russian_state_media_event_records.csv")
+russian_state_media_event_records <- read_csv("data/icews/data/russian_state_media_event_records.csv")
+# icews <- russian_state_media_event_records
+
+# inspect
+icews
+icews %>% glimpse()
+icews %>% nrow() # 277059
+
+russian_state_media_event_records 
+russian_state_media_event_records %>% glimpse()
+russian_state_media_event_records %>% nrow() # 277059
+
+
+#///////////////////////////////
+
+
+# plot cameo_codes
+
+# get current_country/year
+current_country <- "Albania"
+current_year <- 2019
+
+sub_obj_2_1_icews_russian_state_media_focus_event_records %>%
+        filter(source_country == current_country | target_country == current_country, year == current_year) %>%
+        select(icews_id, publisher, event_id, year, source_country, target_country, 
+               cameo_bin, cameo_bin_desc, event_text, intensity, event_sentence) %>%
+        mutate(country = current_country) %>%
+        add_count(cameo_bin_desc, name = "cameo_bin_desc_count") %>%
+        group_by(cameo_bin_desc) %>%
+        mutate(avg_intensity = mean(intensity, na.rm = TRUE)) %>%
+        ungroup() %>%
+        arrange(cameo_bin_desc_count, cameo_bin_desc) %>%
+        # select(cameo_bin, cameo_bin_desc, cameo_bin_desc_count, intensity, avg_intensity) %>%
+        select(cameo_bin, cameo_bin_desc, cameo_bin_desc_count, avg_intensity) %>%
+        distinct() %>%
+        arrange(cameo_bin) %>%
+        ggplot(data = ., mapping = aes(x = fct_reorder(.f = cameo_bin_desc, .x = cameo_bin, .desc = FALSE),
+                                       y = cameo_bin_desc_count)) +
+        geom_col() + 
+        theme(
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 7, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), hjust = 1, angle = 45)
+        )
+
+
+#///////////////////////////////
+
+
+# plot wordcloud
+
+# get current_country/year
+current_country <- "Azerbaijan"
+current_year <- 2020
+
+# load stopwords
+data(stop_words)
+stop_words
+
+# plot 
+wordcloud_tbl <- sub_obj_2_1_icews_russian_state_media_focus_event_records %>%
+        filter(source_country == current_country | target_country == current_country, year == current_year) %>%
+        select(icews_id, publisher, event_id, year, source_country, target_country, 
+               cameo_bin, cameo_bin_desc, event_text, intensity, event_sentence) %>%
+        mutate(country = current_country) %>%
+        unnest_tokens(input = event_sentence, output = word) %>%
+        anti_join(., stop_words, by = "word") %>%
+        add_count(word, name = "freq") %>%
+        select(word, freq) %>%
+        distinct() %>%
+        mutate(word = factor(word)) %>%
+        filter(word != str_to_lower(current_country)) %>%
+        arrange(desc(freq))
+
+wordcloud_tbl
+wordcloud_tbl %>% wordcloud2()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
 # create icews_country_flags
 icews_country_flags <- map(.x = country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% 
                                    pull(country), 
@@ -5767,7 +6307,7 @@ icews_country_flags <- map(.x = country_crosswalk %>% filter(ee_region_flag == 1
 # inspect
 icews_country_flags
 icews_country_flags %>% glimpse()
-icews_country_flags %>% nrow() # 257138
+icews_country_flags %>% nrow() # 277059
 icews_country_flags %>% ncol() # 51
 
 # check values
@@ -5799,42 +6339,52 @@ test_icews_country_flags()
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# create sub_obj_2_1_icews_narratives_pushed_by_russian_state_media by 
+# create sub_obj_2_1_icews_russian_state_media_focus by 
 # summarizing icew_country_flags to get share_of_story_id_count_w_country
-# note that russia's story_id_count_w_country is manually set to NA because
-# otherwise russia has the highest story_id_count_w_country and will skew the normalization
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media <- icews_country_flags %>% 
-        select(-c(event_id, event_date, source_country, target_country)) %>%
-        pivot_longer(cols = -c(year, story_id), names_to = "country_flag", values_to = "values") %>%
+# note that russia and us event_id_count_w_country are manually set to NA because
+# otherwise they have the highest event_id_count_w_country and will skew the normalization
+sub_obj_2_1_icews_russian_state_media_focus <- icews_country_flags %>% 
+        select(-c(story_id, event_date, source_country, target_country)) %>%
+        pivot_longer(cols = -c(year, event_id), names_to = "country_flag", values_to = "values") %>%
         filter(values == 1) %>% 
-        distinct(year, story_id, country_flag) %>%
-        group_by(year) %>% count(country_flag, name = "story_id_count_w_country") %>%
-        ungroup() %>% mutate(country_name = str_replace(string = country_flag, pattern = "country_flag_", replacement = "")) %>%
-        select(year, country_name, story_id_count_w_country) %>%
-        mutate(story_id_count_w_country = case_when(country_name == "Russia" ~ NA_real_,
-                                                    TRUE ~ as.numeric(story_id_count_w_country))) %>%
-        left_join(., icews %>% distinct(year, story_id) %>% count(year, name = "story_id_count_annual_total"), by = "year") %>%
-        mutate(stories_w_country_as_share_of_annual_total = story_id_count_w_country / story_id_count_annual_total)
+        distinct(year, event_id, country_flag) %>%
+        group_by(year) %>% 
+        count(country_flag, name = "event_id_count_w_country") %>%
+        ungroup() %>% 
+        mutate(country_name = str_replace(string = country_flag, pattern = "country_flag_", replacement = "")) %>%
+        select(year, country_name, event_id_count_w_country) %>%
+        mutate(event_id_count_w_country = case_when(country_name %in% c("Russia", "U.S.") ~ NA_real_,
+                                                    TRUE ~ as.numeric(event_id_count_w_country))) %>%
+        left_join(., icews %>% distinct(year, event_id) %>% count(year, name = "event_id_count_annual_total"), by = "year") %>%
+        mutate(events_w_country_as_share_of_annual_total = event_id_count_w_country / event_id_count_annual_total)
 
 
 #//////////////////
 
 
 # inspect
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% glimpse()
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% nrow() # 445 (inspect country/years below)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% ncol() # 5
+sub_obj_2_1_icews_russian_state_media_focus
+sub_obj_2_1_icews_russian_state_media_focus %>% glimpse()
+sub_obj_2_1_icews_russian_state_media_focus %>% nrow() # 490 (inspect country/years below)
+sub_obj_2_1_icews_russian_state_media_focus %>% ncol() # 5
 
+# check event_id_count_annual_total
+sub_obj_2_1_icews_russian_state_media_focus %>% print(n = 50)
+sub_obj_2_1_icews_russian_state_media_focus %>% count(year, event_id_count_annual_total)
 
-# inspect story_id_w_country
-# only missing values are for russia, which were manually set to NA to avoid skewing normalization
-# minimum story_id_count_w_country is 1
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% skim(story_id_count_w_country)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
+# inspect event_id_w_country
+# only missing values are for russia and us, which were manually set to NA to avoid skewing normalization
+# minimum event_id_count_w_country is 1
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        filter(is.na(event_id_count_w_country)) %>% 
+        arrange(country_name, year) %>%
+        print(n = nrow(.)) 
+sub_obj_2_1_icews_russian_state_media_focus %>% skim(event_id_count_w_country)
+sub_obj_2_1_icews_russian_state_media_focus %>% 
         filter(country_name == "Russia")
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% arrange(year, desc(story_id_count_w_country)) %>%
-        group_by(year) %>% mutate(cumsum_stories_w_country_as_share_of_annual_total = cumsum(stories_w_country_as_share_of_annual_total)) %>%
+sub_obj_2_1_icews_russian_state_media_focus %>% arrange(year, desc(event_id_count_w_country)) %>%
+        group_by(year) %>% 
+        mutate(cumsum_events_w_country_as_share_of_annual_total = cumsum(events_w_country_as_share_of_annual_total)) %>%
         ungroup() %>% print(n = 50)
 
 
@@ -5842,8 +6392,6 @@ sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% arrange(year, des
 
 
 # inspect years not present for some countries
-# result: will manually add story_id_count_w_country = 0 in 2011 for bih, albania, croatia, and slovakia (also 2010 for bih)
-# because these country/years have no measured russian_media_stories, which means zero measured russian_media_narrative_pushed
 # all countries are missing 2017 because the 2017 icews file doesn't have russian media for some reason (inspected above) 
 # beyond that, only albania, croatia, slovakia, and bih have zero stories for other years
 # bih is missing stories for 2010, 2011, 2017
@@ -5852,114 +6400,140 @@ sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% arrange(year, des
 # slovakia is missing stories for 2011 and 2017
 # since 2011 seems to be the only other year where any country is missing a story, it maybe could be another issue, but
 # much less so since vast majority of countries do in fact have 2011 stories...
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% count(country_name) %>% arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% add_count(country_name) %>% 
+sub_obj_2_1_icews_russian_state_media_focus %>% count(country_name) %>% arrange(desc(n)) %>% print(n = nrow(.))
+sub_obj_2_1_icews_russian_state_media_focus %>% add_count(country_name) %>% 
         filter(n < 10) %>% arrange(n, country_name) %>% print(n = 50)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
-        filter(country_name %in% c("BiH", "Albania", "Croatia", "Slovakia"), year %in% c(2010, 2011, 2017)) %>%
-        select(country_name, year, story_id_count_w_country)
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        filter(is.na(event_id_count_w_country), 
+               year >= 2010) %>%
+        select(country, year, event_id_count_w_country) %>%
+        count(country) %>% arrange(desc(n))
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        filter(country %in% c("BiH", "Albania", "N. Macedonia", "Croatia", "Slovakia"), 
+               year >= 2010,
+               is.na(event_id_count_w_country)) %>%
+        select(country, year, event_id_count_w_country)
 
 
 #////////////////////////
 
 
-# inspect story_id_count_annual_total by year
-# result: will drop and impute for 2020; will impute for 2017, will use story_id_count as given, despite 2014/2015 increase
-# note that icews data only covers 2020 through to april; and in 2015 is when rossiya segodnya started; ria novosti ended in 2014
-# so using the story_id_count_w_country as metric may have some risk of non-comparability if 
+# inspect event_id_count_annual_total by year
+
+# note 2017 icews file has zero russian state media records for some reason, so will impute 2017 as linear trend completion
+# note that 2015 is when rossiya segodnya started; ria novosti ended in 2014
+# so using the event_id_count_w_country as metric may have some risk of non-comparability if 
 # 2015 inclusion of rossiya segodnya is arbitrary
 # on the other hand, rossiya segodnya data starting in 2015 roughly corresponds to its establishment in dec 2013,
 # so it could arguably be considered as reflecting an actual increase, and not an artifact of arbitrary data inclusion
-# for 2020, since 4 months of data are covered, could approximate a full year by multiple 4 months * 3
-# this would give 11568 story_id_count for 2020, which would be a sharp drop from 2019, but 2018 was a comparably sharp drop
-# but better to just drop 2020 and impute it
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-        distinct(year, story_id_count_annual_total)
 
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
-        filter(country_name != "Russia") %>% arrange(desc(story_id_count_w_country)) %>% print(n = 50)
+sub_obj_2_1_icews_russian_state_media_focus %>%
+        distinct(year, event_id_count_annual_total)
+
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        filter(country_name != "Russia") %>% arrange(desc(event_id_count_w_country)) %>% print(n = 50)
 
 
 #//////////////////
 
 
-# note it's a tough call on whether to use stories_w_country_as_share_of_annual_total or story_id_count_w_country
-# this inspection and the one below plot both, including with log transform
-# result: will go with story_id_count_w_country
-# overall, they are similar, and each have some pros/cons in theory/practice
-# pro of shares: can get comparable values for each year, including 2020, whereas w/ counts 2020 must be dropped
-# pro of shares: the 2015 inclusion of rossiya segodnya should affect shares much less than count
-# pro of count: the 2014 spike in count for ukraine has a corresponding spike in share for ukraine, but for other countries
-# the 2014 spike for ukraine causes a plunge in share, even though count for these countries actually went up
-# pro of count: theoretically, we're really trying to measure volume of disinfo affecting country, which is arguably better measured
-# by count (although technically the count is for articles published referencing country, not necessarily articles pushed in country)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-        filter(country_name != "Russia") %>%
-        # filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping == "E&E Balkans") %>% pull(country))) %>%
-        filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping == "E&E Eurasia") %>% pull(country))) %>%
-        # filter(country_name %in% c("BiH", "Albania", "Croatia", "Slovakia")) %>%
-        # filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-        #                              pull(country))) %>%
-        # filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping %in% c("EU-15")) %>%
-        #                                   pull(country))) %>%
+# inspect imputation for 2017 and different metric options 
+# note that robust standardization with median and IQR on log_events_w_country_as_share_of_annual_total works best 
+# and avoids ukraine swamping effect
+sub_obj_2_1_icews_russian_state_media_focus %>%
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        group_by(country) %>% 
+        mutate(events_w_country_as_share_of_annual_total_2016 = case_when(
+                year == 2016 ~ events_w_country_as_share_of_annual_total,
+                TRUE ~ NA_real_),
+               events_w_country_as_share_of_annual_total_2018 = case_when(
+                       year == 2018 ~ events_w_country_as_share_of_annual_total,
+                       TRUE ~ NA_real_)) %>%
+        fill(events_w_country_as_share_of_annual_total_2016, .direction = "updown") %>%
+        fill(events_w_country_as_share_of_annual_total_2018, .direction = "updown") %>%
+        ungroup() %>%
+        mutate(events_w_country_as_share_of_annual_total_2017 = ((events_w_country_as_share_of_annual_total_2018 -
+                                                                          events_w_country_as_share_of_annual_total_2016) / 2) + 
+                       events_w_country_as_share_of_annual_total_2016,
+               events_w_country_as_share_of_annual_total = case_when(year == 2017 ~ events_w_country_as_share_of_annual_total_2017,
+                                                                     TRUE ~ events_w_country_as_share_of_annual_total),
+               log_events_w_country_as_share_of_annual_total = 
+                       log((events_w_country_as_share_of_annual_total + .01))) %>%
+        group_by(year) %>% 
+        mutate(
+                annual_avg_events_w_country_as_share_of_annual_total =
+                        mean(events_w_country_as_share_of_annual_total, na.rm = TRUE),
+                annual_sd_events_w_country_as_share_of_annual_total =
+                        sd(events_w_country_as_share_of_annual_total, na.rm = TRUE),
+                annual_z_score_events_w_country_as_share_of_annual_total =
+                        (events_w_country_as_share_of_annual_total -
+                                 annual_avg_events_w_country_as_share_of_annual_total) /
+                        annual_sd_events_w_country_as_share_of_annual_total,
+                
+                
+                annual_median_events_w_country_as_share_of_annual_total =
+                        median(events_w_country_as_share_of_annual_total, na.rm = TRUE),
+                annual_iqr_events_w_country_as_share_of_annual_total =
+                        IQR(events_w_country_as_share_of_annual_total, na.rm = TRUE),
+                annual_rob_std_events_w_country_as_share_of_annual_total =
+                        (events_w_country_as_share_of_annual_total -
+                                 annual_median_events_w_country_as_share_of_annual_total) /
+                        annual_iqr_events_w_country_as_share_of_annual_total,
+                
+                
+                annual_median_log_events_w_country_as_share_of_annual_total = 
+                        median(log_events_w_country_as_share_of_annual_total, na.rm = TRUE),
+                annual_iqr_log_events_w_country_as_share_of_annual_total = 
+                        IQR(log_events_w_country_as_share_of_annual_total, na.rm = TRUE),
+                annual_rob_std_log_events_w_country_as_share_of_annual_total =
+                        (log_events_w_country_as_share_of_annual_total - 
+                                 annual_median_log_events_w_country_as_share_of_annual_total) /
+                        annual_iqr_log_events_w_country_as_share_of_annual_total) %>%
+        ungroup() %>%
+        select(country, mcp_grouping, year, event_id_count_w_country, event_id_count_annual_total,
+               events_w_country_as_share_of_annual_total, log_events_w_country_as_share_of_annual_total,
+               
+               annual_avg_events_w_country_as_share_of_annual_total,
+               annual_sd_events_w_country_as_share_of_annual_total,
+               annual_z_score_events_w_country_as_share_of_annual_total,
+               
+               annual_median_events_w_country_as_share_of_annual_total,
+               annual_iqr_events_w_country_as_share_of_annual_total,
+               annual_rob_std_events_w_country_as_share_of_annual_total,
+               
+               annual_median_log_events_w_country_as_share_of_annual_total,
+               annual_iqr_log_events_w_country_as_share_of_annual_total,
+               annual_rob_std_log_events_w_country_as_share_of_annual_total
+        ) %>%
+        filter(year >= 2010) %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
         
-        mutate(log_stories_w_country_as_share_of_annual_total = log(stories_w_country_as_share_of_annual_total + .01)) %>%
         
-        # arrange(desc(stories_w_country_as_share_of_annual_total))
-        # arrange(stories_w_country_as_share_of_annual_total)
-        # arrange(desc(log_stories_w_country_as_share_of_annual_total))
-        # arrange(desc(story_id_count_w_country)) 
-        
-        ggplot(data = ., mapping = aes(x = year, y = log_stories_w_country_as_share_of_annual_total, color = country_name)) +
-                geom_line()
-        # ggplot(data = ., mapping = aes(x = year, y = stories_w_country_as_share_of_annual_total, color = country_name)) + geom_line()
-
-
-#////////////////////
-
-
-# inspect replacing story_id_count_w_country with log_story_id_count_w_country to 
-# avoid us or ukraine from swamping the other countries
-# .01 is added to avoid taking log of 0 and getting -Inf
-# result: log_story_id_count_w_country is better, avoiding swamping but still showing us/ukraine significantly ahead
-# normalizing is unnecessary since the story_id_count_w_country is always positive
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-        filter(country_name != "Russia") %>%
-        # filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping == "E&E Balkans") %>% pull(country))) %>%
-        filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping == "E&E Eurasia") %>% pull(country))) %>%
-        # filter(country_name %in% c("BiH", "Albania", "Croatia", "Slovakia")) %>%
-        # filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-        #                                   pull(country))) %>%
-        # filter(country_name %in% (country_crosswalk %>% filter(mcp_grouping %in% c("EU-15")) %>%
-        #                                   pull(country))) %>%
-        
-        select(country_name, year, story_id_count_w_country) %>%
-        mutate(log_story_id_count_w_country = log(story_id_count_w_country + .01)) %>%
-        
-        
-        # arrange(story_id_count_w_country)
-        # arrange(desc(story_id_count_w_country)) %>% print(n = 50)
-        # arrange(log_story_id_count_w_country) %>% print(n = 50)
-        # arrange(desc(log_story_id_count_w_country)) %>% print(n = 50)
-        # skim(story_id_count_w_country, log_story_id_count_w_country)
-        
-        # plot values
-        # ggplot(data = ., mapping = aes(x = year, y = story_id_count_w_country, color = country_name)) + geom_line()
-        ggplot(data = ., mapping = aes(x = year, y = log_story_id_count_w_country, color = country_name)) + geom_line()
+        # ggplot(data = ., mapping = aes(x = year, y = annual_z_score_events_w_country_as_share_of_annual_total, color = country)) +
+        # ggplot(data = ., mapping = aes(x = year, y = annual_rob_std_events_w_country_as_share_of_annual_total, color = country)) +
+        ggplot(data = ., mapping = aes(x = year, y = annual_rob_std_log_events_w_country_as_share_of_annual_total, color = country)) +
+        geom_line(size = 1)
 
 
 #//////////////////
 
 
 # inspect country names
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
+sub_obj_2_1_icews_russian_state_media_focus %>% 
         anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
+sub_obj_2_1_icews_russian_state_media_focus %>% 
         anti_join(country_crosswalk, ., by = c("country" = "country_name")) %>% 
         distinct(country) %>% arrange(country)
 
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
+sub_obj_2_1_icews_russian_state_media_focus %>% 
         filter(str_detect(string = country_name, pattern = regex("yemen", ignore_case = TRUE))) %>%
         distinct(country_name)
 country_crosswalk %>% filter(str_detect(string = country, pattern = regex("gamb", ignore_case = TRUE))) %>% select(country)
@@ -5968,145 +6542,199 @@ country_crosswalk %>% filter(str_detect(string = country, pattern = regex("gamb"
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# filter to exclude 2020 because it only covers through april 2020
 # join country_crosswalk and fmir_framework
-# manually set story_id_count_w_country = 0 values for 2010/2011 in bih, albania, croatia, and slovakia 
-# get log_story_id_count_w_country, set values equal to log_story_id_count_w_country 
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media <- sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
-        filter(year != 2020) %>%
+# impute 2017 as linear trend completion
+# get robust standardized metric annual_rob_std_log_events_w_country_as_share_of_annual_total
+sub_obj_2_1_icews_russian_state_media_focus <- sub_obj_2_1_icews_russian_state_media_focus %>% 
         left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
                   by = c("country" = "country_name", "year" = "year")) %>%
-        mutate(indicator_name = "sub_obj_2_1_icews_narratives_pushed_by_russian_state_media",
-               high_value_is_good_outcome_flag = 0) %>%
+        mutate(high_value_is_good_outcome_flag = 0,
+               indicator_name = "sub_obj_2_1_icews_russian_state_media_focus") %>%
         left_join(., fmir_framework, by = "indicator_name") %>%
-        mutate(story_id_count_w_country = case_when(country == "BiH" & year %in% c(2010, 2011) & 
-                                                            is.na(story_id_count_w_country) ~ 0,
-                                                    country %in% c("Albania", "Croatia", "Slovakia") &
-                                                            year == 2011 & is.na(story_id_count_w_country) ~ 0,
-                                                    TRUE ~ story_id_count_w_country),
-               log_story_id_count_w_country = log(story_id_count_w_country + .01),
-               values = log_story_id_count_w_country)
+        group_by(country) %>% 
+        mutate(events_w_country_as_share_of_annual_total_2016 = case_when(
+                year == 2016 ~ events_w_country_as_share_of_annual_total,
+                TRUE ~ NA_real_),
+               events_w_country_as_share_of_annual_total_2018 = case_when(
+                       year == 2018 ~ events_w_country_as_share_of_annual_total,
+                       TRUE ~ NA_real_)) %>%
+        fill(events_w_country_as_share_of_annual_total_2016, .direction = "updown") %>%
+        fill(events_w_country_as_share_of_annual_total_2018, .direction = "updown") %>%
+        ungroup() %>%
+        mutate(events_w_country_as_share_of_annual_total_2017 = ((events_w_country_as_share_of_annual_total_2018 -
+                                                                          events_w_country_as_share_of_annual_total_2016) / 2) + 
+                       events_w_country_as_share_of_annual_total_2016,
+               events_w_country_as_share_of_annual_total = case_when(year == 2017 ~ events_w_country_as_share_of_annual_total_2017,
+                                                                     TRUE ~ events_w_country_as_share_of_annual_total),
+               log_events_w_country_as_share_of_annual_total = 
+                       log((events_w_country_as_share_of_annual_total + .01))) %>%
+        group_by(year) %>% 
+        mutate(annual_median_log_events_w_country_as_share_of_annual_total = 
+                       median(log_events_w_country_as_share_of_annual_total, na.rm = TRUE),
+               annual_iqr_log_events_w_country_as_share_of_annual_total = 
+                       IQR(log_events_w_country_as_share_of_annual_total, na.rm = TRUE),
+               annual_rob_std_log_events_w_country_as_share_of_annual_total =
+                       (log_events_w_country_as_share_of_annual_total - 
+                                annual_median_log_events_w_country_as_share_of_annual_total) /
+                       annual_iqr_log_events_w_country_as_share_of_annual_total,
+               values = annual_rob_std_log_events_w_country_as_share_of_annual_total) %>%
+        ungroup() %>%
+        select(-c(events_w_country_as_share_of_annual_total_2016,
+                  events_w_country_as_share_of_annual_total_2017,
+                  events_w_country_as_share_of_annual_total_2018))
 
 
 #/////////////////
 
 
 # inspect
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% glimpse()
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% nrow() # 900
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% ncol() # 34
+sub_obj_2_1_icews_russian_state_media_focus
+sub_obj_2_1_icews_russian_state_media_focus %>% glimpse()
+sub_obj_2_1_icews_russian_state_media_focus %>% nrow() # 945
+sub_obj_2_1_icews_russian_state_media_focus %>% ncol() # 41
 
 # check countries/years
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% count(country) # 45
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% count(year)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% skim(values, log_story_id_count_w_country)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
-        # arrange(log_story_id_count_w_country) %>% 
-        arrange(desc(log_story_id_count_w_country)) %>% 
-        select(country, year, indicator_name, log_story_id_count_w_country, values)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
-        filter(country == "Russia") %>% select(country, year, indicator_name, log_story_id_count_w_country, values)
-        
+sub_obj_2_1_icews_russian_state_media_focus %>% count(country) # 45
+sub_obj_2_1_icews_russian_state_media_focus %>% count(year) %>% print(n = nrow(.))
+sub_obj_2_1_icews_russian_state_media_focus %>% skim(values, annual_rob_std_log_events_w_country_as_share_of_annual_total)
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        arrange(desc(annual_iqr_log_events_w_country_as_share_of_annual_total)) %>% 
+        select(country, year, indicator_name, events_w_country_as_share_of_annual_total, 
+               annual_rob_std_log_events_w_country_as_share_of_annual_total, values)
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        filter(country %in% c("Russia", "U.S.")) %>% 
+        select(country, year, indicator_name, 
+               annual_rob_std_log_events_w_country_as_share_of_annual_total, values)
+
 
 # inspect missing values
-# only remaining missing values are pre-2010, 2017, and 2020, plus russia for all years 
-# which are all expected (2017 and 2020 will be imputed)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% filter(is.na(values)) %>% count(year)
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% 
-        filter(is.na(values), country != "Russia") %>% count(year)
-
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-        filter(is.na(values), year >= 2010, year <= 2019, year != 2017) %>% select(country, year, values)
-
-# check manually added zero values for albania, bih, croatia, slovakia, and bih
-# note that log(0 + .01) = -4.61
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-        filter(country %in% c("Albania", "Croatia", "Slovakia", "BiH"),
-               year %in% c(2010, 2011)) %>%
-        arrange(year) %>%
-        select(country, year, indicator_name, values) %>%
+# only missing values are 2011 for albania, bih, croatia, and slovakia; and 2020 for macedonia; plus all values for us/russia
+sub_obj_2_1_icews_russian_state_media_focus %>% filter(is.na(values)) %>% count(year) %>% print(n = nrow(.))
+sub_obj_2_1_icews_russian_state_media_focus %>% 
+        filter(is.na(values), !(country %in% c("Russia", "U.S."))) %>% count(year)
+sub_obj_2_1_icews_russian_state_media_focus %>%
+        filter(year >= 2010) %>%
+        filter(is.na(values)) %>%
+        count(country, year) %>% 
         print(n = nrow(.))
 
 
-# plot, including with values_imp showing what imputation of 2017 will look like
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-        group_by(country) %>% mutate(country_avg_values = mean(values, na.rm = TRUE),
-                                     values_imp = case_when(year == 2017 ~ country_avg_values,
-                                                            TRUE ~ values)) %>%
-        ungroup() %>%
-        select(country, mcp_grouping, year, values, values_imp, country_avg_values) %>%
+# plot
+sub_obj_2_1_icews_russian_state_media_focus %>%
+        
+        select(country, mcp_grouping, year, values) %>%
         filter(year >= 2010) %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
         # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         # filter(mcp_grouping == "U.S.") %>%
         # arrange(desc(values))
-        # ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
-        ggplot(data = ., mapping = aes(x = year, y = values_imp, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1)
+
+# check change in values
+# note there is a general decrease for many countries in 2021, but that's not unreasonable 
+# simply reflects that these countries were closer to the median events_w_country_as_share_of_annual_total
+sub_obj_2_1_icews_russian_state_media_focus %>%
+        select(country, mcp_grouping, year, values) %>%
+        filter(year >= 2020) %>%
+        arrange(country, year) %>%
+        group_by(country) %>%
+        mutate(diff_values = values - lag(values, n = 1),
+                abs_diff_values = abs(values - lag(values, n = 1))) %>%
+        # arrange(desc(abs_diff_values))
+        arrange(desc(diff_values))
 
 
 #/////////////////
 
 
-# test_values_sub_obj_2_1_icews_narratives_pushed_by_russian_state_media
-test_values_sub_obj_2_1_icews_narratives_pushed_by_russian_state_media <- function() {
+# test_values_sub_obj_2_1_icews_russian_state_media_focus
+test_values_sub_obj_2_1_icews_russian_state_media_focus <- function() {
         
         # serbia in 2010
         expect_equal(object = icews_ee_region_2010 %>% 
-                filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
-                        "RIA Novosti"),
-                       `Source Country` == "Serbia" | `Target Country` == "Serbia") %>% 
-                        distinct(`Story ID`) %>% nrow() %>% tibble(story_id_count_w_country = .) %>%
-                        mutate(log_story_id_count_w_country = log(story_id_count_w_country + .01)) %>%
-                        pull(log_story_id_count_w_country),
-                expected = sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-                        filter(country == "Serbia", year == 2010) %>% 
-                        select(country, year, story_id_count_w_country, values) %>%
-                        pull(values))
+                             filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
+                                                     "RIA Novosti"),
+                                    `Source Country` == "Serbia" | `Target Country` == "Serbia") %>% 
+                             distinct(`Event ID`) %>% nrow() %>% tibble(event_id_count_w_country = .) %>%
+                             bind_cols(., icews_ee_region_2010 %>% 
+                                               filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
+                                                                       "RIA Novosti")) %>% 
+                                               distinct(`Event ID`) %>% nrow() %>% 
+                                               tibble(event_id_count_annual_total = .)) %>%
+                             mutate(events_w_country_as_share_of_annual_total = event_id_count_w_country / 
+                                            event_id_count_annual_total,
+                                    log_events_w_country_as_share_of_annual_total = log(events_w_country_as_share_of_annual_total + .01)) %>%
+                             pull(log_events_w_country_as_share_of_annual_total),
+                     expected = sub_obj_2_1_icews_russian_state_media_focus %>%
+                             filter(country == "Serbia", year == 2010) %>% 
+                             select(country, year, event_id_count_w_country, log_events_w_country_as_share_of_annual_total) %>%
+                             pull(log_events_w_country_as_share_of_annual_total))
         
         # ukraine in 2014
         expect_equal(object = icews_ee_region_2014 %>% 
                              filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
                                                      "RIA Novosti"),
                                     `Source Country` == "Ukraine" | `Target Country` == "Ukraine") %>% 
-                             distinct(`Story ID`) %>% nrow() %>% tibble(story_id_count_w_country = .) %>%
-                             mutate(log_story_id_count_w_country = log(story_id_count_w_country + .01)) %>%
-                             pull(log_story_id_count_w_country),
-                     expected = sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
+                             distinct(`Event ID`) %>% nrow() %>% tibble(event_id_count_w_country = .) %>%
+                             bind_cols(., icews_ee_region_2014 %>% 
+                                               filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
+                                                                       "RIA Novosti")) %>% 
+                                               distinct(`Event ID`) %>% nrow() %>% 
+                                               tibble(event_id_count_annual_total = .)) %>%
+                             mutate(events_w_country_as_share_of_annual_total = event_id_count_w_country / 
+                                            event_id_count_annual_total,
+                                    log_events_w_country_as_share_of_annual_total = log(events_w_country_as_share_of_annual_total + .01)) %>%
+                             pull(log_events_w_country_as_share_of_annual_total),
+                     expected = sub_obj_2_1_icews_russian_state_media_focus %>%
                              filter(country == "Ukraine", year == 2014) %>% 
-                             select(country, year, story_id_count_w_country, values) %>%
-                             pull(values))
+                             select(country, year, event_id_count_w_country, log_events_w_country_as_share_of_annual_total) %>%
+                             pull(log_events_w_country_as_share_of_annual_total))
         
         # belarus in 2018
         expect_equal(object = icews_ee_region_2018 %>% 
                              filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
                                                      "RIA Novosti"),
                                     `Source Country` == "Belarus" | `Target Country` == "Belarus") %>% 
-                             distinct(`Story ID`) %>% nrow() %>% tibble(story_id_count_w_country = .) %>%
-                             mutate(log_story_id_count_w_country = log(story_id_count_w_country + .01)) %>%
-                             pull(log_story_id_count_w_country),
-                     expected = sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
+                             distinct(`Event ID`) %>% nrow() %>% tibble(event_id_count_w_country = .) %>%
+                             bind_cols(., icews_ee_region_2018 %>% 
+                                               filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
+                                                                       "RIA Novosti")) %>% 
+                                               distinct(`Event ID`) %>% nrow() %>% 
+                                               tibble(event_id_count_annual_total = .)) %>%
+                             mutate(events_w_country_as_share_of_annual_total = event_id_count_w_country / 
+                                            event_id_count_annual_total,
+                                    log_events_w_country_as_share_of_annual_total = log(events_w_country_as_share_of_annual_total + .01)) %>%
+                             pull(log_events_w_country_as_share_of_annual_total),
+                     expected = sub_obj_2_1_icews_russian_state_media_focus %>%
                              filter(country == "Belarus", year == 2018) %>% 
-                             select(country, year, story_id_count_w_country, values) %>%
-                             pull(values))
+                             select(country, year, event_id_count_w_country, log_events_w_country_as_share_of_annual_total) %>%
+                             pull(log_events_w_country_as_share_of_annual_total))
         
-        # U.S. in 2019
-        expect_equal(object = icews_ee_region_2019 %>% 
+        # armenia in 2021
+        expect_equal(object = icews_ee_region_2021 %>% 
                              filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
                                                      "RIA Novosti"),
-                                    `Source Country` == "United States" | `Target Country` == "United States") %>% 
-                             distinct(`Story ID`) %>% nrow() %>% tibble(story_id_count_w_country = .) %>%
-                             mutate(log_story_id_count_w_country = log(story_id_count_w_country + .01)) %>%
-                             pull(log_story_id_count_w_country),
-                     expected = sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-                             filter(country == "U.S.", year == 2019) %>% 
-                             select(country, year, story_id_count_w_country, values) %>%
-                             pull(values))
+                                    `Source Country` == "Armenia" | `Target Country` == "Armenia") %>% 
+                             distinct(`Event ID`) %>% nrow() %>% tibble(event_id_count_w_country = .) %>%
+                             bind_cols(., icews_ee_region_2021 %>% 
+                                               filter(Publisher %in% c("ITAR Tass", "Rossiya Segodnya International Information Agency (Arabic)",
+                                                                       "RIA Novosti")) %>% 
+                                               distinct(`Event ID`) %>% nrow() %>% 
+                                               tibble(event_id_count_annual_total = .)) %>%
+                             mutate(events_w_country_as_share_of_annual_total = event_id_count_w_country / 
+                                            event_id_count_annual_total,
+                                    log_events_w_country_as_share_of_annual_total = log(events_w_country_as_share_of_annual_total + .01)) %>%
+                             pull(log_events_w_country_as_share_of_annual_total),
+                     expected = sub_obj_2_1_icews_russian_state_media_focus %>%
+                             filter(country == "Armenia", year == 2021) %>% 
+                             select(country, year, event_id_count_w_country, log_events_w_country_as_share_of_annual_total) %>%
+                             pull(log_events_w_country_as_share_of_annual_total))
 }
-test_values_sub_obj_2_1_icews_narratives_pushed_by_russian_state_media()
+test_values_sub_obj_2_1_icews_russian_state_media_focus()
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -6130,16 +6758,16 @@ rm(icews_ee_region_2020)
 
 
 # read/write
-# sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>%
-#         write_csv(file = "data/fmir/sub_obj_2_1_icews_narratives_pushed_by_russian_state_media.csv")
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media <- read.csv(file = "data/fmir/sub_obj_2_1_icews_narratives_pushed_by_russian_state_media.csv") %>%
+# sub_obj_2_1_icews_russian_state_media_focus %>%
+#         write_csv(file = "data/fmir/sub_obj_2_1_icews_russian_state_media_focus.csv")
+sub_obj_2_1_icews_russian_state_media_focus <- read.csv(file = "data/fmir/sub_obj_2_1_icews_russian_state_media_focus.csv") %>%
         as_tibble()
 
 # inspect
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% glimpse()
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% nrow() # 900
-sub_obj_2_1_icews_narratives_pushed_by_russian_state_media %>% ncol() # 34
+sub_obj_2_1_icews_russian_state_media_focus
+sub_obj_2_1_icews_russian_state_media_focus %>% glimpse()
+sub_obj_2_1_icews_russian_state_media_focus %>% nrow() # 945
+sub_obj_2_1_icews_russian_state_media_focus %>% ncol() # 25
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -6179,6 +6807,10 @@ sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives <- vdem %>% select(
 # inspect
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% glimpse()
+sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% nrow() # 3743
+sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% ncol() # 5
+
+sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% count(year) %>% print(n = nrow(.))
 var_info("v2merange")
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% arrange(values) %>% distinct(country_name)
@@ -6209,8 +6841,8 @@ sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives <- sub_obj_2_2_vdem
 # inspect
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% glimpse()
-sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% nrow() # 900
-sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% ncol() # 30
+sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% nrow() # 945
+sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% ncol() # 34
 
 # check country/year
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% distinct(country) %>% nrow() # 45
@@ -6228,7 +6860,7 @@ sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% group_by(indicator_name) %>% 
@@ -6242,7 +6874,8 @@ sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% group_by(indica
 
 
 # read/write
-# sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>% write_csv(file = "data/fmir/sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives.csv")
+# sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives %>%
+#         write_csv(file = "data/fmir/sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives.csv")
 sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives <- read_csv(file = "data/fmir/sub_obj_2_2_vdem_print_broadcast_media_range_of_perspectives.csv")
 
 
@@ -6283,9 +6916,10 @@ sub_obj_2_2_vdem_online_media_range_of_perspectives <- vdem %>% select(country_n
 # inspect
 sub_obj_2_2_vdem_online_media_range_of_perspectives
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% glimpse()
-sub_obj_2_2_vdem_online_media_range_of_perspectives %>% nrow() # 3564
+sub_obj_2_2_vdem_online_media_range_of_perspectives %>% nrow() # 3743
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% ncol() # 5
 
+sub_obj_2_2_vdem_online_media_range_of_perspectives %>% count(year) %>% print(n = nrow(.))
 var_info("v2smonper")
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% arrange(values) %>% distinct(country_name)
@@ -6316,8 +6950,8 @@ sub_obj_2_2_vdem_online_media_range_of_perspectives <- sub_obj_2_2_vdem_online_m
 # inspect
 sub_obj_2_2_vdem_online_media_range_of_perspectives
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% glimpse()
-sub_obj_2_2_vdem_online_media_range_of_perspectives %>% nrow() # 900
-sub_obj_2_2_vdem_online_media_range_of_perspectives %>% ncol() # 30
+sub_obj_2_2_vdem_online_media_range_of_perspectives %>% nrow() # 945
+sub_obj_2_2_vdem_online_media_range_of_perspectives %>% ncol() # 34
 
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% distinct(country) %>% nrow() # 45
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
@@ -6329,12 +6963,12 @@ sub_obj_2_2_vdem_online_media_range_of_perspectives %>% group_by(year) %>% skim(
 
 # plot
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
-        filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% group_by(indicator_name) %>% 
@@ -6354,8 +6988,8 @@ sub_obj_2_2_vdem_online_media_range_of_perspectives <- read_csv(file = "data/fmi
 # inspect
 sub_obj_2_2_vdem_online_media_range_of_perspectives
 sub_obj_2_2_vdem_online_media_range_of_perspectives %>% glimpse()
-sub_obj_2_2_vdem_online_media_range_of_perspectives %>% nrow() # 900
-sub_obj_2_2_vdem_online_media_range_of_perspectives %>% ncol() # 30
+sub_obj_2_2_vdem_online_media_range_of_perspectives %>% nrow() # 945
+sub_obj_2_2_vdem_online_media_range_of_perspectives %>% ncol() # 34
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -6386,6 +7020,8 @@ sub_obj_2_2_vdem_online_media_range_of_perspectives %>% ncol() # 30
 # https://www.irex.org/sites/default/files/pdf/media-sustainability-index-europe-eurasia-2019-full.pdf
 # https://vibe.irex.org/
 
+# note that MSI had 21 countries, VIBE had 13 in condition_year 2020, and 18 in condition_year 2021
+
 # note that raw irex_msi data was copy/pasted together
 sub_obj_2_2_msi_plurality_of_news <- read_excel(path = "data/irex_msi/irex_msi_data_cleaned.xlsx", sheet = "Sheet1") %>%
         mutate(report_year = year,
@@ -6408,7 +7044,7 @@ sub_obj_2_2_msi_plurality_of_news <- read_excel(path = "data/irex_msi/irex_msi_d
                                         TRUE ~ country_name))
 
 # get vibe
-vibe_indicator_4_inclusive_diverse_content <- read_excel(path = "data/irex_msi/vibe-scores-2021.xlsx", sheet = "VIBE 2021", skip = 1) %>%
+vibe_indicator_4_inclusive_diverse_content <- read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2021", skip = 1) %>%
         rename(country_name = "...1", values = `Indicator 4`) %>%
         filter(country_name != "Country Name") %>%
         select(country_name, values) %>%
@@ -6421,7 +7057,23 @@ vibe_indicator_4_inclusive_diverse_content <- read_excel(path = "data/irex_msi/v
                                         country_name == "Macedonia" ~ "N. Macedonia",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
                                         TRUE ~ country_name)) %>%
-        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag)
+        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag) %>%
+        bind_rows(., 
+                  read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2022", skip = 1) %>%
+                          rename(country_name = "...1", values = `Indicator 4`) %>%
+                          filter(country_name != "Country Name") %>%
+                          select(country_name, values) %>%
+                          mutate(report_year = 2022,
+                                 year = 2021,
+                                 values = as.numeric(values),
+                                 indicator_name = "sub_obj_2_2_msi_plurality_of_news",
+                                 high_value_is_good_outcome_flag = 1,
+                                 country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                          country_name == "Macedonia" ~ "N. Macedonia",
+                                                          country_name == "North Macedonia" ~ "N. Macedonia",
+                                                          country_name == "Kazahkstan" ~ "Kazakhstan",
+                                                          TRUE ~ country_name)) %>%
+                          select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag))
 
 
 # combine msi and vibe
@@ -6436,10 +7088,10 @@ sub_obj_2_2_msi_plurality_of_news <- sub_obj_2_2_msi_plurality_of_news %>%
 # note msi has 20 countries for 2001-2007, then 21 countries for 2008-2019
 sub_obj_2_2_msi_plurality_of_news
 sub_obj_2_2_msi_plurality_of_news %>% glimpse()
-sub_obj_2_2_msi_plurality_of_news %>% nrow() # 385
+sub_obj_2_2_msi_plurality_of_news %>% nrow() # 403
 sub_obj_2_2_msi_plurality_of_news %>% ncol() # 6
 
-
+sub_obj_2_2_msi_plurality_of_news %>% count(year) %>% print(n = nrow(.))
 sub_obj_2_2_msi_plurality_of_news %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_2_msi_plurality_of_news %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_2_msi_plurality_of_news %>% skim()
@@ -6471,8 +7123,8 @@ sub_obj_2_2_msi_plurality_of_news <- sub_obj_2_2_msi_plurality_of_news %>%
 # inspect
 sub_obj_2_2_msi_plurality_of_news
 sub_obj_2_2_msi_plurality_of_news %>% glimpse()
-sub_obj_2_2_msi_plurality_of_news %>% nrow() # 900
-sub_obj_2_2_msi_plurality_of_news %>% ncol() # 31
+sub_obj_2_2_msi_plurality_of_news %>% nrow() # 945
+sub_obj_2_2_msi_plurality_of_news %>% ncol() # 35
 
 # check country/year
 sub_obj_2_2_msi_plurality_of_news %>% count(country) %>% print(n = nrow(.))
@@ -6523,29 +7175,26 @@ sub_obj_2_2_msi_plurality_of_news %>% group_by(country) %>% skim(values)
 
 
 # impute 2019 values as midpoint of 2018 MSI and 2020 VIBE
-# manually assign the CARs the eurasia avg, since this will avoid it's earlier MSI values from being extended during imputation 
-# to fill all the missing VIBE values 
+# note, now that VIBE has 2021 values for CARs, they will get 2018-2021 interpolated values for missing 2019/2020 values
 sub_obj_2_2_msi_plurality_of_news <- sub_obj_2_2_msi_plurality_of_news %>%
         mutate(values_2018 = case_when(year == 2018 ~ values, 
                                        TRUE ~ NA_real_),
                values_2020 = case_when(year == 2020 ~ values, 
+                                       TRUE ~ NA_real_),
+               values_2021 = case_when(year == 2021 ~ values, 
                                        TRUE ~ NA_real_)) %>%
         group_by(country) %>% 
         fill(values_2018, .direction = "updown") %>%
         fill(values_2020, .direction = "updown") %>%
+        fill(values_2021, .direction = "updown") %>%
         ungroup() %>%
-        mutate(values = case_when(year == 2019 ~ ((values_2020 - values_2018) / 2) + values_2018,
-                                  TRUE ~ values)) %>%
-        group_by(mcp_grouping, year) %>%
-        mutate(regional_annual_avg = mean(values, na.rm = TRUE)) %>%
-        ungroup() %>%
-        mutate(eurasia_annual_avg = case_when(mcp_grouping == "E&E Eurasia" ~ regional_annual_avg,
-                                              TRUE ~ NA_real_)) %>%
-        group_by(year) %>% 
-        fill(eurasia_annual_avg, .direction = "updown") %>%
-        ungroup() %>%
-        mutate(values = case_when(mcp_grouping == "CARs" & year >= 2019 & is.na(values) ~ eurasia_annual_avg,
-                                  TRUE ~ values))
+        mutate(values = case_when((year == 2019) & (mcp_grouping != "CARs") & (is.na(values)) ~ 
+                                          ((values_2020 - values_2018) / 2) + values_2018,
+                                  (year == 2019) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3) + values_2018,
+                                  (year == 2020) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3)*2 + values_2018,
+                                  TRUE ~ values)) 
 
 
 #/////////////////////
@@ -6554,14 +7203,15 @@ sub_obj_2_2_msi_plurality_of_news <- sub_obj_2_2_msi_plurality_of_news %>%
 # inspect
 sub_obj_2_2_msi_plurality_of_news
 sub_obj_2_2_msi_plurality_of_news %>% glimpse()
-sub_obj_2_2_msi_plurality_of_news %>% nrow() # 900
-sub_obj_2_2_msi_plurality_of_news %>% ncol() # 35
+sub_obj_2_2_msi_plurality_of_news %>% nrow() # 945
+sub_obj_2_2_msi_plurality_of_news %>% ncol() # 38
 
 # inspect
 sub_obj_2_2_msi_plurality_of_news %>%
-        select(country, mcp_grouping, year, values, values_2018, values_2020, regional_annual_avg, eurasia_annual_avg) %>% 
+        select(country, mcp_grouping, year, values, values_2018, values_2020, values_2021) %>% 
         filter(mcp_grouping != "EU-15") %>% 
         filter(mcp_grouping == "CARs") %>%
+        filter(year >= 2010) %>%
         print(n = 30) 
 
 
@@ -6570,13 +7220,13 @@ sub_obj_2_2_msi_plurality_of_news %>%
 
 # plot
 sub_obj_2_2_msi_plurality_of_news %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
-        # filter(mcp_grouping == "CARs") %>%
+        filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() +
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) +
         scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
 
 
@@ -6618,9 +7268,15 @@ test_values_sub_obj_2_2_msi_plurality_of_news <- function() {
         
         # 6
         expect_equal(object = sub_obj_2_2_msi_plurality_of_news %>% 
+                             filter(country == "Tajikistan", year == 2019) %>%
+                             pull(values),
+                     expected = ((15 - (1.88 * 10)) / 3) + (1.88 * 10))
+        
+        # 6
+        expect_equal(object = sub_obj_2_2_msi_plurality_of_news %>% 
                              filter(country == "Tajikistan", year == 2020) %>%
                              pull(values),
-                     expected = mean(c(27, 16, 21, 20, 25, 26)))
+                     expected = ((15 - (1.88 * 10)) / 3)*2 + (1.88 * 10))
 }
 test_values_sub_obj_2_2_msi_plurality_of_news()
 
@@ -6683,7 +7339,7 @@ sub_obj_2_2_msi_business_management <- read_excel(path = "data/irex_msi/irex_msi
                                         TRUE ~ country_name))
 
 # get vibe
-vibe_indicator_5_content_production_resourced <- read_excel(path = "data/irex_msi/vibe-scores-2021.xlsx", sheet = "VIBE 2021", skip = 1) %>%
+vibe_indicator_5_content_production_resourced <- read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2021", skip = 1) %>%
         rename(country_name = "...1", values = `Indicator 5`) %>%
         filter(country_name != "Country Name") %>%
         select(country_name, values) %>%
@@ -6696,7 +7352,23 @@ vibe_indicator_5_content_production_resourced <- read_excel(path = "data/irex_ms
                                         country_name == "Macedonia" ~ "N. Macedonia",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
                                         TRUE ~ country_name)) %>%
-        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag)
+        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag) %>%
+        bind_rows(.,
+                  read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2022", skip = 1) %>%
+                          rename(country_name = "...1", values = `Indicator 5`) %>%
+                          filter(country_name != "Country Name") %>%
+                          select(country_name, values) %>%
+                          mutate(report_year = 2022,
+                                 year = 2021,
+                                 values = as.numeric(values),
+                                 indicator_name = "sub_obj_2_2_msi_business_management",
+                                 high_value_is_good_outcome_flag = 1,
+                                 country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                          country_name == "Macedonia" ~ "N. Macedonia",
+                                                          country_name == "North Macedonia" ~ "N. Macedonia",
+                                                          country_name == "Kazahkstan" ~ "Kazakhstan",
+                                                          TRUE ~ country_name)) %>%
+                          select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag))
 
 
 # combine msi and vibe
@@ -6711,10 +7383,11 @@ sub_obj_2_2_msi_business_management <- sub_obj_2_2_msi_business_management %>%
 # note msi has 20 countries for 2001-2007, then 21 countries for 2008-2019
 sub_obj_2_2_msi_business_management
 sub_obj_2_2_msi_business_management %>% glimpse()
-sub_obj_2_2_msi_business_management %>% nrow() # 385
+sub_obj_2_2_msi_business_management %>% nrow() # 403
 sub_obj_2_2_msi_business_management %>% ncol() # 6
 
 
+sub_obj_2_2_msi_business_management %>% count(year)
 sub_obj_2_2_msi_business_management %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_2_msi_business_management %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_2_msi_business_management %>% skim()
@@ -6746,7 +7419,7 @@ sub_obj_2_2_msi_business_management <- sub_obj_2_2_msi_business_management %>%
 # inspect
 sub_obj_2_2_msi_business_management
 sub_obj_2_2_msi_business_management %>% glimpse()
-sub_obj_2_2_msi_business_management %>% nrow() # 900
+sub_obj_2_2_msi_business_management %>% nrow() # 945
 sub_obj_2_2_msi_business_management %>% ncol() # 31
 
 # check country/year
@@ -6798,29 +7471,26 @@ sub_obj_2_2_msi_business_management %>% group_by(country) %>% skim(values)
 
 
 # impute 2019 values as midpoint of 2018 MSI and 2020 VIBE
-# manually assign the CARs the eurasia avg, since this will avoid it's earlier MSI values from being extended during imputation 
-# to fill all the missing VIBE values 
+# note, now that VIBE has 2021 values for CARs, they will get 2018-2021 interpolated values for missing 2019/2020 values
 sub_obj_2_2_msi_business_management <- sub_obj_2_2_msi_business_management %>%
         mutate(values_2018 = case_when(year == 2018 ~ values, 
                                        TRUE ~ NA_real_),
                values_2020 = case_when(year == 2020 ~ values, 
+                                       TRUE ~ NA_real_),
+               values_2021 = case_when(year == 2021 ~ values, 
                                        TRUE ~ NA_real_)) %>%
         group_by(country) %>% 
         fill(values_2018, .direction = "updown") %>%
         fill(values_2020, .direction = "updown") %>%
+        fill(values_2021, .direction = "updown") %>%
         ungroup() %>%
-        mutate(values = case_when(year == 2019 ~ ((values_2020 - values_2018) / 2) + values_2018,
-                                  TRUE ~ values)) %>%
-        group_by(mcp_grouping, year) %>%
-        mutate(regional_annual_avg = mean(values, na.rm = TRUE)) %>%
-        ungroup() %>%
-        mutate(eurasia_annual_avg = case_when(mcp_grouping == "E&E Eurasia" ~ regional_annual_avg,
-                                              TRUE ~ NA_real_)) %>%
-        group_by(year) %>% 
-        fill(eurasia_annual_avg, .direction = "updown") %>%
-        ungroup() %>%
-        mutate(values = case_when(mcp_grouping == "CARs" & year >= 2019 & is.na(values) ~ eurasia_annual_avg,
-                                  TRUE ~ values))
+        mutate(values = case_when((year == 2019) & (mcp_grouping != "CARs") & (is.na(values)) ~ 
+                                          ((values_2020 - values_2018) / 2) + values_2018,
+                                  (year == 2019) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3) + values_2018,
+                                  (year == 2020) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3)*2 + values_2018,
+                                  TRUE ~ values)) 
 
 
 #/////////////////////
@@ -6829,14 +7499,15 @@ sub_obj_2_2_msi_business_management <- sub_obj_2_2_msi_business_management %>%
 # inspect
 sub_obj_2_2_msi_business_management
 sub_obj_2_2_msi_business_management %>% glimpse()
-sub_obj_2_2_msi_business_management %>% nrow() # 900
-sub_obj_2_2_msi_business_management %>% ncol() # 35
+sub_obj_2_2_msi_business_management %>% nrow() # 945
+sub_obj_2_2_msi_business_management %>% ncol() # 38
 
 # inspect
 sub_obj_2_2_msi_business_management %>%
-        select(country, mcp_grouping, year, values, values_2018, values_2020, regional_annual_avg, eurasia_annual_avg) %>% 
+        select(country, mcp_grouping, year, values, values_2018, values_2020, values_2021) %>% 
         filter(mcp_grouping != "EU-15") %>% 
         filter(mcp_grouping == "CARs") %>%
+        filter(year >= 2010) %>%
         print(n = 30) 
 
 
@@ -6845,13 +7516,13 @@ sub_obj_2_2_msi_business_management %>%
 
 # plot
 sub_obj_2_2_msi_business_management %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
-        # filter(mcp_grouping == "CARs") %>%
+        filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() +
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) + geom_point() +
         scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
 
 
@@ -6893,9 +7564,15 @@ test_values_sub_obj_2_2_msi_business_management <- function() {
         
         # 6
         expect_equal(object = sub_obj_2_2_msi_business_management %>% 
+                             filter(country == "Tajikistan", year == 2019) %>%
+                             pull(values),
+                     expected = ((11 - (1.35 * 10)) / 3) + (1.35 * 10))
+        
+        # 6
+        expect_equal(object = sub_obj_2_2_msi_business_management %>% 
                              filter(country == "Tajikistan", year == 2020) %>%
                              pull(values),
-                     expected = mean(c(21, 7, 14, 14, 13, 17)))
+                     expected = ((11 - (1.35 * 10)) / 3)*2 + (1.35 * 10))
 }
 test_values_sub_obj_2_2_msi_business_management()
 
@@ -6915,7 +7592,7 @@ sub_obj_2_2_msi_business_management <- read_csv(file = "data/fmir/sub_obj_2_2_ms
 
 # load sub_obj_2_2_aiddata_content_consumers ####
 
-sub_obj_2_2_aiddata_content_consumers <- read_csv(file = "data/aiddata/mrmi/usaid_mrmiprelim09162021.csv") %>% 
+sub_obj_2_2_aiddata_content_consumers <- read_csv(file = "data/aiddata/mrmi/mrmi_dataset.csv") %>% 
         rename(country_name = country) %>% 
         mutate(values = I_cc,
                indicator_name = "sub_obj_2_2_aiddata_content_consumers",
@@ -6932,8 +7609,8 @@ sub_obj_2_2_aiddata_content_consumers <- read_csv(file = "data/aiddata/mrmi/usai
 # inspect
 sub_obj_2_2_aiddata_content_consumers
 sub_obj_2_2_aiddata_content_consumers %>% glimpse()
-sub_obj_2_2_aiddata_content_consumers %>% nrow() # 170
-sub_obj_2_2_aiddata_content_consumers %>% ncol() # 9
+sub_obj_2_2_aiddata_content_consumers %>% nrow() # 187
+sub_obj_2_2_aiddata_content_consumers %>% ncol() # 18
 
 # check values
 sub_obj_2_2_aiddata_content_consumers %>% count(year)
@@ -6941,7 +7618,6 @@ sub_obj_2_2_aiddata_content_consumers %>% count(country_name)
 sub_obj_2_2_aiddata_content_consumers %>% skim(values, I_cc)
 
 # check county names
-# note FD index does not have data for kosovo, or monetenegro
 sub_obj_2_2_aiddata_content_consumers %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name)
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% 
@@ -6972,8 +7648,8 @@ sub_obj_2_2_aiddata_content_consumers <- sub_obj_2_2_aiddata_content_consumers %
 # inspect
 sub_obj_2_2_aiddata_content_consumers
 sub_obj_2_2_aiddata_content_consumers %>% glimpse()
-sub_obj_2_2_aiddata_content_consumers %>% nrow() # 900
-sub_obj_2_2_aiddata_content_consumers %>% ncol() # 34
+sub_obj_2_2_aiddata_content_consumers %>% nrow() # 945
+sub_obj_2_2_aiddata_content_consumers %>% ncol() # 47
 
 # inspect
 sub_obj_2_2_aiddata_content_consumers %>% distinct(country) %>% nrow() # 45
@@ -6998,10 +7674,10 @@ sub_obj_2_2_aiddata_content_consumers %>% group_by(year) %>% skim(values)
 
 # plot
 sub_obj_2_2_aiddata_content_consumers %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
-        filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
 
@@ -7016,31 +7692,31 @@ test_values_sub_obj_2_2_aiddata_content_consumers <- function() {
         expect_equal(object = sub_obj_2_2_aiddata_content_consumers %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(values),
-                     expected = 57.843758)
+                     expected = 58.462757)
         
         # 2
         expect_equal(object = sub_obj_2_2_aiddata_content_consumers %>% 
                              filter(country == "Kosovo", year == 2016) %>%
                              pull(values),
-                     expected = 59.212166)
+                     expected = 59.840622)
         
         # 3
         expect_equal(object = sub_obj_2_2_aiddata_content_consumers %>% 
                              filter(country == "Belarus", year == 2010) %>%
                              pull(values),
-                     expected = 46.620358)
+                     expected = 46.654621)
         
         # 4
         expect_equal(object = sub_obj_2_2_aiddata_content_consumers %>% 
                              filter(country == "Moldova", year == 2019) %>%
                              pull(values),
-                     expected = 63.983387)
+                     expected = 60.549545)
         
         # 5
         expect_equal(object = sub_obj_2_2_aiddata_content_consumers %>% 
-                             filter(country == "Serbia", year == 2013) %>%
+                             filter(country == "Serbia", year == 2020) %>%
                              pull(values),
-                     expected = 53.074059)
+                     expected = 58.736336)
 }
 test_values_sub_obj_2_2_aiddata_content_consumers()
 
@@ -7056,8 +7732,8 @@ sub_obj_2_2_aiddata_content_consumers <- read.csv(file = "data/fmir/sub_obj_2_2_
 # inspect
 sub_obj_2_2_aiddata_content_consumers
 sub_obj_2_2_aiddata_content_consumers %>% glimpse()
-sub_obj_2_2_aiddata_content_consumers %>% nrow() # 900
-sub_obj_2_2_aiddata_content_consumers %>% ncol() # 34
+sub_obj_2_2_aiddata_content_consumers %>% nrow() # 945
+sub_obj_2_2_aiddata_content_consumers %>% ncol() # 47
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -7097,8 +7773,13 @@ sub_obj_2_2_vdem_online_media_existence <- vdem %>% select(country_name, year, v
 # inspect
 sub_obj_2_2_vdem_online_media_existence
 sub_obj_2_2_vdem_online_media_existence %>% glimpse()
+sub_obj_2_2_vdem_online_media_existence %>% nrow() # 3743
+sub_obj_2_2_vdem_online_media_existence %>% ncol() # 5
+
+sub_obj_2_2_vdem_online_media_existence %>% count(year) %>% print(n = nrow(.))
 var_info("v2smonex")
 sub_obj_2_2_vdem_online_media_existence %>% arrange(desc(values)) %>% distinct(country_name)
+sub_obj_2_2_vdem_online_media_existence %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_2_vdem_online_media_existence %>% skim()
 
 # inspect country names
@@ -7126,8 +7807,8 @@ sub_obj_2_2_vdem_online_media_existence <- sub_obj_2_2_vdem_online_media_existen
 # inspect
 sub_obj_2_2_vdem_online_media_existence
 sub_obj_2_2_vdem_online_media_existence %>% glimpse()
-sub_obj_2_2_vdem_online_media_existence %>% nrow() # 900
-sub_obj_2_2_vdem_online_media_existence %>% ncol() # 29
+sub_obj_2_2_vdem_online_media_existence %>% nrow() # 945
+sub_obj_2_2_vdem_online_media_existence %>% ncol() # 34
 
 # check country/year
 sub_obj_2_2_vdem_online_media_existence %>% distinct(country) %>% nrow() # 45
@@ -7140,12 +7821,12 @@ sub_obj_2_2_vdem_online_media_existence %>% filter(indicator_name == "sub_obj_2_
 
 # plot
 sub_obj_2_2_vdem_online_media_existence %>%
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1)
 
 # inspect summary stats on indicators
 sub_obj_2_2_vdem_online_media_existence %>% group_by(indicator_name) %>%
@@ -7214,7 +7895,7 @@ sub_obj_2_3_msi_freedom_of_speech <- read_excel(path = "data/irex_msi/irex_msi_d
                                         TRUE ~ country_name))
 
 # get vibe
-vibe_principle_2_multiple_channels <- read_excel(path = "data/irex_msi/vibe-scores-2021.xlsx", sheet = "VIBE 2021", skip = 1) %>%
+vibe_principle_2_multiple_channels <- read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2021", skip = 1) %>%
         rename(country_name = "...1", values = `Principle 2`) %>%
         filter(country_name != "Country Name") %>%
         select(country_name, values) %>%
@@ -7227,7 +7908,23 @@ vibe_principle_2_multiple_channels <- read_excel(path = "data/irex_msi/vibe-scor
                                         country_name == "Macedonia" ~ "N. Macedonia",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
                                         TRUE ~ country_name)) %>%
-        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag)
+        select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag) %>%
+        bind_rows(., 
+                  read_excel(path = "data/irex_msi/vibe-scores-2021 - 2022 final.xlsx", sheet = "VIBE 2022", skip = 1) %>%
+                          rename(country_name = "...1", values = `Principle 2`) %>%
+                          filter(country_name != "Country Name") %>%
+                          select(country_name, values) %>%
+                          mutate(report_year = 2022,
+                                 year = 2021,
+                                 values = as.numeric(values),
+                                 indicator_name = "sub_obj_2_3_msi_freedom_of_speech",
+                                 high_value_is_good_outcome_flag = 1,
+                                 country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                                          country_name == "Macedonia" ~ "N. Macedonia",
+                                                          country_name == "North Macedonia" ~ "N. Macedonia",
+                                                          country_name == "Kazahkstan" ~ "Kazakhstan",
+                                                          TRUE ~ country_name)) %>%
+                          select(country_name, year, report_year, indicator_name, values, high_value_is_good_outcome_flag))
 
 
 # combine msi and vibe
@@ -7242,10 +7939,10 @@ sub_obj_2_3_msi_freedom_of_speech <- sub_obj_2_3_msi_freedom_of_speech %>%
 # note msi has 20 countries for 2001-2007, then 21 countries for 2008-2019
 sub_obj_2_3_msi_freedom_of_speech
 sub_obj_2_3_msi_freedom_of_speech %>% glimpse()
-sub_obj_2_3_msi_freedom_of_speech %>% nrow() # 385
+sub_obj_2_3_msi_freedom_of_speech %>% nrow() # 403
 sub_obj_2_3_msi_freedom_of_speech %>% ncol() # 6
 
-
+sub_obj_2_3_msi_freedom_of_speech %>% count(year)
 sub_obj_2_3_msi_freedom_of_speech %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_2_3_msi_freedom_of_speech %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_3_msi_freedom_of_speech %>% skim()
@@ -7277,8 +7974,8 @@ sub_obj_2_3_msi_freedom_of_speech <- sub_obj_2_3_msi_freedom_of_speech %>%
 # inspect
 sub_obj_2_3_msi_freedom_of_speech
 sub_obj_2_3_msi_freedom_of_speech %>% glimpse()
-sub_obj_2_3_msi_freedom_of_speech %>% nrow() # 900
-sub_obj_2_3_msi_freedom_of_speech %>% ncol() # 31
+sub_obj_2_3_msi_freedom_of_speech %>% nrow() # 945
+sub_obj_2_3_msi_freedom_of_speech %>% ncol() # 35
 
 # check country/year
 sub_obj_2_3_msi_freedom_of_speech %>% count(country) %>% print(n = nrow(.))
@@ -7329,29 +8026,26 @@ sub_obj_2_3_msi_freedom_of_speech %>% group_by(country) %>% skim(values)
 
 
 # impute 2019 values as midpoint of 2018 MSI and 2020 VIBE
-# manually assign the CARs the eurasia avg, since this will avoid it's earlier MSI values from being extended during imputation 
-# to fill all the missing VIBE values 
+# note, now that VIBE has 2021 values for CARs, they will get 2018-2021 interpolated values for missing 2019/2020 values
 sub_obj_2_3_msi_freedom_of_speech <- sub_obj_2_3_msi_freedom_of_speech %>%
         mutate(values_2018 = case_when(year == 2018 ~ values, 
                                        TRUE ~ NA_real_),
                values_2020 = case_when(year == 2020 ~ values, 
+                                       TRUE ~ NA_real_),
+               values_2021 = case_when(year == 2021 ~ values, 
                                        TRUE ~ NA_real_)) %>%
         group_by(country) %>% 
         fill(values_2018, .direction = "updown") %>%
         fill(values_2020, .direction = "updown") %>%
+        fill(values_2021, .direction = "updown") %>%
         ungroup() %>%
-        mutate(values = case_when(year == 2019 ~ ((values_2020 - values_2018) / 2) + values_2018,
-                                  TRUE ~ values)) %>%
-        group_by(mcp_grouping, year) %>%
-        mutate(regional_annual_avg = mean(values, na.rm = TRUE)) %>%
-        ungroup() %>%
-        mutate(eurasia_annual_avg = case_when(mcp_grouping == "E&E Eurasia" ~ regional_annual_avg,
-                                              TRUE ~ NA_real_)) %>%
-        group_by(year) %>% 
-        fill(eurasia_annual_avg, .direction = "updown") %>%
-        ungroup() %>%
-        mutate(values = case_when(mcp_grouping == "CARs" & year >= 2019 & is.na(values) ~ eurasia_annual_avg,
-                                  TRUE ~ values))
+        mutate(values = case_when((year == 2019) & (mcp_grouping != "CARs") & (is.na(values)) ~ 
+                                          ((values_2020 - values_2018) / 2) + values_2018,
+                                  (year == 2019) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3) + values_2018,
+                                  (year == 2020) & (mcp_grouping == "CARs") & (is.na(values)) ~ 
+                                          ((values_2021 - values_2018) / 3)*2 + values_2018,
+                                  TRUE ~ values)) 
 
 
 #/////////////////////
@@ -7360,14 +8054,15 @@ sub_obj_2_3_msi_freedom_of_speech <- sub_obj_2_3_msi_freedom_of_speech %>%
 # inspect
 sub_obj_2_3_msi_freedom_of_speech
 sub_obj_2_3_msi_freedom_of_speech %>% glimpse()
-sub_obj_2_3_msi_freedom_of_speech %>% nrow() # 900
-sub_obj_2_3_msi_freedom_of_speech %>% ncol() # 35
+sub_obj_2_3_msi_freedom_of_speech %>% nrow() # 945
+sub_obj_2_3_msi_freedom_of_speech %>% ncol() # 38
 
 # inspect
 sub_obj_2_3_msi_freedom_of_speech %>%
-        select(country, mcp_grouping, year, values, values_2018, values_2020, regional_annual_avg, eurasia_annual_avg) %>% 
+        select(country, mcp_grouping, year, values, values_2018, values_2020, values_2021) %>% 
         filter(mcp_grouping != "EU-15") %>% 
         filter(mcp_grouping == "CARs") %>%
+        filter(year >= 2010) %>%
         print(n = 30) 
 
 
@@ -7376,13 +8071,13 @@ sub_obj_2_3_msi_freedom_of_speech %>%
 
 # plot
 sub_obj_2_3_msi_freedom_of_speech %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
-        # filter(mcp_grouping == "CARs") %>%
+        filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() +
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) +
         scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
 
 
@@ -7424,9 +8119,15 @@ test_values_sub_obj_2_3_msi_freedom_of_speech <- function() {
         
         # 6
         expect_equal(object = sub_obj_2_3_msi_freedom_of_speech %>% 
+                             filter(country == "Tajikistan", year == 2019) %>%
+                             pull(values),
+                     expected = ((13 - (1.63 * 10)) / 3) + (1.63 * 10))
+        
+        # 6
+        expect_equal(object = sub_obj_2_3_msi_freedom_of_speech %>% 
                              filter(country == "Tajikistan", year == 2020) %>%
                              pull(values),
-                     expected = mean(c(28, 9, 13, 19, 24, 26)))
+                     expected = ((13 - (1.63 * 10)) / 3)*2 + (1.63 * 10))
 }
 test_values_sub_obj_2_3_msi_freedom_of_speech()
 
@@ -7446,7 +8147,7 @@ sub_obj_2_3_msi_freedom_of_speech <- read_csv(file = "data/fmir/sub_obj_2_3_msi_
 
 # load sub_obj_2_3_aiddata_institutional_environment ####
 
-sub_obj_2_3_aiddata_institutional_environment <- read_csv(file = "data/aiddata/mrmi/usaid_mrmiprelim09162021.csv") %>% 
+sub_obj_2_3_aiddata_institutional_environment <- read_csv(file = "data/aiddata/mrmi/mrmi_dataset.csv") %>% 
         rename(country_name = country) %>% 
         mutate(values = I_ie,
                indicator_name = "sub_obj_2_3_aiddata_institutional_environment",
@@ -7463,8 +8164,8 @@ sub_obj_2_3_aiddata_institutional_environment <- read_csv(file = "data/aiddata/m
 # inspect
 sub_obj_2_3_aiddata_institutional_environment
 sub_obj_2_3_aiddata_institutional_environment %>% glimpse()
-sub_obj_2_3_aiddata_institutional_environment %>% nrow() # 170
-sub_obj_2_3_aiddata_institutional_environment %>% ncol() # 9
+sub_obj_2_3_aiddata_institutional_environment %>% nrow() # 187
+sub_obj_2_3_aiddata_institutional_environment %>% ncol() # 18
 
 # check values
 sub_obj_2_3_aiddata_institutional_environment %>% count(year)
@@ -7534,7 +8235,7 @@ sub_obj_2_3_aiddata_institutional_environment %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -7547,31 +8248,31 @@ test_values_sub_obj_2_3_aiddata_institutional_environment <- function() {
         expect_equal(object = sub_obj_2_3_aiddata_institutional_environment %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(values),
-                     expected = 64.617508)
+                     expected = 59.0103)
         
         # 2
         expect_equal(object = sub_obj_2_3_aiddata_institutional_environment %>% 
                              filter(country == "Kosovo", year == 2016) %>%
                              pull(values),
-                     expected = 59.921257)
+                     expected = 53.61076)
         
         # 3
         expect_equal(object = sub_obj_2_3_aiddata_institutional_environment %>% 
                              filter(country == "Belarus", year == 2010) %>%
                              pull(values),
-                     expected = 37.202579)
+                     expected = 43.795841)
         
         # 4
         expect_equal(object = sub_obj_2_3_aiddata_institutional_environment %>% 
                              filter(country == "Moldova", year == 2019) %>%
                              pull(values),
-                     expected = 65.138901)
+                     expected = 59.11298)
         
         # 5
         expect_equal(object = sub_obj_2_3_aiddata_institutional_environment %>% 
-                             filter(country == "Serbia", year == 2013) %>%
+                             filter(country == "Serbia", year == 2020) %>%
                              pull(values),
-                     expected = 64.081169)
+                     expected = 53.905514)
 }
 test_values_sub_obj_2_3_aiddata_institutional_environment()
 
@@ -7587,8 +8288,8 @@ sub_obj_2_3_aiddata_institutional_environment <- read.csv(file = "data/fmir/sub_
 # inspect
 sub_obj_2_3_aiddata_institutional_environment
 sub_obj_2_3_aiddata_institutional_environment %>% glimpse()
-sub_obj_2_3_aiddata_institutional_environment %>% nrow() # 900
-sub_obj_2_3_aiddata_institutional_environment %>% ncol() # 34
+sub_obj_2_3_aiddata_institutional_environment %>% nrow() # 945
+sub_obj_2_3_aiddata_institutional_environment %>% ncol() # 47
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -7628,8 +8329,13 @@ sub_obj_2_3_vdem_gov_censor_of_media_effort <- vdem %>% select(country_name, yea
 # inspect
 sub_obj_2_3_vdem_gov_censor_of_media_effort
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% glimpse()
+sub_obj_2_3_vdem_gov_censor_of_media_effort %>% nrow() # 3743
+sub_obj_2_3_vdem_gov_censor_of_media_effort %>% ncol() # 5
+
+sub_obj_2_3_vdem_gov_censor_of_media_effort %>% count(year) %>% print(n = nrow(.))
 var_info("v2mecenefm")
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% arrange(desc(values)) %>% distinct(country_name)
+sub_obj_2_3_vdem_gov_censor_of_media_effort %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% skim()
 
 # inspect country names
@@ -7657,8 +8363,8 @@ sub_obj_2_3_vdem_gov_censor_of_media_effort <- sub_obj_2_3_vdem_gov_censor_of_me
 # inspect
 sub_obj_2_3_vdem_gov_censor_of_media_effort
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% glimpse()
-sub_obj_2_3_vdem_gov_censor_of_media_effort %>% nrow() # 900
-sub_obj_2_3_vdem_gov_censor_of_media_effort %>% ncol() # 29
+sub_obj_2_3_vdem_gov_censor_of_media_effort %>% nrow() # 945
+sub_obj_2_3_vdem_gov_censor_of_media_effort %>% ncol() # 34
 
 # check country/year
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% distinct(country) %>% nrow() # 45
@@ -7672,11 +8378,11 @@ sub_obj_2_3_vdem_gov_censor_of_media_effort %>% filter(indicator_name == "sub_ob
 # plot
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_3_vdem_gov_censor_of_media_effort %>% group_by(indicator_name) %>% 
@@ -7732,8 +8438,13 @@ sub_obj_2_3_vdem_harassment_of_journalists <- vdem %>% select(country_name, year
 # inspect
 sub_obj_2_3_vdem_harassment_of_journalists
 sub_obj_2_3_vdem_harassment_of_journalists %>% glimpse()
+sub_obj_2_3_vdem_harassment_of_journalists %>% nrow() # 3743
+sub_obj_2_3_vdem_harassment_of_journalists %>% ncol() # 5
+
+sub_obj_2_3_vdem_harassment_of_journalists %>% count(year) %>% print(n = nrow(.))
 var_info("v2mecenefm")
 sub_obj_2_3_vdem_harassment_of_journalists %>% arrange(desc(values)) %>% distinct(country_name)
+sub_obj_2_3_vdem_harassment_of_journalists %>% arrange(values) %>% distinct(country_name)
 sub_obj_2_3_vdem_harassment_of_journalists %>% skim()
 
 # inspect country names
@@ -7765,8 +8476,8 @@ sub_obj_2_3_vdem_harassment_of_journalists <- sub_obj_2_3_vdem_harassment_of_jou
 # inspect
 sub_obj_2_3_vdem_harassment_of_journalists
 sub_obj_2_3_vdem_harassment_of_journalists %>% glimpse()
-sub_obj_2_3_vdem_harassment_of_journalists %>% nrow() # 900
-sub_obj_2_3_vdem_harassment_of_journalists %>% ncol() # 29
+sub_obj_2_3_vdem_harassment_of_journalists %>% nrow() # 945
+sub_obj_2_3_vdem_harassment_of_journalists %>% ncol() # 34
 
 # check country/year
 sub_obj_2_3_vdem_harassment_of_journalists %>% distinct(country) %>% nrow() # 45
@@ -7784,7 +8495,7 @@ sub_obj_2_3_vdem_harassment_of_journalists %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_2_3_vdem_harassment_of_journalists %>% group_by(indicator_name) %>% 
@@ -7811,11 +8522,8 @@ sub_obj_2_3_vdem_harassment_of_journalists <- read_csv(file = "data/fmir/sub_obj
 
 # downloaded from http://wds.iea.org -> World Energy Balances
 # downloaded table is configured so that flow, unit, country, time are rows; while product is column
-# note that as of 2/22/2022, IEA subscription site still does not have updated 2020 TES total values for several E&E presence
-# countries (eg belarus, armenia, etc)
-# for this reason, i have not re-pulled the IEA data since 20210805, assuming that if it still lacks E&E then it's either
-# not been updated at all, or even it has been partially updated, it's not worth the effort to 
-# re-pull/update it all for a partial update
+
+# iea energy balance data table: https://www.iea.org/data-and-statistics/data-tools/energy-statistics-data-browser?country=WORLD&fuel=Energy%20supply&indicator=TESbySource
 
 # note IEA conversion rate between TJ and TOES is listed below (from OECD website, and matches IEA online calculator and data)
 # Unit of measurement of energy consumption : 1 TOE = 0.041868 TJ.
@@ -7831,42 +8539,52 @@ sub_obj_2_3_vdem_harassment_of_journalists <- read_csv(file = "data/fmir/sub_obj
 # note values of ".." and "c" are converted to NA
 # note there will be one parsing failure for each csv read because of IEA's odd dual-header structure
 # row 1 has 5 columns instead of 19 columns, but its subsequently sliced off from each csv
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- read_csv(file = "data/iea/energy_balances_2001_to_2020_downloaded/iea_ee_energy_balances_2001_to_2004_20210805.csv",
-                                na = c("..", "c", "NA", "nan")) %>%
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2000_to_2002_20221121.csv",
+                                                               na = c("..", "c", "NA", "nan")) %>%
         slice(-1) %>%
-        bind_rows(., read_csv(file = "data/iea/energy_balances_2001_to_2020_downloaded/iea_ee_energy_balances_2005_to_2008_20210805.csv",
-                               na = c("..", "c", "NA", "nan")) %>%
-                          slice(-1)) %>% 
-        bind_rows(., read_csv(file = "data/iea/energy_balances_2001_to_2020_downloaded/iea_ee_energy_balances_2009_to_2012_20210805.csv",
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2003_to_2005_20221121.csv",
                               na = c("..", "c", "NA", "nan")) %>%
                           slice(-1)) %>% 
-        bind_rows(., read_csv(file = "data/iea/energy_balances_2001_to_2020_downloaded/iea_ee_energy_balances_2013_to_2016_20210805.csv",
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2006_to_2008_20221121.csv",
                               na = c("..", "c", "NA", "nan")) %>%
                           slice(-1)) %>% 
-        bind_rows(., read_csv(file = "data/iea/energy_balances_2001_to_2020_downloaded/iea_ee_energy_balances_2017_to_2020_20210805.csv",
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2009_to_2011_20221121.csv",
+                              na = c("..", "c", "NA", "nan")) %>%
+                          slice(-1)) %>% 
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2012_to_2014_20221121.csv",
+                              na = c("..", "c", "NA", "nan")) %>%
+                          slice(-1)) %>% 
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2015_to_2017_20221121.csv",
+                              na = c("..", "c", "NA", "nan")) %>%
+                          slice(-1)) %>% 
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2018_to_2020_20221121.csv",
+                              na = c("..", "c", "NA", "nan")) %>%
+                          slice(-1)) %>% 
+        bind_rows(., read_csv(file = "data/iea/energy_balances_2000_to_2021_downloaded/iea_ee_energy_balances_2021_20221121.csv",
                               na = c("..", "c", "NA", "nan")) %>%
                           slice(-1)) %>% 
         rename(flow = ...1, unit = ...2, country_name = ...3, year = PRODUCT,
-                             coal_and_coal_products = `Coal and coal products`,
-                             peat_and_peat_products = `Peat and peat products`,
-                             oil_shale_and_oil_sands = `Oil shale and oil sands`,
-                             crude_oil = `Crude, NGL and feedstocks`,
-                             oil_products = `Oil products`,
-                             natural_gas = `Natural gas`,
-                             nuclear = Nuclear,
-                             hydro = Hydro,
-                             geothermal = Geothermal,
-                             wind_solar_etc = `Solar/wind/other`,
-                             biofuels_and_waste = `Biofuels and waste`,
-                heat_from_non_specified_combustible_fuels = `Heat production from non-specified combustible fuels`,
-                             electricity = Electricity,
-                             heat = Heat,
-                             total = Total) %>%
+               coal_and_coal_products = `Coal and coal products`,
+               peat_and_peat_products = `Peat and peat products`,
+               oil_shale_and_oil_sands = `Oil shale and oil sands`,
+               crude_oil = `Crude, NGL and feedstocks`,
+               oil_products = `Oil products`,
+               natural_gas = `Natural gas`,
+               nuclear = Nuclear,
+               hydro = Hydro,
+               geothermal = Geothermal,
+               wind_solar_etc = `Solar/wind/other`,
+               biofuels_and_waste = `Biofuels and waste`,
+               heat_from_non_specified_combustible_fuels = `Heat production from non-specified combustible fuels`,
+               electricity = Electricity,
+               heat = Heat,
+               total = Total) %>%
         mutate(year = as.numeric(year)) %>%
-        filter(unit == "ktoe") %>%
+        filter(unit == "TJ",
+               !(country_name %in% c("People's Republic of China", "Malta", "Cyprus"))) %>%
         select(country_name, year, unit, flow, everything()) %>%
         pivot_longer(cols = -c("country_name", "year", "flow", "unit"), names_to = "var", values_to = "values")
-        
+
 
 #/////////////////////////
 
@@ -7874,11 +8592,15 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- read_csv(file = "data/iea/
 # inspect
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% glimpse()
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 108000 (45 countries * 20 years * 8 flows * 15 vars)
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 148500 (45 countries * 22 years * 10 flows * 15 vars)
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 6
 
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(country_name) %>% print(n = nrow(.))
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(country_name) %>% nrow() # 45
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(year) # 20
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(year) # 22
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(flow) # 10
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(var) # 15
+
 
 # note that long records are unique at country/year/flow/var level
 # 5400 records per country (20 years * 8 flows * 15 vars = 2400)
@@ -7895,28 +8617,26 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(var)
 # vars are numeric, very minimal NAs, all due to values of ".." or "c", none by coercion
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% skim()
 
-# 539 country/year/flow/var combo records with NA values once filtering out 2020; none are e&e presence countries
-# vast majority is montenegro (480 records), then ireland (23 records), czech rep (11 records),
-# france (6 records), italy (6 records), us (6 records), belgium (4 records), germany (2 records), finland (1 records)
+# many countries with missing data for country/year/flow/var record
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
         filter(is.na(values)) %>%
-        filter(year <= 2019) %>%
         count(country_name) %>% arrange(desc(n)) %>% print(n = nrow(.))
-        # count(year)
-        # count(flow)
-        # count(var)
-        # count(country_name, flow, var) %>% arrange(country_name, desc(n)) %>% print(n = nrow(.))
+# count(year) %>% print(n = nrow(.))
+# count(flow) %>% print(n = nrow(.))
+# count(var) %>% print(n = nrow(.))
+# count(country_name, flow, var) %>% arrange(country_name, desc(n)) %>% print(n = nrow(.))
 
-# note that total final consumption is missing for 2020 for several countries
-# note that 20 countries are still missing 2020 TES total, including 8 e&e presence countries
+# note that 20 countries are still missing 2021 TES total, including all 11 e&e presence countries
+# note that total total consumption is missing for 2021 for several countries
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
         filter(is.na(values),
                # country_name %in% c(country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% 
                #                             pull(country)),
                flow == "Total energy supply",
                var == "total") %>% 
+        count(country_name) %>% arrange(desc(n)) %>%
         print(n = nrow(.))
-        
+
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
         filter(is.na(values)) %>%
         # filter(country_name == "United Kingdom") %>%
@@ -7925,7 +8645,7 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
 
 # inspect specific country
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
-        filter(country_name == "Serbia", year == 2015, unit == "ktoe",
+        filter(country_name == "Serbia", year == 2015, unit == "TJ",
                flow %in% c("Production", "Total energy supply", "Total final consumption"),
                var == "total") 
 
@@ -7941,11 +8661,13 @@ country_crosswalk %>% filter(ee_region_flag == 1 | country == "United States") %
 
 
 # pivot_wider to combine fuel types, then pivot_longer, unite flow+var, and pivot combined flow/var back to wide
-# this creates one row per county/year
+# this creates one row per country/year
 # then create net_energy_imports_as_share_of_tes, and clean country names
 # note that the fuel_type combinations were manually confirmed using iea data tables website - sums matched exactly
-# https://www.iea.org/data-and-statistics/data-tables?country=GERMANY&energy=Balances&year=2019
-        
+# new: https://www.iea.org/data-and-statistics/data-tools/energy-statistics-data-browser?country=WORLD&fuel=Energy%20supply&indicator=TESbySource
+# old: https://www.iea.org/data-and-statistics/data-tables?country=GERMANY&energy=Balances&year=2019
+
+
 # calculate net energy imports as % of energy supply/use
 # in energy_and_infrastructure_portfolio_review.R this calculation of net energy imports was verified
 # against an outdated world bank times series
@@ -7985,7 +8707,7 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- sub_obj_3_1_iea_net_energy
                                         country_name == "United Kingdom" ~ "U.K.",
                                         country_name == "United States" ~ "U.S.",
                                         TRUE ~ country_name))
-                
+
 
 #//////////////////////////////////
 
@@ -7993,12 +8715,12 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- sub_obj_3_1_iea_net_energy
 # inspect
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% glimpse()
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 900
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 94
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 990 (45 countries * 22 years)
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 116
 
 # note data is now one row per country/year 
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(year)
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(country_name)
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(year) # 22
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(country_name) # 45
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(country_name, year) %>% arrange(desc(n))
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% skim()
 
@@ -8017,17 +8739,18 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
         select(country_name, year, TES_total, TFC_total, Production_total, 
                net_energy_imports_as_share_of_tfc, net_energy_imports_as_share_of_tes)
 
-# inspect 2020 for missing values not yet published
-# note that 20 countries are still missing 2020 TES_total, including all 11 e&e presence countries
+# inspect 2021 for missing values not yet published
+# note that 20 countries are still missing 2021 TES_total, including all 11 e&e presence countries
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
         group_by(year) %>%
         skim(net_energy_imports_as_share_of_tes)
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
-        filter(is.na(net_energy_imports_as_share_of_tes), year == 2020) %>%
-        select(country, year, TES_total)
+        filter(is.na(net_energy_imports_as_share_of_tes), year == 2021) %>%
+        select(country_name, year, TES_total)
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
-        filter(!is.na(TES_total), year == 2020) %>%
-        select(country, year, net_energy_imports_as_share_of_tes)
+        filter(!is.na(TES_total), year == 2021) %>%
+        select(country_name, year, net_energy_imports_as_share_of_tes) %>%
+        print(n = nrow(.))
 
 # inspect specific countries
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
@@ -8039,72 +8762,32 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
 #/////////////////////////
 
 
-# check again previous_iea data scraped from website 
-# for indicator of net_energy_imports_as_share_of_tes from EI portolio review
-previous_iea <- read_csv(file = "data/iea/for_inspection/iea_20201218.csv")
-
-# inspect
-previous_iea
-previous_iea %>% glimpse()
-previous_iea %>% nrow() # 350
-previous_iea %>% ncol() # 163
-
-previous_iea %>% count(country) # 35
-previous_iea %>% count(year) # 2009-2018
-
-# note the largest abs_diff is .09; the 75th percentile abs_diff is .0017
-# result, extremely minor differences with previous_iea data scraped off web; likely just data updates
-previous_iea %>% select(country, year, net_energy_imports_as_share_of_tes) %>%
-        rename(net_energy_imports_as_share_of_tes_previous = net_energy_imports_as_share_of_tes) %>%
-        left_join(., sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
-                          select(country_name, year, net_energy_imports_as_share_of_tes), 
-                  by = c("country" = "country_name", "year")) %>%
-        mutate(diff = net_energy_imports_as_share_of_tes - net_energy_imports_as_share_of_tes_previous,
-               abs_diff = abs(diff),
-               pct_diff = diff / net_energy_imports_as_share_of_tes,
-               abs_pct_diff = abs(pct_diff)) %>% 
-        # skim()
-        # arrange(desc(abs_pct_diff))
-        arrange(desc(abs_diff))
-        
-# plot
-previous_iea %>% select(country, year, net_energy_imports_as_share_of_tes) %>%
-        rename(net_energy_imports_as_share_of_tes_previous = net_energy_imports_as_share_of_tes) %>%
-        left_join(., sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
-                          select(country_name, year, net_energy_imports_as_share_of_tes), 
-                  by = c("country" = "country_name", "year")) %>%
-        mutate(diff = net_energy_imports_as_share_of_tes - net_energy_imports_as_share_of_tes_previous,
-               abs_diff = abs(diff),
-               pct_diff = diff / net_energy_imports_as_share_of_tes,
-               abs_pct_diff = abs(pct_diff)) %>% 
-        ggplot(data = ., mapping = aes(x = abs_diff)) + 
-        # stat_ecdf()
-        geom_histogram()
-
-
-#/////////////////////////
-
-
 # test net_energy_imports_as_share_of_tes values
 test_values_sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- function() {
         
         # serbia 2015
         expect_equal(object = sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
                              filter(country_name == "Serbia", year == 2015) %>%
+                             select(country_name, year, TES_total, Production_total, TFC_total, 
+                                    net_energy_imports, net_energy_imports_as_share_of_tes) %>%
                              pull(net_energy_imports_as_share_of_tes),
-                     expected = (14763.9697 - 10764.1412) / 14763.9697)
+                     expected = (618137.8834 - 450673.0638) / 618137.8834)
         
         # belarus 2011
         expect_equal(object = sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
-                             filter(country_name == "Belarus", year == 2013) %>%
+                             filter(country_name == "Belarus", year == 2011) %>%
+                             select(country_name, year, TES_total, Production_total, TFC_total, 
+                                    net_energy_imports, net_energy_imports_as_share_of_tes) %>%
                              pull(net_energy_imports_as_share_of_tes),
-                     expected = (27105.8471 - 3987.9326) / 27105.8471)
+                     expected = (1220777.3134 - 175179.0782) / 1220777.3134)
         
-        # germany 2019
+        # germany 2021
         expect_equal(object = sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
-                             filter(country_name == "Germany", year == 2019) %>%
+                             filter(country_name == "Germany", year == 2021) %>%
+                             select(country_name, year, TES_total, Production_total, TFC_total, 
+                                    net_energy_imports, net_energy_imports_as_share_of_tes) %>%
                              pull(net_energy_imports_as_share_of_tes),
-                     expected = (294331.8461 - 104394.5272) / 294331.8461)
+                     expected = (12052805.2466 - 4249675.8007) / 12052805.2466)
 }
 test_values_sub_obj_3_1_iea_net_energy_imports_as_share_of_tes()
 
@@ -8112,16 +8795,16 @@ test_values_sub_obj_3_1_iea_net_energy_imports_as_share_of_tes()
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# read/write final iea_energy_balances data ####
-# sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% 
-#         write_csv(file = "data/iea/iea_energy_balances_cleaned_20210902.csv")
-iea <- read_csv(file = "data/iea/iea_energy_balances_cleaned_20210902.csv")
+# read/write final iea_energy_balances data 
+# sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
+#         write_csv(file = "data/iea/iea_energy_balances_cleaned_20221220.csv")
+iea <- read_csv(file = "data/iea/iea_energy_balances_cleaned_20221220.csv")
 
 # inspect
 iea
 iea %>% glimpse()
-iea %>% nrow() # 900
-iea %>% ncol() # 94
+iea %>% nrow() # 990
+iea %>% ncol() # 116
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -8132,6 +8815,7 @@ iea %>% ncol() # 94
 # note will set variable "values" equal to zero for those 9 countries where net_energy_imports_as_share_of_tes < 0
 # to avoid swamping rest of variation - see inspection below; only azerbaijan is e&E presence country
 # the net_energy_imports_as_share_of_tes variable will remain unadjusted however for reference
+# azerbaijan and other net exporters still get a "perfect" score of 0, but users can still distinguish useful variation in non-net-exporters
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
         mutate(indicator_name = "sub_obj_3_1_iea_net_energy_imports_as_share_of_tes") %>%
         left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), .,
@@ -8151,12 +8835,12 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- sub_obj_3_1_iea_net_energy
 # inspect
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% glimpse()
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 900
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 121
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 945 (45 countries * 21 years)
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 148
 
 
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(country) # 45
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(year) # 20
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% count(year) # 21
 
 # inspect countries with negative net_energy_imports_as_share_of_tes
 # note will set 9 countries with net_energy_imports_as_share_of_tes < 0 to be equal to 0 since
@@ -8168,7 +8852,7 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
         filter(net_energy_imports_as_share_of_tes < 0) %>%
         select(country, year, net_energy_imports_as_share_of_tes, values) %>% 
         arrange(net_energy_imports_as_share_of_tes) %>%
-        # count(country)
+        count(country)
         print(n = 50)
 
 # plot
@@ -8178,7 +8862,7 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -8192,8 +8876,8 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes <- read_csv(file = "data/fmir
 # inspect
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes
 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% glimpse()
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 900
-sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 121
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% nrow() # 945
+sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 148
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -8205,9 +8889,23 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 121
 
 # https://drive.google.com/drive/folders/1R644_qzOzVw0fk0cZaPbX70K6m8fkd8y
 
+# note that "E&E ESI indexes All Countries.dta" was sent by kraemer on 9/21/2022 in the same email with ESI8.30.22.csv".
+# kraemer said on 12/20/2022 that "E&E ESI indexes All Countries.dta" was the most current data, and i saved the dta he re-linked
+
+# note on weighting from aiddata methodology dated 20220805
+# "After reviewing various types of weighting methods and testing three different methods, 
+# we decided to apply equal weighting to the components of the Energy Security Index. "
+
 # comparison of ESI data with documentation notes confirms that higher scores = better outcomes
 # eg "belarus and moldova are persistently among the most energy insecure", and both have the lowest overall ESI scores
 # also, sorting all countries by 2019 ESIindex score shows moldova 6th lowest out of 25, and highests are bulgaria, slovakia, poland
+
+# notes from methodology dated 20220805:
+# "Perhaps the most compelling and important finding from review of the ESI index results is that the assistance (i.e., AEECA) countries 
+# consistently have values below those for those countries that graduated from assistance. In 2020, all the AEECA countries had 
+# ESI index values below 50, whereas all graduate countries had values above 50.... "
+# The importance of this finding is that, although some AEECA countries are close in energy security to graduate countries and 
+# even have exceeded graduate countries in the past, all are currently below the graduates in terms of energy security. 
 
 # notes from aiddata documentation on 20210612 version:
 # Belarus and Moldova are persistently among the most energy insecure. Serbia and Ukraine are more secure, though 
@@ -8225,10 +8923,11 @@ sub_obj_3_1_iea_net_energy_imports_as_share_of_tes %>% ncol() # 121
 # Both of these countries have substantial coal resources. Moldova is a middling performer across most dimensions of energy 
 # security, though its relatively high scores on energy resilience were insufficient to make up for lagging levels of energy supply.
 
-sub_obj_3_1_aiddata_esi <- read_csv(file = "data/aiddata/esi/ESI.2.1.22.csv") %>%
+sub_obj_3_1_aiddata_esi <- read_dta(file = "data/aiddata/esi/E&E ESI indexes All Countries.dta") %>%
+        zap_formats() %>%
         rename(country_name = country) %>%
-        mutate(values = ESIindex_sem) %>%
-        select(country_name, year, values, ESIindex, ESIindex_pca, ESIindex_sem) %>%
+        mutate(values = ESIindex) %>%
+        select(country_name, year, values, ESIindex) %>%
         mutate(indicator_name = "sub_obj_3_1_aiddata_esi",
                high_value_is_good_outcome_flag = 1,
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
@@ -8243,20 +8942,23 @@ sub_obj_3_1_aiddata_esi <- read_csv(file = "data/aiddata/esi/ESI.2.1.22.csv") %>
 # inspect
 sub_obj_3_1_aiddata_esi
 sub_obj_3_1_aiddata_esi %>% glimpse()
-sub_obj_3_1_aiddata_esi %>% nrow() # 529
-sub_obj_3_1_aiddata_esi %>% ncol() # 8
+sub_obj_3_1_aiddata_esi %>% nrow() # 644 (28 countries * 23 years)
+sub_obj_3_1_aiddata_esi %>% ncol() # 6
+
+# check for inherited stata formats
+attributes(sub_obj_3_1_aiddata_esi$values) # should output NULL, instead of "$format.stata [1] "%10.0g""
 
 # check values
 # no missing values
-# has 23 countries (all except Czechia, Estonia, Slovenia, EU-15, Russia, or US)
-sub_obj_3_1_aiddata_esi %>% arrange(desc(values)) %>% distinct(country_name) %>% print(n = nrow(.))
+# has 28 countries (includes E&E presence, graduates, and CARS; lacks EU-15, Russia, and US)
+sub_obj_3_1_aiddata_esi %>% arrange(desc(values)) %>% distinct(country_name) %>% print(n = nrow(.)) # 28
 sub_obj_3_1_aiddata_esi %>% arrange(values) %>% distinct(country_name)
 sub_obj_3_1_aiddata_esi %>% skim()
 sub_obj_3_1_aiddata_esi %>% count(country_name) %>% print(n = nrow(.))
-sub_obj_3_1_aiddata_esi %>% count(year)
+sub_obj_3_1_aiddata_esi %>% count(year) %>% print(n = nrow(.)) # 23 years, up to 2020
 
 # inspect country names
-# note ESI does not have CARs, EU-15, Russia, or US
+# note ESI includes E&E presence, graduates, and CARS; lacks EU-15, Russia, and US
 sub_obj_3_1_aiddata_esi %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name)
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% distinct(country, mcp_grouping) %>%
@@ -8287,42 +8989,31 @@ sub_obj_3_1_aiddata_esi <- sub_obj_3_1_aiddata_esi %>%
 # inspect
 sub_obj_3_1_aiddata_esi
 sub_obj_3_1_aiddata_esi %>% glimpse()
-sub_obj_3_1_aiddata_esi %>% nrow() # 900
-sub_obj_3_1_aiddata_esi %>% ncol() # 33
+sub_obj_3_1_aiddata_esi %>% nrow() # 945 (45 countries * 11 years)
+sub_obj_3_1_aiddata_esi %>% ncol() # 35
 
-# had data for balkans, eurasia, and graduates (11 ee presence, 12 graduates)
-sub_obj_3_1_aiddata_esi %>% filter(!is.na(values)) %>% distinct(country, mcp_grouping) %>%
+# has all non-missing data for balkans, eurasia, graduates, and cars (11 ee presence, 12 graduates, 5 cars = 28)
+sub_obj_3_1_aiddata_esi %>% filter(!is.na(values)) %>% count(country, mcp_grouping) %>%
         arrange(mcp_grouping) %>% print(n = nrow(.))
 
-# Missing all values (2001-2019) for CARs, Russia, EU-15, and US
-sub_obj_3_1_aiddata_esi %>% filter(is.na(values), year <= 2019) %>% count(country) %>% 
-        arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_3_1_aiddata_esi %>% filter(is.na(values), year <= 2019, mcp_grouping == "EU-15") %>% count(country) %>% 
-        arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_3_1_aiddata_esi %>% filter(is.na(values), year <= 2019, mcp_grouping == "CARs") %>% 
-        count(country) %>% 
-        arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_3_1_aiddata_esi %>% filter(is.na(values), year <= 2019, 
-                                    !(mcp_grouping %in% c("E&E graduates", "EU-15", "U.S."))) %>% 
-        count(country) %>% 
-        arrange(desc(n)) %>% print(n = nrow(.))
-
-sub_obj_3_1_aiddata_esi %>% filter(is.na(values), year <= 2019) %>%
-        count(country, year) %>% print(n = nrow(.))
-sub_obj_3_1_aiddata_esi %>% filter(!is.na(values), year <= 2019) %>%
-        count(country) %>% print(n = nrow(.))
-sub_obj_3_1_aiddata_esi %>% filter(is.na(values), year <= 2019, 
-                                    mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-        count(country, year) %>% print(n = nrow(.))
+# Missing all values for Russia, EU-15, and US
+# has values for all ee presence countries, graduates, and CARs from 2000-2020 (missing 2021 for all)
+sub_obj_3_1_aiddata_esi %>% 
+        filter(is.na(values), year <= 2020) %>%
+        count(country, year) %>% 
+        print(n = nrow(.))
+sub_obj_3_1_aiddata_esi %>% 
+        filter(is.na(values), year <= 2020, 
+               mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARS")) %>%
+        count(country, year) %>% 
+        print(n = nrow(.))
 
 
 sub_obj_3_1_aiddata_esi  %>% skim(values)
 sub_obj_3_1_aiddata_esi  %>% group_by(year) %>% skim(values)
-sub_obj_3_1_aiddata_esi  %>% filter(year <= 2019) %>% skim(values)
-sub_obj_3_1_aiddata_esi  %>% filter(year <= 2019) %>% group_by(country) %>% skim(values)
+sub_obj_3_1_aiddata_esi  %>% filter(year <= 2020) %>% skim(values)
+sub_obj_3_1_aiddata_esi  %>% filter(year <= 2020) %>% group_by(country) %>% skim(values)
 
-# check values
-sub_obj_3_1_aiddata_esi %>% filter(indicator_name == "sub_obj_3_1_aiddata_esi") %>% skim(values)
 
 # plot
 sub_obj_3_1_aiddata_esi %>% 
@@ -8331,66 +9022,46 @@ sub_obj_3_1_aiddata_esi %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
-
-# plot ESIindex vs ESIindex_pcg vs ESIindex_sem
-# result: sem was recommended by rodney knight in their SOW for "Reform Analytics Inception Report - 20220105" with 
-# EURACE (see doc in data/esi folder)
-# "Data-defined weights will not require experts, thereby reducing the time and costs to produce them. 
-# In prior work (Knight et al., 2021), we chose data-defined weights based on PCA and structural equation modeling (SEM). 
-# The PCA weights are relatively straightforward to calculate, but those weights are linked to the structure of the data 
-# and not outcomes. This implies the PCA weights will reflect what is important in the data, but not necessarily what is 
-# important to the outcomes. We prefer SEM weights because these will assign weights according to the importance of the 
-# indicators relative to the outcomes."
-# note also that sem trend line for ee presence countries is usually significantly lower than index/pca, but tracks consistently
-# though for some country/years the sem does seem to reflect important outcomes - like ukraine dips sharply in 2015
-# so this also speaks to the appropriateness of sem
-sub_obj_3_1_aiddata_esi %>% 
-        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-        select(country, year, ESIindex, ESIindex_pca, ESIindex_sem) %>%
-        pivot_longer(cols = c(ESIindex, ESIindex_pca, ESIindex_sem), names_to = "var", values_to = "values") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = var)) + 
-        geom_line(size = 1) + facet_wrap(facets = vars(country)) + 
-        theme(
-                legend.position = "bottom"
-        )
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #///////////////////////
 
 
 # test values
+# note that "E&E ESI indexes All Countries.dta" was sent by kraemer on 9/21/2022 in the same email with 
+# "ESI8.30.22.csv". the values below were manually looked up in "ESI8.30.22.csv"
 test_values_sub_obj_3_1_aiddata_esi <- function() {
         
         # 1
         expect_equal(object = sub_obj_3_1_aiddata_esi %>% 
                              filter(country == "Armenia", year == 2017) %>%
                              pull(values),
-                     expected = 50.2247467041016)
+                     expected = 44.8508865356445)
         
         # 2
         expect_equal(object = sub_obj_3_1_aiddata_esi %>% 
                              filter(country == "Kosovo", year == 2017) %>%
                              pull(values),
-                     expected = 50.5157814025879)
+                     expected = 46.321138381958)
         
         # 3
         expect_equal(object = sub_obj_3_1_aiddata_esi %>% 
                              filter(country == "Kosovo", year == 2018) %>%
                              pull(values),
-                     expected = 50.9957084655762)
+                     expected = 46.6515884399414)
         
         # 4
         expect_equal(object = sub_obj_3_1_aiddata_esi %>% 
                              filter(country == "Ukraine", year == 2014) %>%
                              pull(values),
-                     expected = 52.6834907531738)
+                     expected = 47.1903484344482)
         
         # 5
         expect_equal(object = sub_obj_3_1_aiddata_esi %>% 
                              filter(country == "Ukraine", year == 2017) %>%
                              pull(values),
-                     expected = 50.0045433044434)
+                     expected = 47.0397232055664)
 }
 test_values_sub_obj_3_1_aiddata_esi()
 
@@ -8405,1313 +9076,8 @@ sub_obj_3_1_aiddata_esi <- read.csv(file = "data/fmir/sub_obj_3_1_aiddata_esi.cs
 # inspect
 sub_obj_3_1_aiddata_esi
 sub_obj_3_1_aiddata_esi %>% glimpse()
-sub_obj_3_1_aiddata_esi %>% nrow() # 900
-sub_obj_3_1_aiddata_esi %>% ncol() # 32
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# read atlas 4 digit import data ####
-
-# note atlas has no data on kosovo
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# read atlas hs codes w/ descriptions 
-hs <- read_stata("data/atlas_of_economic_complexity/hs_product.dta")
-hs
-
-# read atlas location codes
-location <- read_stata("data/atlas_of_economic_complexity/location.dta")
-location %>% filter(location_code == "ANS")
-location
-
-
-#//////////////////////////
-
-# inspect location
-# note that atlas has no data for kosovo
-country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% select(country, iso3) %>% 
-        anti_join(., location, by = c("iso3" = "location_code"))
-
-
-# inspect hs
-hs %>% count(hs_product_code)
-hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2711", ignore_case = TRUE)))
-hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2701", ignore_case = TRUE)))
-hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2709", ignore_case = TRUE)))
-hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2710", ignore_case = TRUE))) %>% print(n = nrow(.))
-hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2716", ignore_case = TRUE)))
-
-# note that iea uses the Standard International Energy Classifcation system (SIEC) 2018 edition
-# based on SIEC to HS crosswalk:
-# 2712 and 2713 needs to be added to oil products
-# 271112, 271113, 271114, 271119, and 271129 go to crude oil
-# 2715 is not in SIEC crosswalk table, so will drop it
-# 2702, 2703, 2704, 2705, 2706, 2707, 2708, 2714 go to coal 
-# see also IEA World Energy Balances Highlights 2020 spreadhseet definitions tab
-# iea highlights data: https://www.iea.org/reports/world-energy-balances-overview
-# see table on page 24 for SIEC to HS 2007 crosswalk: https://unstats.un.org/unsd/energystats/methodology/documents/IRES-web.pdf 
-# https://unstats.un.org/unsd/classifications/Family/Detail/2007
-# note there are no differences at 6 digit level to fossil energy HS 92 vs HS 2007 codes (2701, 2709, 2710, 2711)
-# to confirm no HS 2007 to HS 92 changes, see UN HS crosswalk tables: 
-# https://unstats.un.org/unsd/trade/classifications/correspondence-tables.asp
-
-
-# SIEC defition of fossil fuels on page 35:
-# this allows for plotting the IEA categories of coal, crude oil, refined oil, and natural gas
-# "For the purposes of the discussion on the scope of SIEC, fossil
-# fuels refer to coal, peat, oil and
-# natural gas, even though the
-# inclusion of peat in fossil fuels is
-# not universally accepted."
-
-# note that eurostat cites share of fuel type imports from russia
-# and in the calculation notes "Imports from not specified countries excluded"
-# https://ec.europa.eu/eurostat/cache/infographs/energy/bloc-2c.html#carouselControls?lang=en
-# https://ec.europa.eu/eurostat/databrowser/view/NRG_IND_ID__custom_938402/bookmark/table?lang=en,en&bookmarkId=f1ab4519-82df-4a89-a329-1b8d0a5925f7
-# https://www.eia.gov/international/analysis/country/DEU
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2001_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2001.csv")
-# atlas_2001_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2001.csv")
-rm(atlas_2001_4digit)
-atlas_2001_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2001.csv")
-atlas_2001_4digit
-atlas_2001_4digit %>% glimpse()
-atlas_2001_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2001_4digit %>% count(location_code)
-# note that kosovo is missing for all years, and montenegro (2001-2005), and serbia (2001-2004) are missing for early years
-atlas_2001_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2002_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2002.csv")
-# atlas_2002_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2002.csv")
-rm(atlas_2002_4digit)
-atlas_2002_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2002.csv")
-atlas_2002_4digit
-atlas_2002_4digit %>% glimpse()
-atlas_2002_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2002_4digit %>% count(location_code)
-# note that kosovo is missing for all years, and montenegro (2001-2005), and serbia (2001-2004) are missing for early years
-atlas_2002_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2003_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2003.csv")
-# atlas_2003_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2003.csv")
-rm(atlas_2003_4digit)
-atlas_2003_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2003.csv")
-atlas_2003_4digit
-atlas_2003_4digit %>% glimpse()
-atlas_2003_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2003_4digit %>% count(location_code)
-# note that kosovo is missing for all years, and montenegro (2001-2005), and serbia (2001-2004) are missing for early years
-atlas_2003_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2004_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2004.csv")
-# atlas_2004_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2004.csv")
-rm(atlas_2004_4digit)
-atlas_2004_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2004.csv")
-atlas_2004_4digit
-atlas_2004_4digit %>% glimpse()
-atlas_2004_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2004_4digit %>% count(location_code)
-# note that kosovo is missing for all years, and montenegro (2001-2005), and serbia (2001-2004) are missing for early years
-atlas_2004_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2005_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2005.csv")
-# atlas_2005_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2005.csv")
-rm(atlas_2005_4digit)
-atlas_2005_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2005.csv")
-atlas_2005_4digit
-atlas_2005_4digit %>% glimpse()
-atlas_2005_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2005_4digit %>% count(location_code)
-# note that kosovo is missing for all years, and montenegro (2001-2005) are missing for early years
-atlas_2005_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2006_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2006.csv")
-# atlas_2006_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2006.csv")
-rm(atlas_2006_4digit)
-atlas_2006_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2006.csv")
-atlas_2006_4digit
-atlas_2006_4digit %>% glimpse()
-atlas_2006_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2006_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2006_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2007_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2007.csv")
-# atlas_2007_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2007.csv")
-rm(atlas_2007_4digit)
-atlas_2007_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2007.csv")
-atlas_2007_4digit
-atlas_2007_4digit %>% glimpse()
-atlas_2007_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2007_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2007_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2008_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2008.csv")
-# atlas_2008_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2008.csv")
-rm(atlas_2008_4digit)
-atlas_2008_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2008.csv")
-atlas_2008_4digit
-atlas_2008_4digit %>% glimpse()
-atlas_2008_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2008_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2008_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2009_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2009.csv")
-# atlas_2009_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2009.csv")
-rm(atlas_2009_4digit)
-atlas_2009_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2009.csv")
-atlas_2009_4digit
-atlas_2009_4digit %>% glimpse()
-atlas_2009_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2009_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2009_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2010_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2010.csv")
-# atlas_2010_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2010.csv")
-rm(atlas_2010_4digit)
-atlas_2010_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2010.csv")
-atlas_2010_4digit
-atlas_2010_4digit %>% glimpse()
-atlas_2010_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2010_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2010_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2011_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2011.csv")
-# atlas_2011_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2011.csv")
-rm(atlas_2011_4digit)
-atlas_2011_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2011.csv")
-atlas_2011_4digit
-atlas_2011_4digit %>% glimpse()
-atlas_2011_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2011_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2011_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2012_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2012.csv")
-# atlas_2012_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2012.csv")
-rm(atlas_2012_4digit)
-atlas_2012_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2012.csv")
-atlas_2012_4digit
-atlas_2012_4digit %>% glimpse()
-atlas_2012_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2012_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2012_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2013_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2013.csv")
-# atlas_2013_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2013.csv")
-rm(atlas_2013_4digit)
-atlas_2013_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2013.csv")
-atlas_2013_4digit
-atlas_2013_4digit %>% glimpse()
-atlas_2013_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2013_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2013_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2014_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2014.csv")
-# atlas_2014_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2014.csv")
-rm(atlas_2014_4digit)
-atlas_2014_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2014.csv")
-atlas_2014_4digit
-atlas_2014_4digit %>% glimpse()
-atlas_2014_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2014_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2014_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2015_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2015.csv")
-# atlas_2015_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2015.csv")
-rm(atlas_2015_4digit)
-atlas_2015_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2015.csv")
-atlas_2015_4digit
-atlas_2015_4digit %>% glimpse()
-atlas_2015_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2015_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2015_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2016_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2016.csv")
-# atlas_2016_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2016.csv")
-rm(atlas_2016_4digit)
-atlas_2016_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2016.csv")
-atlas_2016_4digit
-atlas_2016_4digit %>% glimpse()
-atlas_2016_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2016_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2016_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2017_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2017.csv")
-# atlas_2017_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2017.csv")
-rm(atlas_2017_4digit)
-atlas_2017_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2017.csv")
-atlas_2017_4digit
-atlas_2017_4digit %>% glimpse()
-atlas_2017_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2017_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2017_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2018_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2018.csv")
-# atlas_2018_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2018.csv")
-rm(atlas_2018_4digit)
-atlas_2018_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2018.csv")
-atlas_2018_4digit
-atlas_2018_4digit %>% glimpse()
-atlas_2018_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2018_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2018_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# atlas_2019_4digit <- read_csv(file = "data/atlas_of_economic_complexity/country_partner_hsproduct4digit_year_2019.csv")
-# atlas_2019_4digit %>%
-#         filter(location_code %in%
-#                        (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
-#                                 pull(iso3))) %>%
-#         group_by(location_code) %>% mutate(global_import_value_sum = sumNA(import_value, na.rm = TRUE)) %>%
-#         ungroup() %>%
-#         filter(hs_product_code %in% c("2701", "2702", "2703", "2704", "2705", "2706", "2707", "2708", "2709",
-#                               "2710", "2711", "2712", "2713", "2714", "2715", "2716"), import_value > 0) %>%
-#         select(location_code, partner_code, year, hs_product_code, import_value, global_import_value_sum) %>%
-#         write_csv("data/atlas_of_economic_complexity/atlas_4digit_2019.csv")
-rm(atlas_2019_4digit)
-atlas_2019_4digit <- read_csv("data/atlas_of_economic_complexity/atlas_4digit_2019.csv")
-atlas_2019_4digit
-atlas_2019_4digit %>% glimpse()
-atlas_2019_4digit %>% count(hs_product_code) %>% print(n = nrow(.))
-atlas_2019_4digit %>% count(location_code)
-# note that kosovo is missing for all years
-atlas_2019_4digit %>% count(location_code) %>% 
-        anti_join(ee_country_crosswalk %>% 
-                          filter(mcp_grouping %in% c("E&E Eurasia", "E&E Balkans", "E&E graduates", "CARs")), ., 
-                  by = c("iso_3_alpha" = "location_code"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# combine 4_digit atlas data 
-# also add fuel_type consolidated category to crosswalk HS codes to IEA/SIEC categories 
-
-# based on SIEC to HS crosswalk documented above:
-# 2712 and 2713 needs to be added to oil products
-# 271112, 271113, 271114, 271119, and 271129 technically go to crude oil, with 271111 and 271121 staying natural gas
-# but since data is only 4 digit, will leave it as natural gas
-# shouldn't make a major difference (will somewhat overestimate natural gas imports, but good enough for estimate)
-# 2702, 2703, 2704, 2705, 2706, 2707, 2708, 2714 go to coal 
-# 2715 bitumous mixtures based on asphalt, natural bitumen, petroleum bitumen, mineral tar, or mineral tar pitch 
-# 2715 is not in SIEC crosswalk table, so will drop it; it ranks 10 of 15 in aggregate import value, ~ 965 mil
-# 2716 is electricity and will be dropped
-atlas_4digit <- dir_ls("data/atlas_of_economic_complexity") %>% tibble(path = as.character(.)) %>%
-        select(path) %>% filter(str_detect(string = path, pattern = regex("4digit", ignore_case = TRUE))) %>%
-        pull(path) %>%
-        map(.x = ., .f = ~ read_csv(.x)) %>% bind_rows() %>%
-        mutate(fuel_type = case_when(hs_product_code == "2701" ~ "Coal",
-                                     hs_product_code == "2702" ~ "Coal",
-                                     hs_product_code == "2703" ~ "Coal",
-                                     hs_product_code == "2704" ~ "Coal",
-                                     hs_product_code == "2705" ~ "Coal",
-                                     hs_product_code == "2706" ~ "Coal",
-                                     hs_product_code == "2707" ~ "Coal",
-                                     hs_product_code == "2708" ~ "Coal",
-                                     hs_product_code == "2709" ~ "Crude oil",
-                                     hs_product_code == "2710" ~ "Oil products",
-                                     hs_product_code == "2711" ~ "Natural gas",
-                                     hs_product_code == "2712" ~ "Oil products",
-                                     hs_product_code == "2713" ~ "Oil products",
-                                     hs_product_code == "2714" ~ "Coal")) %>%
-        filter(!(hs_product_code %in% c("2715", "2716")))
-
-
-#/////////////////////////
-
-
-# inspect
-atlas_4digit
-atlas_4digit %>% glimpse()
-atlas_4digit %>% nrow() # 149629
-atlas_4digit %>% ncol() # 7
-atlas_4digit %>% distinct(location_code) %>% nrow() # 44
-atlas_4digit %>% count(year) 
-atlas_4digit %>% count(hs_product_code)
-atlas_4digit %>% count(hs_product_code, fuel_type)
-atlas_4digit %>% group_by(hs_product_code) %>% summarize(import_sum = sumNA(import_value)) %>% arrange(desc(import_sum))
-atlas_4digit %>% group_by(fuel_type) %>% summarize(import_sum = sumNA(import_value)) %>% arrange(desc(import_sum))
-atlas_4digit %>% group_by(fuel_type, hs_product_code) %>% summarize(import_sum = sumNA(import_value)) %>% 
-        arrange(fuel_type, desc(import_sum))
-atlas_4digit %>% count(location_code) %>% print(n = nrow(.))
-atlas_4digit %>% filter(location_code == "ALB", year == 2010)
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# get atlas data with one row per country/year/fuel_type
-atlas <- atlas_4digit %>% 
-        group_by(location_code, year, hs_product_code) %>%
-        mutate(global_fuel_type_import_sum = sumNA(import_value),
-               russia_fuel_type_import = case_when(partner_code == "RUS" ~ import_value,
-                                                   TRUE ~ 0),
-               russia_flag = case_when(partner_code == "RUS" ~ 1, TRUE ~ 0),
-               ans_fuel_type_import = case_when(partner_code == "ANS" ~ import_value,
-                                                TRUE ~ 0),
-               # note max(ans_fuel_type_import) ensures that the row with partner = ANS and ans_fuel_type_import
-               # is then filled into all rows for location/year/hs, including the one w/ partner = russia that will be sliced off
-               ans_fuel_type_import = max(ans_fuel_type_import)) %>%
-        arrange(desc(russia_flag)) %>% 
-        slice(1) %>%
-        ungroup() %>%
-        select(location_code, year, hs_product_code, fuel_type, russia_fuel_type_import, ans_fuel_type_import,
-               global_fuel_type_import_sum, global_import_value_sum) %>%
-        group_by(location_code, year, fuel_type) %>%
-        mutate(russia_fuel_type_import = sumNA(russia_fuel_type_import),
-               ans_fuel_type_import = sumNA(ans_fuel_type_import),
-               global_fuel_type_import_sum = sumNA(global_fuel_type_import_sum)) %>%
-        select(-hs_product_code) %>%
-        slice(1) %>%
-        ungroup() %>%
-        left_join(., country_crosswalk, by = c("location_code" = "iso3")) %>%
-        select(country, mcp_grouping, everything()) %>%
-        mutate(country = case_when(country == "North Macedonia" ~ "N. Macedonia",
-                                   country == "Bosnia and Herzegovina" ~ "BiH",
-                                   TRUE ~ country))
-
-
-#////////////////////////////
-
-
-# inspect
-# note not every country has 4 records (one per fuel_type) since some were missing in atlas data
-# these country/years will get blank record manually added with 0 import amounts (see below)
-# complete country records are 4 fuel_types * 19 years = 76 records
-atlas
-atlas %>% glimpse()
-atlas %>% nrow() # 3219 
-atlas %>% ncol() # 19
-
-atlas %>% count(year)
-atlas %>% count(country) %>% nrow() # 44
-atlas %>% count(fuel_type)
-atlas %>% count(mcp_grouping, country, location_code) %>% arrange(desc(n)) %>% print(n = nrow(.))
-atlas %>% filter(is.na(country))
-# note that records are unique at country/year/fuel_type level
-atlas %>% count(country, year, fuel_type) %>% arrange(desc(n))
-
-# inspect countries missing one or more years for a given fuel_type
-# this was manually spot-checked in the atlas viewer/download and confirmed
-# eg atlas says "no data" for import of product x by country y for year z, 
-# and often the immediately previous and following year does have data on 
-# eg kyrgyzstan is missing crude oil record for 2011, but in 2010 they imported 100% of crude from russia
-# so does it really make sense to manually convert NA values to zero??
-# also some missing fuel_types are for 2019 (eg moldova missing crude for 2019), which is probably late reporting, not a true zero
-# i will add placeholder records with NA import_value for these countries below, 
-# since manually adding a zero could be incorrect, which is probably why atlas itself did not replace NA with zeroes
-
-# note montenegro and serbia are only countries without at least one fuel_type record for each of 19 years
-# montenegro is missing 2001-2005, serbia is missing 2001-2004
-# so the remaining missing records are the result of country/years missing fuel_type records
-atlas %>% count(country, year) %>% select(-n) %>% count(country) %>% arrange(n) %>% print(n = nrow(.))
-atlas %>% filter(country %in% c("Montenegro", "Serbia")) %>% count(country, year) %>% print(n = nrow(.))
-
-# note that 13 countries are missing at least one fuel_type record, leaving their total record count below the complete 76
-# note montenegro is missing year records and fuel_type records...
-# serbia is only missing 4 years records (and the associated fuel_type records), but has all fuel_type records for years w data
-atlas %>% count(country) %>% arrange(n) %>% print(n = nrow(.))
-atlas %>% count(country) %>% count(n, name = "count_of_countries_with_by_record_count")
-atlas %>% count(fuel_type)
-
-
-#//////////////////////
-
-
-# Montenegro is missing crude oil for 2001-2007; 2012-2013, 2015, 2017, and 2019
-# it might recently have gone on a pattern of reporting every other year??
-atlas %>% filter(country == "Montenegro") %>% count(fuel_type)
-atlas %>% filter(country == "Montenegro", fuel_type == "Crude oil") %>% count(year)
-
-# Kyrgyzstan is missing crude oil for 2001 and 2011
-atlas %>% filter(country == "Kyrgyzstan") %>% count(fuel_type)
-atlas %>% filter(country == "Kyrgyzstan", fuel_type == "Crude oil") %>% count(year)
-
-# note armenia is missing crude oil record for every year except 2001, 2003, and 2010
-atlas %>% filter(country == "Armenia") %>% count(fuel_type)
-atlas %>% filter(country == "Armenia", fuel_type == "Crude oil") %>% count(year)
-atlas_4digit %>% filter(location_code == "ARM", fuel_type == "Crude oil")
-
-# turkmenistan is missing crude oil for every year except 2009 and 2017
-atlas %>% filter(country == "Turkmenistan") %>% count(fuel_type)
-atlas %>% filter(country == "Turkmenistan", fuel_type == "Crude oil") %>% count(year)
-
-# albania is missing crude oil for 2002, 2005, 2008, 2013, 2014, 2015, 2017, 2018, 2019
-atlas %>% filter(country == "Albania") %>% count(fuel_type)
-atlas %>% filter(country == "Albania", fuel_type == "Crude oil") %>% count(year)
-
-# Tajikistan is missing crude oil for 2001, 2002, 2006, 2009, 2010, 2011, 2014, 2015
-# and is also missing natural gas for 2005
-atlas %>% filter(country == "Tajikistan") %>% count(fuel_type)
-atlas %>% filter(country == "Tajikistan", fuel_type == "Crude oil") %>% count(year)
-atlas %>% filter(country == "Tajikistan", fuel_type == "Natural gas") %>% count(year)
-
-# Azerbaijan is missing crude oil for 2002, 2004-2007, 2010, 2012-2014
-atlas %>% filter(country == "Azerbaijan") %>% count(fuel_type)
-atlas %>% filter(country == "Azerbaijan", fuel_type == "Crude oil") %>% count(year)
-
-# N. Macedonia is missing crude oil for 2009, 2014, 2015, 2016, 2019
-atlas %>% filter(country == "N. Macedonia") %>% count(fuel_type)
-atlas %>% filter(country == "N. Macedonia", fuel_type == "Crude oil") %>% count(year)
-
-# Moldova is missing crude oil for 2004, 2006, 2008, 2010, 2019
-atlas %>% filter(country == "Moldova") %>% count(fuel_type)
-atlas %>% filter(country == "Moldova", fuel_type == "Crude oil") %>% count(year)
-
-# Slovenia is missing crude oil for 2002-2004, 2010
-atlas %>% filter(country == "Slovenia") %>% count(fuel_type)
-atlas %>% filter(country == "Slovenia", fuel_type == "Crude oil") %>% count(year)
-
-# uzbekistan is missing crude for 2001
-# also missing natural gas for 2004, 2007, 2009
-atlas %>% filter(country == "Uzbekistan") %>% count(fuel_type)
-atlas %>% filter(country == "Uzbekistan", fuel_type == "Crude oil") %>% count(year)
-atlas %>% filter(country == "Uzbekistan", fuel_type == "Natural gas") %>% count(year)
-
-# georgia is missing crude for 2004 and 2006
-atlas %>% filter(country == "Georgia") %>% count(fuel_type)
-atlas %>% filter(country == "Georgia", fuel_type == "Crude oil") %>% count(year)
-
-
-#///////////////////////
-
-
-# check for ANS undeclared country
-# note that many countries have large amounts of ANS "undeclared" partners for natural gas imports
-# eg germany consistently imports ~ 75% of natural gas from ANS, and they are large dollar amounts of imports
-# probably undeclared imports from russia??
-# most ans imports are for natural gas, then oil products, and coal and crude comparable
-atlas %>% arrange(desc(ans_fuel_type_import)) %>% select(country, year, fuel_type, ans_fuel_type_import) %>% print(n = 50)
-atlas %>% arrange(desc(ans_fuel_type_import)) %>% select(country, mcp_grouping, year, fuel_type, ans_fuel_type_import) %>% 
-        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% print(n = 50)
-atlas %>% group_by(country) %>%
-        summarize(ans_imports = sum(ans_fuel_type_import)) %>%
-        ungroup() %>%
-        arrange(desc(ans_imports)) %>% print(n = 50)
-atlas %>% group_by(fuel_type) %>% summarize(ans_imports = sumNA(ans_fuel_type_import, na.rm = TRUE)) %>%
-        arrange(desc(ans_imports))
-
-# check imports from ANS (unspecfied country) for ee presence countries
-# result: ANS is more a problem for EU, much less a problem for ee presence countries
-# note that the majority of ans imports > $1 mil for presence countries are: 
-# over $1 mil ANS natural gas to georgia for 6 years
-# over $1 mil ANS natural gas / oil products to serbia for 2 years
-# over $1 mil ANS natural gas/ oil products to armenia for 2 years
-
-# note that georgian natural gas imports from ans are very high, while from russia equals zero
-# looking it up manually in atlas, they were importing natural gas from ans from only from 2008-2014, none before/after
-# so the ANS country/countries are significant and somehow related to the russian invasion
-# 2008 is when russia invaded georgia, though the 2010 CRS article linked below says russia continues to supply gas
-# in atlas manually, imports of gas from ANS of zero in 2008, 158m in 2009, steady for yearsto 300m in 2014, then zero after
-# in atlas manually, imports of gas from russia drop from 149 mil in 2007, to 69 mil in 2008, to 0 in 2009
-# in atlas manually, imports of gas from azerbaijan: 72 mil in 2007, 109m in 2008, 97m in 2009, 66m in 2010, 160m in 2014, 270m in 2018
-# https://www.everycrsreport.com/files/20100322_RL34261_81c2967fa98020653a1798e52320fa1a4ef73a10.pdf
-# reuters says in 2015 that 87% of georgian natural gas imports are then from azerbaijan
-# https://www.reuters.com/article/georgia-russia-gas/georgia-in-talks-with-russia-on-additional-gas-supplies-idUSL8N12R2TQ20151027
-# note there is a pipelin from russia specifically to the breakaway south ossetia
-# https://www.reuters.com/article/russia-georgia-gazprom/russia-to-build-gas-pipeline-to-georgian-region-idUSLH12833120081117
-# https://www.gfsis.org/blog/view/1134
-# iea report on georgia: https://www.iea.org/reports/georgia-2020
-atlas %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-        # filter(country == "Georgia") %>% 
-        # filter(fuel_type == "Natural gas") %>%
-        select(country, year, fuel_type,
-               russia_fuel_type_import,
-               ans_fuel_type_import,
-               global_fuel_type_import_sum) %>%
-        arrange(desc(ans_fuel_type_import)) %>% print(n = 20)
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# create placeholder records for those country/years missing a fuel_type record 
-# note that since coal has a record for every country/year, filtering to coal and the years missing records
-# will give a placeholder record that can then just have the fuel_type and russia/ans import values changed
-# these placeholders will then be row_binded to atlas, giving complete country/year/fuel_type records
-
-# serbia is a special case, because it's only missing 2001-2004 records, 
-# but for years where is has data, it always has all 4 fuel_types
-serbia_placeholder <- atlas %>% filter(country == "Serbia", 
-                                                     year %in% c(2005, 2006, 2007, 2008)) %>%
-        mutate(fuel_type = rep(x = c("Coal", "Crude oil", "Natural gas", "Oil products"), times = 4),
-               year = c(rep(2001, times = 4), rep(2002, times = 4), rep(2003, times = 4), rep(2004, times = 4)),
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-serbia_placeholder
-
-# Montenegro is missing crude oil for 2001-2007; 2012-2013, 2015, 2017, and 2019
-# note that montenegro's placeholder is special, because it lacks all records 2001-2005, so there's no coal record to even pull
-# will create two montenegro placeholders, and will manually update the years for the second to be 2001-2005
-montenegro_placeholder <- atlas %>% filter(country == "Montenegro", fuel_type == "Coal",
-                                        year %in% c(2006, 2007, 2012, 2013, 2015, 2017, 2019)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-montenegro_placeholder
-
-montenegro_placeholder <- atlas %>% filter(country == "Montenegro", 
-                                                     year %in% c(2008, 2009, 2010, 2011, 2014)) %>%
-        mutate(fuel_type = rep(c("Coal", "Crude oil", "Natural gas", "Oil products"), times = 5),
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_,
-               year = c(rep(2001, times = 4), 
-                        rep(2002, times = 4),
-                        rep(2003, times = 4),
-                        rep(2004, times = 4),
-                        rep(2005, times = 4))) %>%
-        bind_rows(., montenegro_placeholder)
-montenegro_placeholder
-
-
-# Kyrgyzstan is missing crude oil for 2001 and 2011
-kyrgyzstan_placeholder <- atlas %>% filter(country == "Kyrgyzstan", fuel_type == "Coal",
-                                                     year %in% c(2001, 2011)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-kyrgyzstan_placeholder
-
-# note armenia is missing crude oil record for every year except 2001, 2003, and 2010
-armenia_placeholder <- atlas %>% filter(country == "Armenia", fuel_type == "Coal",
-                                                     year %in% c(2002, seq(from = 2004, to = 2009, by = 1),
-                                                                 seq(from = 2011, to = 2019, by = 1))) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-armenia_placeholder
-
-# turkmenistan is missing crude oil for every year except 2009 and 2017
-turkmenistan_placeholder <- atlas %>% filter(country == "Turkmenistan", fuel_type == "Coal",
-                                                     year %in% c(seq(from = 2001, to = 2008, by = 1),
-                                                                 seq(from = 2010, to = 2016, by = 1),
-                                                                 2018, 2019)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-turkmenistan_placeholder
-
-# albania is missing crude oil for 2002, 2005, 2008, 2013, 2014, 2015, 2017, 2018, 2019
-albania_placeholder <- atlas %>% filter(country == "Albania", fuel_type == "Coal",
-                                                       year %in% c(2002, 2005, 2008, 2013, 2014, 2015, 2017, 2018, 2019)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-albania_placeholder
-
-# Tajikistan is missing crude oil for 2001, 2002, 2006, 2009, 2010, 2011, 2014, 2015
-# and is also missing natural gas for 2005
-tajikistan_placeholder <- atlas %>% filter(country == "Tajikistan", fuel_type == "Coal",
-                                                       year %in% c(2001, 2002, 2006, 2009, 2010, 2011, 2014, 2015)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-tajikistan_placeholder
-
-tajikistan_placeholder <- atlas %>% filter(country == "Tajikistan", fuel_type == "Coal",
-                                           year %in% c(2005)) %>%
-        mutate(fuel_type = "Natural gas",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_) %>%
-        bind_rows(tajikistan_placeholder, .)
-tajikistan_placeholder
-
-
-# Azerbaijan is missing crude oil for 2002, 2004-2007, 2010, 2012-2014
-azerbaijan_placeholder <- atlas %>% filter(country == "Azerbaijan", fuel_type == "Coal",
-                                           year %in% c(2002, 2004, 2005, 2006, 2007, 2010, 2012, 2013, 2014)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-azerbaijan_placeholder
-
-# N. Macedonia is missing crude oil for 2009, 2014, 2015, 2016, 2019
-macedonia_placeholder <- atlas %>% filter(country == "N. Macedonia", fuel_type == "Coal",
-                                           year %in% c(2009, 2014, 2015, 2016, 2019)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-macedonia_placeholder
-
-# Moldova is missing crude oil for 2004, 2006, 2008, 2010, 2019
-moldova_placeholder <- atlas %>% filter(country == "Moldova", fuel_type == "Coal",
-                                          year %in% c(2004, 2006, 2008, 2010, 2019)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-moldova_placeholder
-
-# Slovenia is missing crude oil for 2002-2004, 2010
-slovenia_placeholder <- atlas %>% filter(country == "Slovenia", fuel_type == "Coal",
-                                        year %in% c(2002, 2003, 2004, 2010)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-slovenia_placeholder
-
-# uzbekistan is missing crude for 2001
-# also missing natural gas for 2004, 2007, 2009
-uzbekistan_placeholder <- atlas %>% filter(country == "Uzbekistan", fuel_type == "Coal",
-                                        year %in% c(2001)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-uzbekistan_placeholder
-
-uzbekistan_placeholder <- atlas %>% filter(country == "Uzbekistan", fuel_type == "Coal",
-                                           year %in% c(2004, 2007, 2009)) %>%
-        mutate(fuel_type = "Natural gas",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_) %>%
-        bind_rows(., uzbekistan_placeholder)
-uzbekistan_placeholder
-
-# georgia is missing crude for 2004 and 2006
-georgia_placeholder <- atlas %>% filter(country == "Georgia", fuel_type == "Coal",
-                                         year %in% c(2004, 2006)) %>%
-        mutate(fuel_type = "Crude oil",
-               russia_fuel_type_import = NA_real_,
-               ans_fuel_type_import = NA_real_,
-               global_fuel_type_import_sum = NA_real_)
-georgia_placeholder
-
-
-
-
-# bind placeholder rows to atlas 
-atlas <- atlas %>% 
-        bind_rows(., serbia_placeholder) %>%
-        bind_rows(., montenegro_placeholder) %>%
-        bind_rows(., kyrgyzstan_placeholder) %>%
-        bind_rows(., armenia_placeholder) %>% 
-        bind_rows(., turkmenistan_placeholder) %>%
-        bind_rows(., albania_placeholder) %>%
-        bind_rows(., tajikistan_placeholder) %>%
-        bind_rows(., azerbaijan_placeholder) %>%
-        bind_rows(., macedonia_placeholder) %>%
-        bind_rows(., moldova_placeholder) %>%
-        bind_rows(., slovenia_placeholder) %>%
-        bind_rows(., uzbekistan_placeholder) %>%
-        bind_rows(., georgia_placeholder) %>%
-        arrange(country, year)
-
-
-#/////////////////////////
-
-
-# inspect
-atlas
-atlas %>% glimpse()
-atlas %>% nrow() # 3344 ; 19 years * 4 fuel_types * 44 countries = 3344
-atlas %>% count(country) %>% arrange(n)
-atlas %>% count(country) %>% count(n)
-atlas %>% count(country, fuel_type) %>% count(n)
-
-atlas %>% filter(country == "Armenia") %>% count(fuel_type)
-atlas %>% filter(country == "Armenia", fuel_type == "Crude oil") %>% count(year)
-atlas %>% filter(country == "Armenia") 
-atlas_4digit %>% filter(location_code == "ARM", fuel_type == "Crude oil")
-atlas_4digit %>% filter(location_code == "ARM", hs_product_code %in% c("2709"))
-atlas_4digit %>% filter(location_code == "ARM", hs_product_code %in% c("2707"))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# calculate import shares from russia/ans for each fuel_type, as well as for fossil fuels in aggregate 
-atlas <- atlas %>% mutate(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum = russia_fuel_type_import / 
-                                  global_fuel_type_import_sum,
-                          ans_fuel_type_import_as_share_of_global_fuel_type_import_sum = ans_fuel_type_import / 
-                                  global_fuel_type_import_sum) %>%
-        group_by(country, year) %>%
-        mutate(russia_fossil_import_sum = sumNA(russia_fuel_type_import),
-               ans_fossil_import_sum = sumNA(ans_fuel_type_import),
-               global_fossil_import_sum = sumNA(global_fuel_type_import_sum)) %>%
-        ungroup() %>%
-        mutate(russia_fossil_import_sum_as_share_of_global_fossil_import_sum = russia_fossil_import_sum /
-                       global_fossil_import_sum,
-               ans_fossil_import_sum_as_share_of_global_fossil_import_sum = ans_fossil_import_sum /
-                       global_fossil_import_sum) 
-
-
-#/////////////////////        
-
-
-# inspect
-atlas
-atlas %>% glimpse()
-atlas %>% nrow() # 3344
-atlas %>% ncol() # 26
-atlas %>% distinct(country) %>% nrow() # 44
-atlas %>% count(fuel_type)
-atlas %>% count(mcp_grouping, country, location_code) %>% print(n = nrow(.))
-atlas %>% count(country, year) %>% count(country) %>% distinct(n)
-atlas %>% count(country) %>% count(n)
-
-
-# check russia/global fuel_type summaries 
-atlas_4digit %>% filter(location_code == "ALB", year == 2009, fuel_type == "Crude oil") 
-atlas_4digit %>% filter(location_code == "ALB", year == 2009, fuel_type == "Crude oil") %>%
-        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
-                  global_fuel_type_import_sum = sum(import_value),
-                  russia_fuel_type_import_as_share_of_global_fuel_type_import_sum = russia_fuel_type_import / 
-                          global_fuel_type_import_sum)
-atlas %>% filter(location_code == "ALB", year == 2009, fuel_type == "Crude oil") %>%
-        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, 
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum)
-
-
-atlas_4digit %>% filter(location_code == "BLR", year == 2002, fuel_type == "Natural gas") 
-atlas_4digit %>% filter(location_code == "BLR", year == 2002, fuel_type == "Natural gas") %>%
-        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
-                  global_fuel_type_import_sum = sum(import_value),
-                  russia_fuel_type_import_as_share_of_global_fuel_type_import_sum = russia_fuel_type_import / 
-                          global_fuel_type_import_sum)
-atlas %>% filter(location_code == "BLR", year == 2002, fuel_type == "Natural gas") %>%
-        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, 
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum)
-
-
-atlas_4digit %>% filter(location_code == "MDA", year == 2018, fuel_type == "Coal") 
-atlas_4digit %>% filter(location_code == "MDA", year == 2018, fuel_type == "Coal") %>%
-        summarize(russia_fuel_type_import = sum(import_value[partner_code == "RUS"]),
-                  global_fuel_type_import_sum = sum(import_value),
-                  russia_fuel_type_import_as_share_of_global_fuel_type_import_sum = russia_fuel_type_import / 
-                          global_fuel_type_import_sum)
-atlas %>% filter(location_code == "MDA", year == 2018, fuel_type == "Coal") %>%
-        select(country, year, fuel_type, russia_fuel_type_import, global_fuel_type_import_sum, 
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum)
-
-
-#/////////////////////
-
-
-# check russia/global fossil fuel summaries
-atlas_4digit %>% filter(location_code == "MDA", year == 2018) 
-atlas_4digit %>% filter(location_code == "MDA", year == 2018) %>%
-        summarize(russia_fossil_import_sum = sum(import_value[partner_code == "RUS"]),
-                  global_fossil_import_sum = sum(import_value),
-                  russia_fossil_import_sum_as_share_of_global_fossil_import_sum = russia_fossil_import_sum / 
-                          global_fossil_import_sum)
-atlas %>% filter(location_code == "MDA", year == 2018) %>%
-        select(country, year, russia_fossil_import_sum, global_fossil_import_sum, 
-               russia_fossil_import_sum_as_share_of_global_fossil_import_sum)
-
-
-atlas_4digit %>% filter(location_code == "UKR", year == 2011) 
-atlas_4digit %>% filter(location_code == "UKR", year == 2011) %>%
-        summarize(russia_fossil_import_sum = sum(import_value[partner_code == "RUS"]),
-                  global_fossil_import_sum = sum(import_value),
-                  russia_fossil_import_sum_as_share_of_global_fossil_import_sum = russia_fossil_import_sum / 
-                          global_fossil_import_sum)
-atlas %>% filter(location_code == "UKR", year == 2011) %>%
-        select(country, year, russia_fossil_import_sum, global_fossil_import_sum, 
-               russia_fossil_import_sum_as_share_of_global_fossil_import_sum)
-
-
-atlas_4digit %>% filter(location_code == "AZE", year == 2003) 
-atlas_4digit %>% filter(location_code == "AZE", year == 2003) %>%
-        summarize(russia_fossil_import_sum = sum(import_value[partner_code == "RUS"]),
-                  global_fossil_import_sum = sum(import_value),
-                  russia_fossil_import_sum_as_share_of_global_fossil_import_sum = russia_fossil_import_sum / 
-                          global_fossil_import_sum)
-atlas %>% filter(location_code == "AZE", year == 2003) %>%
-        select(country, year, russia_fossil_import_sum, global_fossil_import_sum, 
-               russia_fossil_import_sum_as_share_of_global_fossil_import_sum)
-
-
-#////////////////////////
-
-
-# check ans
-# result, ANS isn't an issue for E&E, E&E grads or CARS the way it is for EU-15
-# as inspected above, georgia, armenia and serbia have highest ANS imports for ee presence
-# georgia has the highest ans share at .016 (1.6%), following by .008
-# note on atlas website, germany has 36 bil in 2711 natural gas imports in 2018; only 102 mil from russia; 27.1 bil from ANS
-# 92% of german imports from ANS are of 2711 natural gas
-atlas %>% glimpse()
-atlas %>% select(country, year, fuel_type, ans_fuel_type_import, ans_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-        arrange(desc(ans_fuel_type_import_as_share_of_global_fuel_type_import_sum)) %>% print(n = 50)
-atlas %>% select(country, mcp_grouping, year, fuel_type, ans_fuel_type_import, ans_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-        arrange(desc(ans_fuel_type_import_as_share_of_global_fuel_type_import_sum)) %>% 
-        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-        print(n = 50)
-atlas %>% group_by(country, fuel_type) %>% 
-        summarize(avg_ans_fuel_type_import_as_share_of_global_import_value = 
-                          mean(ans_fuel_type_import_as_share_of_global_import_value_sum_adj)) %>%
-        ungroup() %>% arrange(desc(avg_ans_fuel_type_import_as_share_of_global_import_value)) %>% print(n = nrow(.))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# compare to prior_atlas data 
-prior_atlas <- read_csv(file = "data/atlas_of_economic_complexity/atlas_20201218.csv")
-
-
-#///////////////////
-
-
-# inspect
-prior_atlas
-prior_atlas %>% glimpse()
-prior_atlas %>% nrow() # 1240
-prior_atlas %>% ncol() # 61
-prior_atlas %>% distinct(country) %>% nrow() # 31
-prior_atlas %>% count(year)
-
-# compare
-atlas_comparison <- prior_atlas %>% 
-        select(country, year, fuel_type, 
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>% 
-        left_join(., atlas %>% 
-                          select(country, year, fuel_type, russia_fuel_type_import_as_share_of_global_fuel_type_import_sum),
-                  by = c("country", "year", "fuel_type")) %>%
-        mutate(diff = russia_fuel_type_import_as_share_of_global_fuel_type_import_sum -
-                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-               abs_diff = abs(diff),
-               pct_diff = diff / russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj,
-               abs_pct_diff = abs_diff / russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj) %>%
-        filter(year >= 2009, year <= 2018, !(country %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs"))) 
-
-# results
-# differences come primarily from fuel_type coding, where in prior_atlas i had used 6-digit HS codes
-# based on SIEC classifications to really narrowly define natural gas as 271111 and 271121 only, 
-# and so reclassified 271114 to crude, and all other 2711 6 digit codes were reclassified to oil products
-# for simplicity, this time i just used 4digit HS codes from atlas, and so all 2711 was classified as natural gas
-# especially because most of the "share of imports from russia" stats will be based on IEA's new import by origin data
-# and atlas estimated import share from russia will only be used as a backfill for where IEA is missing data,
-# these differences are not significant enough to worry about
-# after filtering down to records without an NA abs_diff, there are 1037 records
-# 892 / 1037 = 86% have abs_diff < .05
-# 936 / 1037 = 90% have abs_diff < .1
-# 976 / 1037 = 94% have abs_diff < .2
-# also moldova's differences are due to the manual edit i made in prior_atlas to set their natural gas / oil products
-# import share from russia to be higher based on outside research (IEA data will solve this though, so no need for edits)
-
-
-# note that 41 of 43 records with NA abs_diff have NA fuel_type imports for new atlas, but 0 for prior_atlas
-# these differences are just the result of choosing to now manually code missing country/fuel_type combos as NA, not 0
-atlas_comparison %>% glimpse()
-atlas_comparison %>% filter(is.na(abs_diff)) # 43
-atlas_comparison %>% filter(is.na(abs_diff)) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.)) # 
-atlas_comparison %>% filter(!is.na(abs_diff)) %>% nrow() # 1037
-atlas_comparison %>% filter(is.na(abs_diff), is.na(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) &
-                                    russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj == 0) # 41
-# result: no issues;
-# inspect NAs after removing those differences due to manualy coding missing as 0 in prior_atlas,
-# the only two records with NA abs_diff are for armenia, where prior_atlas had 1 but current atlas has NA
-# manually confirmed with atlas tree map website that armenia has no data for crude oil imports for recent years
-atlas_comparison %>% filter(is.na(abs_diff), !(is.na(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) &
-                                    russia_fuel_type_import_as_share_of_global_fuel_type_import_sum_adj == 0))
-
-
-
-atlas_comparison %>% skim(diff, abs_diff, pct_diff, abs_pct_diff)
-atlas_comparison %>% arrange(desc(abs_diff)) %>% print(n = 20)
-atlas_comparison %>% arrange(abs_diff)
-atlas_comparison %>% filter(abs_diff == 0) # 97
-atlas_comparison %>% filter(abs_diff < .05) %>% nrow() # 892 / 1037 = 86%
-atlas_comparison %>% filter(abs_diff < .1) %>% nrow() # 936 / 1037 = 90%
-atlas_comparison %>% filter(abs_diff < .2) %>% nrow() # 976 / 1037 = 94%
-atlas_comparison %>% group_by(country) %>% 
-        mutate(avg_abs_diff = mean(abs_diff, na.rm = TRUE)) %>%
-        arrange(desc(avg_abs_diff))
-atlas_comparison %>% group_by(country) %>% 
-        mutate(sum_abs_diff = sumNA(abs_diff, na.rm = TRUE)) %>%
-        arrange(desc(sum_abs_diff))
-atlas_comparison %>% ggplot(data = ., mapping = aes(x = abs_diff)) + geom_histogram()
-atlas_comparison %>% ggplot(data = ., mapping = aes(x = abs_diff)) + stat_ecdf()
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# test_atlas_values
-test_atlas_values <- function() {
-        
-        # note because the atlas downloads are spread out over several files,
-        # the checks will be made against the atlas explorer website
-        
-        # belarus crude oil in 2006
-        expect_equal(object = atlas %>% filter(country == "Belarus", year == 2006, fuel_type == "Crude oil") %>%
-                             pull(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum),
-                     expected = 1) 
-        
-        # armenia natural gas in 2016
-        expect_equal(object = atlas %>% filter(country == "Armenia", year == 2016, fuel_type == "Natural gas") %>%
-                             pull(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-                             round(digits = 3),
-                     expected = round(.6957, digits = 3))
-        
-        # moldova natural gas in 2011
-        expect_equal(object = atlas %>% filter(country == "Moldova", year == 2011, fuel_type == "Natural gas") %>%
-                             pull(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-                             round(digits = 3),
-                     expected = .512)
-        
-        # ukraine crude oil in 2018
-        expect_equal(object = atlas %>% filter(country == "Ukraine", year == 2008, fuel_type == "Crude oil") %>%
-                             pull(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-                             round(digits = 3),
-                     expected = round(.9404, digits = 3))
-        
-        # germany crude oil in 2018
-        expect_equal(object = atlas %>% filter(country == "Germany", year == 2018, fuel_type == "Crude oil") %>%
-                             pull(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-                             round(digits = 3),
-                     expected = round(.3791, digits = 3))
-        
-}
-test_atlas_values()
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# read/write atlas_4digit_cleaned ####
-# atlas %>% write_csv(file = "data/atlas_of_economic_complexity/atlas_4digit_cleaned_20210801.csv")
-atlas <- read_csv(file = "data/atlas_of_economic_complexity/atlas_4digit_cleaned_20210801.csv")
-
-# inspect
-atlas
-atlas %>% glimpse()
-atlas %>% nrow() # 3344
-atlas %>% ncol() # 26
-
-
-atlas %>% count(year)
-atlas %>% count(country) # 44
-atlas %>% group_by(country) %>% skim(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-        as_tibble() %>% arrange(desc(numeric.mean))
+sub_obj_3_1_aiddata_esi %>% nrow() # 945
+sub_obj_3_1_aiddata_esi %>% ncol() # 35
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -9720,6 +9086,12 @@ atlas %>% group_by(country) %>% skim(russia_fuel_type_import_as_share_of_global_
 
 
 # load iea imports by origin data ####
+
+
+# iea energy balance data table: https://www.iea.org/data-and-statistics/data-tools/energy-statistics-data-browser?country=WORLD&fuel=Energy%20supply&indicator=TESbySource
+
+# note that iea recently came out with its own reliance-on-russian-fuel dataset, but it doesn't include all E&E countries
+# https://www.iea.org/reports/national-reliance-on-russian-fossil-fuel-imports
 
 # note the iea website has natural gas and coal files labeled as imports by origin
 # the crude/oil products file is just labeled as imports from selected countries
@@ -9734,6 +9106,12 @@ atlas %>% group_by(country) %>% skim(russia_fuel_type_import_as_share_of_global_
 # these then get 2020 imputed by extension
 # but for sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports, only four NA records for montenegro,
 # so 2020 records are not manually set to NA
+
+# note that there can be small differences between the import_from_world values in the WDS fuel_type_imports_by_origin downloaded data and 
+# the IEA energy balances download and online table 
+# eg see armenia in 2019 total imports in WDS fuel_type_imports_by_origin download is 98637.895, but in IEA energy balances download and online table its 111527.5848
+# this is not an issue though, since the WDS download fuel_type_imports_by origin is only used to get fuel_type_import_share_from_russia
+# then the IEA energy balances download file is used for the rest of the metric calculation
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////
@@ -9760,7 +9138,7 @@ atlas %>% group_by(country) %>% skim(russia_fuel_type_import_as_share_of_global_
 # (142370 TJ / .041868) / 1000
 # (142370 / .041868) / 1000
 
-iea_natural_gas <- read_csv(file = "data/iea/energy_imports_by_origin_2001_to_2020_downloaded/iea_ee_natural_gas_imports_from_russia_and_world_2001_to_2020_20210903.csv",
+iea_natural_gas <- read_csv(file = "data/iea/energy_imports_by_origin_2000_to_2021_downloaded/iea_ee_natural_gas_imports_from_russia_and_world_2000_to_2021_20221121.csv",
                  skip = 3, col_names = c("country", "year", "units", "imports_from_russia", "imports_from_world"),
                  col_types = cols(country = col_character(), year = col_double(), 
                                   units = col_character(), imports_from_russia = col_character(),
@@ -9798,15 +9176,15 @@ iea_natural_gas <- read_csv(file = "data/iea/energy_imports_by_origin_2001_to_20
 # inspect
 iea_natural_gas
 iea_natural_gas %>% glimpse()
-iea_natural_gas %>% nrow() # 900 (45 countries * 20 years)
+iea_natural_gas %>% nrow() # 1056 (48 countries * 22 years)
 iea_natural_gas %>% ncol() # 7
 
 # data is unique at country/year level
-iea_natural_gas %>% count(year) # 20
-iea_natural_gas %>% count(country_name) %>% print(n = nrow(.)) # 45
+iea_natural_gas %>% count(year) %>% arrange(desc(year)) # 22
+iea_natural_gas %>% count(country_name) %>% print(n = nrow(.)) # 48
 iea_natural_gas %>% count(country_name, year) %>% arrange(desc(n))
 
-# note the only missing values for imports_from_russia/world are montenegro from 2001-2004
+# note the only missing values for imports_from_russia/world are montenegro from 2000-2004
 iea_natural_gas %>% skim()
 iea_natural_gas %>% filter(is.na(imports_from_russia) | is.na(imports_from_world))
 iea_natural_gas %>% filter(is.na(fuel_type_import_share_from_russia)) %>%
@@ -9833,13 +9211,14 @@ country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# join country_crosswalk and fmir_framework
+# join country_crosswalk and fmir_framework, and filter out cyprus, malta, and china from dataset
 iea_natural_gas <- iea_natural_gas %>% 
         left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
                   by = c("country" = "country_name", "year" = "year")) %>%
         mutate(indicator_name = "sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes",
                high_value_is_good_outcome_flag = 0) %>%
-        left_join(., fmir_framework, by = "indicator_name")
+        left_join(., fmir_framework, by = "indicator_name") %>%
+        filter(!(country %in% c("China", "Malta", "Cyprus")))
 
 
 #//////////////////
@@ -9848,8 +9227,13 @@ iea_natural_gas <- iea_natural_gas %>%
 # inspect
 iea_natural_gas
 iea_natural_gas %>% glimpse()
-iea_natural_gas %>% nrow() # 900
-iea_natural_gas %>% ncol() # 34
+iea_natural_gas %>% nrow() # 945
+iea_natural_gas %>% ncol() # 38
+
+# data is unique at country/year level
+iea_natural_gas %>% count(year) %>% arrange(desc(year)) # 21
+iea_natural_gas %>% count(country) %>% print(n = nrow(.)) # 45
+iea_natural_gas %>% count(country, year) %>% arrange(desc(n)) # 945
 
 iea_natural_gas %>% count(fuel_type, units)
 
@@ -9924,7 +9308,7 @@ test_values_iea_natural_gas()
 # (142370 TJ / .041868) / 1000
 # (142370 / .041868) / 1000
 
-iea_coal <- read_csv(file = "data/iea/energy_imports_by_origin_2001_to_2020_downloaded/iea_ee_coal_imports_from_russia_and_world_2001_to_2020_20210905.csv",
+iea_coal <- read_csv(file = "data/iea/energy_imports_by_origin_2000_to_2021_downloaded/iea_ee_coal_imports_from_russia_and_world_2000_to_2021_20221121.csv",
                             skip = 3, col_names = FALSE) %>%
         rename(country_name = X1, origin = X2, year = X3,
                hard_coal = X4,	
@@ -9949,7 +9333,7 @@ iea_coal <- read_csv(file = "data/iea/energy_imports_by_origin_2001_to_2020_down
         distinct(country_name, year, origin, fuel_type, units, total_imports) %>%
         mutate(origin = case_when(origin == "Russian Federation" ~ "imports_from_russia",
                                   origin == "Total Imports" ~ "imports_from_world")) %>%
-        pivot_wider(id_cols = -c(origin, total_imports), names_from = origin, values_from = total_imports) %>%
+        pivot_wider(names_from = origin, values_from = total_imports) %>%
         mutate(fuel_type_import_share_from_russia = imports_from_russia / imports_from_world,
                fuel_type_import_share_from_russia = case_when(imports_from_world == 0 ~ 0,
                                                               TRUE ~ fuel_type_import_share_from_russia),
@@ -9971,15 +9355,18 @@ iea_coal <- read_csv(file = "data/iea/energy_imports_by_origin_2001_to_2020_down
 # inspect
 iea_coal
 iea_coal %>% glimpse()
-iea_coal %>% nrow() # 720
+iea_coal %>% nrow() # 814
 iea_coal %>% ncol() # 7
 
 # note that iea_coal only has data for 36 countries
-iea_coal %>% count(country_name) %>% print(n = nrow(.)) # 36
-iea_coal %>% count(year) # 20
+iea_coal %>% count(country_name) %>% print(n = nrow(.)) # 37
+iea_coal %>% count(year) # 22
 iea_coal %>% count(units)
 
-# no missing values
+# only missing values are montenegro in 2021 
+# will manually carry-forward montenegro
+iea_coal %>% filter(is.na(imports_from_russia) | is.na(imports_from_world) | is.na(fuel_type_import_share_from_russia)) %>% 
+        print(n = 100)
 iea_coal %>% skim()
 
 # check country_name
@@ -9990,6 +9377,37 @@ iea_coal %>%
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
         anti_join(., iea_coal, by = c("country" = "country_name")) %>% 
         distinct(country) %>% arrange(country)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get fuel_type_import_share_from_russia
+iea_coal <- iea_coal %>%
+        mutate(fuel_type_import_share_from_russia = imports_from_russia / imports_from_world,
+               fuel_type_import_share_from_russia = case_when(imports_from_world == 0 ~ 0,
+                                                              TRUE ~ fuel_type_import_share_from_russia)) 
+
+
+#//////////////////////
+
+
+# inspect
+iea_coal
+iea_coal %>% glimpse()
+iea_coal %>% nrow() # 814
+iea_coal %>% ncol() # 7
+
+# note that iea_coal only has data for 36 countries
+iea_coal %>% count(country_name) %>% print(n = nrow(.)) # 37
+iea_coal %>% count(year) # 22
+iea_coal %>% count(units)
+
+# only montenegro is missing 2021 coal
+iea_coal %>% filter(is.na(imports_from_russia) | is.na(imports_from_world) | is.na(fuel_type_import_share_from_russia)) %>% 
+        print(n = 100)
+iea_coal %>% filter(country_name == "Montegnegro") %>% print(n = nrow(.))
+iea_coal %>% skim()
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -10011,13 +9429,13 @@ iea_coal <- iea_coal %>%
 # inspect
 iea_coal
 iea_coal %>% glimpse()
-iea_coal %>% nrow() # 900
-iea_coal %>% ncol() # 33
+iea_coal %>% nrow() # 945
+iea_coal %>% ncol() # 38
 
 iea_coal %>% count(fuel_type, units)
 
-# note 9 countries were not in iea_coal 
-# armenia, azerbaijan, belarus, kazakhstan, kyrgyzstan, russia, tajikistan, turkmenistan, uzbekistan
+# note 10 countries were not in iea_coal 
+# armenia, austria, azerbaijan, belarus, kazakhstan, kyrgyzstan, russia, tajikistan, turkmenistan, uzbekistan
 # plus austria is missing imports_from_russia value for 1 year
 iea_coal %>% count(country) %>% nrow() # 45
 iea_coal %>% count(year) # 20
@@ -10076,7 +9494,7 @@ test_values_iea_coal()
 # actually specify this
 # note there are 318 import with ".." values, which were manually converted to NA (see inspection below)
 # note iea crude/oil products downloaded only has data avaialble for 36 countries
-iea_crude_oil_and_oil_products <- read_csv(file = "data/iea/energy_imports_by_origin_2001_to_2020_downloaded/iea_ee_crude_and_oil_products_imports_from_russia_and_world_2001_to_2020_20210903.csv",
+iea_crude_oil_and_oil_products <- read_csv(file = "data/iea/energy_imports_by_origin_2000_to_2021_downloaded/iea_ee_crude_and_oil_products_imports_from_russia_and_world_2000_to_2021_20221121.csv",
          skip = 3, col_names = FALSE) %>%
         rename(country_name = X1, year = X2, origin = X3,
                crude_oil = X4,	
@@ -10105,7 +9523,7 @@ iea_crude_oil_and_oil_products <- read_csv(file = "data/iea/energy_imports_by_or
                total_products = X27) %>%
         mutate(units = "ktoe") %>%
         pivot_longer(cols = -c(country_name, year, origin, units), names_to = "var", values_to = "imports") %>%
-        mutate(imports = case_when(imports == ".." ~ NA_character_, 
+        mutate(imports = case_when(imports == ".." ~ NA_real_, 
                                    TRUE ~ imports),
                imports = as.numeric(imports)) %>%
         mutate(fuel_type = case_when(var %in% c("crude_oil", "natural_gas_liquids", "refinery_feedstocks",
@@ -10126,8 +9544,7 @@ iea_crude_oil_and_oil_products <- read_csv(file = "data/iea/energy_imports_by_or
         mutate(origin = case_when(origin == "Russian Federation" ~ "imports_from_russia",
                                   origin == "World Total" ~ "imports_from_world")) %>%
         unite(origin, fuel_type, col = "origin_fuel_type") %>%
-        pivot_wider(id_cols = -c(origin_fuel_type, fuel_type_imports_sum), 
-                    names_from = origin_fuel_type, values_from = fuel_type_imports_sum)
+        pivot_wider(names_from = origin_fuel_type, values_from = fuel_type_imports_sum)
 
 
 #////////////////
@@ -10136,64 +9553,35 @@ iea_crude_oil_and_oil_products <- read_csv(file = "data/iea/energy_imports_by_or
 # inspect
 iea_crude_oil_and_oil_products
 iea_crude_oil_and_oil_products %>% glimpse()
-iea_crude_oil_and_oil_products %>% nrow() # 720
+iea_crude_oil_and_oil_products %>% nrow() # 836 (38 countries * 22 years)
 iea_crude_oil_and_oil_products %>% ncol() # 10
 
 # note that iea only has crude/oil_products data on 36 countries
-iea_crude_oil_and_oil_products %>% count(country_name) %>% nrow() # 36
-iea_crude_oil_and_oil_products %>% count(year) # 20
+# note that countries entirely missing from iea_crude_oil_and_oil_products are:
+# armenia, azerbaijan, belarus, kazakhstan, kyrgyzstan, russia, tajikistan, turkmenistan, and uzbekistan
+iea_crude_oil_and_oil_products %>% count(country_name) %>% nrow() # 38
+iea_crude_oil_and_oil_products %>% count(country_name) %>% print(n = nrow(.))
+country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% 
+        select(country) %>% 
+        anti_join(., iea_crude_oil_and_oil_products %>% distinct(country_name),
+                  by = c("country" = "country_name"))
+iea_crude_oil_and_oil_products %>% count(year) %>% print(n = nrow(.)) # 22
 
 
 #////////////////////
 
 
 # check NAs
-# there are 12 records with either NA values for imports_from_russia_oil_products_sum or 
+# there are 14 records with either NA values for imports_from_russia_oil_products_sum or 
 # imports_from_russia_crude_oil_sum
-# and it turns out all 12 are missing both values, and all for 2020 (haven't reported yet)
+# and it turns out all 12 are missing both values, and all for 2021 (haven't reported yet)
+# 8 of the 11 E&E countries are missing
+# montenegro is the only one that is also missing 2021 imports_from_world for both crude and oil_products
+# will manually carry-forward these countries 2020 values so that aggregation to russian_fossil_fuels indicator is not impeded/impacted
 iea_crude_oil_and_oil_products %>% 
         filter(is.na(imports_from_russia_oil_products_sum) |
                        is.na(imports_from_russia_crude_oil_sum)) %>%
         select(country_name, year, imports_from_russia_oil_products_sum, imports_from_russia_crude_oil_sum)
-
-
-#/////////////////////
-
-
-# check to see if the pre-prepared crude_oil_sum equals the manual sum of individual crude oil fuel_types
-# note there are 253 records where russia_crude_oil_diff equals 0, which then get NaN values for 
-# russia_crude_oil_pct_diff because of the attempting 0 / 0
-# there are also 12 records with NA russia_crude_oil_diff, because 2020 values for both
-# imports_from_russia_Crude oil and imports_from_russia_crude_oil_sum are NA (must not have reported yet)
-
-# results: the pre-prepared crude_oil_sum almost exactly equals the manual sum of individual crude oil fuel_types
-# 75th percentile abs_diff is 0, largest abs_diff is 1 ktoe for austria for four years, and below that is small fractions
-iea_crude_oil_and_oil_products %>% 
-        mutate(russia_crude_oil_diff = `imports_from_russia_Crude oil` - imports_from_russia_crude_oil_sum,
-               russia_crude_oil_pct_diff = russia_crude_oil_diff / `imports_from_russia_Crude oil`,
-               russia_crude_oil_abs_diff = abs(russia_crude_oil_diff),
-               russia_crude_oil_pct_abs_diff = russia_crude_oil_abs_diff / `imports_from_russia_Crude oil`) %>%
-        
-        # select(country_name, year, `imports_from_russia_Crude oil`, imports_from_russia_crude_oil_sum,
-        #        russia_crude_oil_diff,
-        #        russia_crude_oil_pct_diff,
-        #        russia_crude_oil_abs_diff,
-        #        russia_crude_oil_pct_abs_diff) %>%
-        # filter(is.na(russia_crude_oil_pct_diff)) %>% count(russia_crude_oil_diff)
-        
-        # filter(is.na(russia_crude_oil_pct_diff), is.na(russia_crude_oil_diff)) %>%
-        # select(country_name, year, `imports_from_russia_Crude oil`,
-        #                                                     imports_from_russia_crude_oil_sum)
-
-        # arrange(desc(russia_crude_oil_abs_diff)) %>%
-        # select(country_name, year, `imports_from_russia_Crude oil`, imports_from_russia_crude_oil_sum,
-        #        russia_crude_oil_abs_diff,
-        #        russia_crude_oil_pct_abs_diff)
-        
-        skim(russia_crude_oil_diff,
-             russia_crude_oil_pct_diff,
-             russia_crude_oil_abs_diff,
-             russia_crude_oil_pct_abs_diff)
 
 
 #/////////////////////
@@ -10243,7 +9631,7 @@ iea_crude_oil_and_oil_products %>%
 # note cases where imports_from_russia = 0 and imports_from_world = 0 get NaN by default, but 
 # will manually correct fuel_type_import_share_from_russia to equal zero
 # note this issue does not arise in iea_natural_gas or iea_coal
-iea_crude_oil_and_oil_products <- iea_crude_oil_and_oil_products %>% 
+iea_crude_oil_and_oil_products <- iea_crude_oil_and_oil_products %>%
         select(-c(`imports_from_russia_Crude oil`, `imports_from_world_Crude oil`,
                 `imports_from_russia_Oil products`, `imports_from_world_Oil products`)) %>%
         pivot_longer(cols = -c(country_name, year), names_to = "var", values_to = "imports") %>%
@@ -10252,8 +9640,8 @@ iea_crude_oil_and_oil_products <- iea_crude_oil_and_oil_products %>%
                origin = case_when(str_detect(string = var, pattern = "russia") ~ "imports_from_russia",
                                   str_detect(string = var, pattern = "world") ~ "imports_from_world")) %>%
         select(-var) %>%
-        pivot_wider(id_cols = -c(origin, imports), names_from = origin, values_from = imports) %>%
-        mutate(units = "ktoe", 
+        pivot_wider(names_from = origin, values_from = imports) %>%
+        mutate(units = "ktoe",
                fuel_type_import_share_from_russia = imports_from_russia / imports_from_world,
                fuel_type_import_share_from_russia = case_when(imports_from_russia == 0 & imports_from_world == 0 ~ 0,
                                                               TRUE ~ fuel_type_import_share_from_russia),
@@ -10274,20 +9662,29 @@ iea_crude_oil_and_oil_products <- iea_crude_oil_and_oil_products %>%
 # inspect
 iea_crude_oil_and_oil_products
 iea_crude_oil_and_oil_products %>% glimpse()
-iea_crude_oil_and_oil_products %>% nrow() # 1440
+iea_crude_oil_and_oil_products %>% nrow() # 1672 (38 countries * 22 years * 2 fuel_types)
 iea_crude_oil_and_oil_products %>% ncol() # 7
 
 # note iea crude/oil products downloaded only has data avaialble for 36 countries
-iea_crude_oil_and_oil_products %>% count(country_name) %>% nrow() # 36
-iea_crude_oil_and_oil_products %>% count(year) # 20
+iea_crude_oil_and_oil_products %>% count(country_name) %>% nrow() # 38
+iea_crude_oil_and_oil_products %>% count(year) # 22
 iea_crude_oil_and_oil_products %>% count(fuel_type)
 iea_crude_oil_and_oil_products %>% skim()
 
 # check missing
-# note, again there are same 24 records for 12 countries with NA imports_from_russia for 2020 
-# (12 for crude, 12 for oil products); only montenegro has NA also for crude/oil products imports_from_world in 2020
+# note, there are 28 records for 14 countries with NA imports_from_russia for 2021 
+# (14 for crude, 14 for oil products); 8 of 11 presence countries were missing 2021 data
 iea_crude_oil_and_oil_products %>% skim()
 iea_crude_oil_and_oil_products %>% filter(is.na(imports_from_russia) | is.na(imports_from_world)) %>% print(n = nrow(.))
+iea_crude_oil_and_oil_products %>% filter(imputed_imports_from_russia_flag == 1 | imputed_imports_from_world_flag == 1) %>% 
+        select(-c(units, 
+                  # imports_from_russia_crude_oil_2020,
+                  # imports_from_russia_oil_products_2020,
+                  imports_from_world_crude_oil_2020,
+                  imports_from_world_oil_products_2020
+                  )) %>% 
+        print(n = nrow(.))
+
 
 # prior to fix, note there are also 143 records where imports_from_russia and imports_from_world equal zero, 
 # and these get NaN for fuel_type_imports_share_from_russia
@@ -10326,7 +9723,7 @@ iea_crude_oil <- iea_crude_oil_and_oil_products %>% filter(fuel_type == "Crude o
 # inspect
 iea_crude_oil
 iea_crude_oil %>% glimpse()
-iea_crude_oil %>% nrow() # 720
+iea_crude_oil %>% nrow() # 836 (38 countries * 22 years)
 iea_crude_oil %>% ncol() # 7
 
 
@@ -10349,15 +9746,15 @@ iea_crude_oil <- iea_crude_oil %>%
 # inspect
 iea_crude_oil
 iea_crude_oil %>% glimpse()
-iea_crude_oil %>% nrow() # 900
-iea_crude_oil %>% ncol() # 34
+iea_crude_oil %>% nrow() # 945
+iea_crude_oil %>% ncol() # 38
 
 iea_crude_oil %>% count(units, fuel_type)
 
 # note 9 countries were not in iea_crude_oil_and_oil_products
 # armenia, azerbaijan, belarus, kazakhstan, kyrgyzstan, russia, tajikistan, turkmenistan, uzbekistan
 iea_crude_oil %>% count(country) %>% nrow() # 45
-iea_crude_oil %>% count(year) # 20
+iea_crude_oil %>% count(year) # 21
 iea_crude_oil %>% filter(is.na(fuel_type_import_share_from_russia)) %>%
         count(country, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
         arrange(imports_from_world) %>% print(n = nrow(.))
@@ -10398,7 +9795,7 @@ test_values_iea_crude_oil()
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# splite into iea_oil_products and iea_oil_products so that join with country_crosswalk_expanded yields
+# split into iea_oil_products and iea_oil_products so that join with country_crosswalk_expanded yields
 # full cross of one country/year per fuel_type
 # if iea_oil_products_and_oil_products is left un-split, the join with country_crosswalk_expanded only
 # adds a single country/year record for the nine countries not present, but two country/year records for each of these 9
@@ -10412,7 +9809,7 @@ iea_oil_products <- iea_crude_oil_and_oil_products %>% filter(fuel_type == "Oil 
 # inspect
 iea_oil_products
 iea_oil_products %>% glimpse()
-iea_oil_products %>% nrow() # 720
+iea_oil_products %>% nrow() # 836 (38 countries * 22 years)
 iea_oil_products %>% ncol() # 7
 
 
@@ -10435,8 +9832,8 @@ iea_oil_products <- iea_oil_products %>%
 # inspect
 iea_oil_products
 iea_oil_products %>% glimpse()
-iea_oil_products %>% nrow() # 900
-iea_oil_products %>% ncol() # 34
+iea_oil_products %>% nrow() # 945
+iea_oil_products %>% ncol() # 38
 
 iea_oil_products %>% count(units, fuel_type)
 
@@ -10479,8 +9876,8 @@ test_values_iea_oil_products()
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# get sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes by combining iea_natural_gas, 
-# iea_coal, and iea_crude_oil_and_oil_products
+# get sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes ####
+# by combining iea_natural_gas, iea_coal, and iea_crude_oil_and_oil_products
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- iea_natural_gas %>% 
         bind_rows(., iea_coal) %>% 
         bind_rows(., iea_crude_oil) %>%
@@ -10493,13 +9890,16 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- iea_natural_g
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3600
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 34
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3780 (45 countries * 21 years * 4 fuel_types)
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 37
 
-# note that data is unique at country/year/fuel_type level (45 countries * 20 years * 4 fuel_type = 3600 records)
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(year) # 20
+# note that data is unique at country/year/fuel_type level 
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
+        count(country, year, fuel_type) %>%
+        arrange(desc(n))
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(year) # 21
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(country) %>% nrow() # 45
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(fuel_type, units) # 900
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(fuel_type, units) # 945
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(indicator_name, high_value_is_good_outcome_flag)
 
 # inspect country/year/fuel_type records that were not in IEA data and will need 
@@ -10508,44 +9908,611 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(indica
 # 20 years missing oil products/crude oil/coal for for armenia, azerbaijan, belarus, kazakhstan, kyrgyzstan, 
 # russia, tajikistan, turkmenistan, uzbekistan
 # also missing montenegro natural gas for 4 years, and monetenegro crude and oil products each for 1 year
+# notably, moldova is not one of the countries needing imputation from atlas (since atlas has bad energy data for moldova)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
-        filter(is.na(imports_from_world)) %>%
+        filter(is.na(fuel_type_import_share_from_russia)) %>%
+        select(country, year, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
         count(country, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
+        # count(country, year, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
         arrange(desc(n)) %>%
         print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# atlas_2digit_ee_region ####
+
+
+# https://dataverse.harvard.edu/dataverse/atlas
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# load atlas_4digit_cleaned
-# for those countries missing fuel_type_import_share_from_russia from iea, join to 
-# atlas and use russia_fuel_type_import_as_share_of_global_fuel_type_import_sum from atlas as backup stand-in
-# atlas data was cleaned/saved above
-atlas <- read_csv(file = "data/atlas_of_economic_complexity/atlas_4digit_cleaned_20210801.csv")
+# read atlas hs codes w/ descriptions 
+hs <- read_stata("data/atlas_of_economic_complexity/hs_product.dta")
+hs
+
+# read atlas location codes
+location <- read_stata("data/atlas_of_economic_complexity/location.dta")
+location %>% filter(location_code == "ANS")
+location
 
 
-#//////////////////////
+#//////////////////////////
+
+
+# inspect location
+# note that atlas has no data for kosovo
+country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% select(country, iso3) %>% 
+        anti_join(., location, by = c("iso3" = "location_code"))
+
+
+# inspect hs
+hs %>% print(n = 100)
+hs %>% count(parent_id) %>% print(n = 100)
+hs %>% count(hs_product_code, parent_id)
+
+# inspect specific hs codes
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2711", ignore_case = TRUE)))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2701", ignore_case = TRUE)))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2709", ignore_case = TRUE)))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2710", ignore_case = TRUE))) %>% print(n = nrow(.))
+hs %>% filter(str_detect(string = hs_product_code, pattern = regex("^2716", ignore_case = TRUE)))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read in atlas_2digit, and get 1digit classification 
+# note the 1digit classificaiton is product_id 0 to 10
+# the hs file has crosswalk of hs_product_code to parent_id, where parent_id 0 to 10 corresponds to product_id 0 to 10
+# atlas uses both 1digit and 2digit (see hs codes above and atlas explorer)
+atlas_2digit <- read_dta(file = "data/atlas_of_economic_complexity/country_partner_hsproduct2digit_year.dta") 
+# rm(atlas_2digit)
+
+
+atlas_2digit <- atlas_2digit %>% 
+        filter(location_code %in% (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% pull(iso3))) %>%
+        left_join(., hs %>% select(hs_product_code, hs_product_name_short_en, parent_id), by = "hs_product_code") %>%
+        rename(hs_product_name_2digit = hs_product_name_short_en,
+               hs_product_code_1digit = parent_id) %>%
+        left_join(., hs %>% 
+                          filter(hs_product_code %in% c(seq(from = 0, to = 9, by = 1))) %>%
+                          select(hs_product_code, hs_product_name_short_en) %>%
+                          mutate(hs_product_code = as.numeric(hs_product_code)), 
+                  by = c("hs_product_code_1digit" = "hs_product_code")) %>%
+        rename(hs_product_name_1digit = hs_product_name_short_en) %>%
+        left_join(., location %>% select(location_code, location_name_short_en) %>%
+                          rename(location_name = location_name_short_en), 
+                  by = "location_code") %>%
+        left_join(., location %>% select(location_code, location_name_short_en) %>%
+                          rename(partner_code = location_code, partner_name = location_name_short_en), 
+                  by = "partner_code") %>%
+        rename(hs_product_code_2digit = hs_product_code) %>%
+        select(location_name, location_code, location_id, 
+               partner_name, partner_code, partner_id,
+               year, product_id, hs_product_code_2digit, hs_product_name_2digit, hs_product_code_1digit, hs_product_name_1digit,
+               export_value, import_value, hs_eci, hs_coi)
+
+
+#//////////////////////////
 
 
 # inspect
-atlas
-atlas %>% glimpse()
-atlas %>% nrow() # 3344
-atlas %>% ncol() # 26
+atlas_2digit 
+atlas_2digit %>% glimpse()
+atlas_2digit %>% nrow() # 8083009
+atlas_2digit %>% ncol() # 16
 
-# note kosovo is not available in atlas
-atlas %>% count(year)
-atlas %>% count(country) # 44
-atlas %>% group_by(country) %>% skim(russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-        as_tibble() %>% arrange(desc(numeric.mean))
+atlas_2digit %>% count(location_code)
+atlas_2digit %>% count(hs_product_code_2digit, hs_product_name_2digit, hs_product_code_1digit, hs_product_name_1digit) %>% print(n = nrow(.))
+atlas_2digit %>% filter(hs_product_name_1digit == "Agriculture") %>% count(hs_product_name_2digit) %>% print(n = nrow(.))
+atlas_2digit %>% count(year) %>% arrange(desc(year)) %>% print(n = nrow(.))
 
-# inspect country/year/fuel_type records that were not in IEA data and will need 
-# atlas russia_fuel_type_import_as_share_of_global_fuel_type_import_sum from atlas as backup stand-in
-# 9 countries * 3 fuel_types * 20 years
+# notice that ANS is partner_code for undeclared countries (there is no ANS value in location_code)
+atlas_2digit %>% select(partner_code, partner_name) %>% filter(partner_code == "ANS")
+atlas_2digit %>% select(location_code, location_name) %>% filter(location_code == "ANS")
+
+# check location_code
+# location_code matches country_crosswalk for all but kosovo
+country_crosswalk %>% 
+        filter(ee_region_flag == 1 | country == "U.S.") %>%
+        anti_join(., atlas_2digit %>% select(location_code), by = c("iso3" = "location_code"))
+atlas_2digit %>% distinct(location_code) %>%
+        anti_join(., country_crosswalk %>% select(iso3), by = c("location_code" = "iso3"))
+
+
+atlas_2digit %>%
+        # filter(location_code %in% (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% pull(iso3))) %>%
+        count(location_code) %>% print(n = nrow(.))
+
+# check partner_code
+country_crosswalk %>% 
+        anti_join(., atlas_2digit %>% select(partner_code), by = c("iso3" = "partner_code"))
+atlas_2digit %>% distinct(partner_code, partner_name) %>%
+        anti_join(., country_crosswalk %>% select(iso3), by = c("partner_code" = "iso3")) %>%
+        print(n = nrow(.))
+
+atlas_2digit %>%
+        # filter(location_code %in% (country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% pull(iso3))) %>%
+        count(partner_code) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add country_crosswalk to get atlas_2digit_ee_region, and drop atlas_2digit
+atlas_2digit_ee_region <- atlas_2digit %>% 
+        left_join(., country_crosswalk %>% select(country, iso3, mcp_grouping, eu_27_flag, ee_region_flag), 
+                  by = c("location_code" = "iso3")) %>%
+        left_join(., country_crosswalk %>% select(country, iso3, mcp_grouping, eu_27_flag, ee_region_flag) %>%
+                          rename(partner_country = country, 
+                                 partner_mcp_grouping = mcp_grouping, 
+                                 partner_eu_27_flag = eu_27_flag, 
+                                 partner_ee_region_flag = ee_region_flag), 
+                  by = c("partner_code" = "iso3")) %>%
+        relocate(country, mcp_grouping, eu_27_flag, ee_region_flag, .after = location_id) %>%
+        relocate(partner_country, partner_mcp_grouping, partner_eu_27_flag, partner_ee_region_flag, .after = partner_id) %>%
+        mutate(partner_country_from_crosswalk = partner_country,
+               partner_country = case_when(is.na(partner_country) ~ partner_name,
+                                           TRUE ~ partner_country)) %>%
+        relocate(partner_country_from_crosswalk, .after = partner_country)
+
+# drop atlas_2digit
+rm(atlas_2digit)
+
+
+#//////////////////////////
+
+
+# inspect
+atlas_2digit_ee_region 
+atlas_2digit_ee_region %>% glimpse()
+atlas_2digit_ee_region %>% nrow() # 8083009
+atlas_2digit_ee_region %>% ncol() # 25
+
+# check countries
+atlas_2digit_ee_region %>% count(location_code) %>% print(n = nrow(.))
+atlas_2digit_ee_region %>% count(location_name) %>% print(n = nrow(.)) # 44
+atlas_2digit_ee_region %>% count(partner_name) %>% print(n = nrow(.)) # 242
+
+# compare country/partner_country names from country_crosswalk with atlas names in location_name/partner_name
+# all location_names match country_crosswalk
+
+# prior to cleaning, there are several partner_names that have different spellings in country_crosswalk
+# and there are several partner_names in atlas for small territories/historic/other that have no atlas code / iso3 match
+# note that the code above keeps country from crosswalk for locations,
+# it also keeps partner_country from crosswalk where there are matched values,
+# and where there are no matched values for partner_country from crosswalk (small territories/historic/other), will import partner_name from atlas
+atlas_2digit_ee_region %>% filter(country != location_name) %>% distinct(country, location_name)
+atlas_2digit_ee_region %>% filter(partner_country_from_crosswalk != partner_name) %>% 
+        distinct(partner_country, partner_country_from_crosswalk, partner_name, partner_code) %>% print(n = nrow(.))
+atlas_2digit_ee_region %>% filter(is.na(country)) %>% distinct(country, location_name)
+atlas_2digit_ee_region %>% filter(is.na(partner_country_from_crosswalk)) %>% 
+        distinct(partner_country, partner_country_from_crosswalk, partner_name, partner_code) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get atlas_2digit_ee_region
+# chose not to filter down partners to just ee_region, also including china, eu27, us, and ANS-undeclared
+# this leaves a large 8 mil record dataset, but gains the option to show top import/export partners for ee countries at 2digit level
+atlas_2digit_ee_region <- atlas_2digit_ee_region %>%
+        group_by(location_code, year) %>% 
+        mutate(imports_from_world_all_products = sumNA(import_value, na.rm = TRUE),
+               exports_to_world_all_products = sumNA(export_value, na.rm = TRUE)) %>%
+        ungroup() %>%
+        group_by(location_code, year, hs_product_code_1digit) %>% 
+        mutate(imports_from_world_hs_1digit = sumNA(import_value, na.rm = TRUE),
+               exports_to_world_hs_1digit = sumNA(export_value, na.rm = TRUE)) %>%
+        ungroup() %>%
+        group_by(location_code, year, hs_product_code_2digit) %>% 
+        mutate(imports_from_world_hs_2digit = sumNA(import_value, na.rm = TRUE),
+               exports_to_world_hs_2digit = sumNA(export_value, na.rm = TRUE)) %>%
+        ungroup() %>%
+        # filter(partner_code %in% 
+        #                (c(country_crosswalk %>% 
+        #                           filter(ee_region_flag == 1 | country == "U.S." | country %in% c("China", "Cyprus", "Malta")) %>% 
+        #                           pull(iso3), "ANS"))) %>%
+        group_by(location_code, partner_code, year, hs_product_code_1digit) %>%
+        mutate(imports_from_partner_hs_1digit = sumNA(import_value, na.rm = TRUE),
+               exports_to_partner_hs_1digit = sumNA(export_value, na.rm = TRUE)) %>%
+        ungroup() %>%
+        rename(imports_from_partner_hs_2digit = import_value,
+               exports_to_partner_hs_2digit = export_value) %>%
+        arrange(location_name, year, partner_name, hs_product_code_1digit, hs_product_code_2digit) %>%
+        relocate(hs_eci, hs_coi, .after = last_col())
+
+
+#/////////////////////////
+
+
+# inspect
+atlas_2digit_ee_region
+atlas_2digit_ee_region %>% glimpse()
+atlas_2digit_ee_region %>% nrow() # 8083009
+atlas_2digit_ee_region %>% ncol() # 33
+
+# check countries
+atlas_2digit_ee_region %>% count(location_name) %>% print(n = nrow(.)) # 44
+atlas_2digit_ee_region %>% count(partner_name) %>% print(n = nrow(.)) # 242
+
+# check
+atlas_2digit_ee_region %>% 
+        filter(country == "Albania", year == 2011) %>% 
+        filter(partner_country == "China") %>%
+        filter(hs_product_code_1digit == 8) %>%
+        
+        select(country, partner_country, year, 
+               hs_product_name_1digit, hs_product_name_2digit,
+               imports_from_partner_hs_2digit, imports_from_partner_hs_1digit, imports_from_world_hs_1digit, imports_from_world_all_products) %>%
+        arrange(country, year, partner_country, hs_product_name_1digit, hs_product_name_2digit, desc(imports_from_partner_hs_2digit)) %>%
+        # select(country, partner_country, year,
+        #        hs_product_name_1digit, hs_product_name_2digit,
+        #        exports_to_partner_hs_2digit, exports_to_partner_hs_1digit, exports_to_world_hs_1digit) %>%
+        # arrange(country, year, partner_country, hs_product_code_1digit, hs_product_code_2digit, desc(exports_to_partner_hs_2digit)) %>%
+        
+        
+        # distinct(country, partner_country, year, hs_product_name_1digit,
+        #        imports_from_partner_hs_1digit, imports_from_world_hs_1digit, imports_from_world_all_products) %>%
+        # distinct(country, partner_country, year, hs_product_name_1digit,
+        #        exports_to_partner_hs_1digit, exports_to_world_hs_1digit) %>%
+        
+
+print(n = 20)
+
+# check hs 27 - fuels/oils
+atlas_2digit_ee_region %>% count(hs_product_code_2digit, hs_product_name_2digit, hs_product_code_1digit, hs_product_name_1digit) %>% print(n = nrow(.))
+atlas_2digit_ee_region %>% filter(hs_product_code_2digit == 27) %>% count(location_name, partner_name)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add gdp_current
+
+# load gdp_current ####
+# https://data.worldbank.org/indicator/NY.GDP.MKTP.CD
+
+gdp_current <- read_excel(path = "data/world_bank/API_NY.GDP.MKTP.CD_DS2_en_excel_v2_4334130.xls", sheet = "Data", skip = 3) %>%
+        rename(country_name = `Country Name`, iso3 = `Country Code`) %>%
+        select(-c(`Indicator Name`, `Indicator Code`)) %>%
+        pivot_longer(cols = -c(country_name, iso3), names_to = "year", values_to = "gdp_current") %>%
+        mutate(year = as.numeric(year))
+
+
+#/////////////////
+
+
+# inspect
+gdp_current
+gdp_current %>% glimpse()
+gdp_current %>% nrow() # 16492
+gdp_current %>% ncol() # 4
+
+gdp_current %>% count(year) %>% arrange(desc(year))
+gdp_current %>% filter(year == 2021) %>% distinct(gdp_current)
+gdp_current %>% filter(is.na(gdp_current), year >= 2010) %>% count(country_name) %>% arrange(desc(n)) %>% print(n = 20)
+
+gdp_current %>% anti_join(., atlas_2digit_ee_region %>% select(location_code), by = c("iso3" = "location_code")) %>% 
+        distinct(country_name) %>% print(n = nrow(.))
+atlas_2digit_ee_region %>% anti_join(., gdp_current %>% select(iso3), by = c("location_code" = "iso3")) %>% 
+        distinct(country) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add gdp_current
+atlas_2digit_ee_region <- atlas_2digit_ee_region %>% 
+        left_join(., gdp_current %>% select(iso3, year, gdp_current), by = c("location_code" = "iso3", "year"))
+
+
+#/////////////////////////
+
+
+# inspect
+atlas_2digit_ee_region
+atlas_2digit_ee_region %>% glimpse()
+atlas_2digit_ee_region %>% nrow() # 8083009
+atlas_2digit_ee_region %>% ncol() # 34
+
+atlas_2digit_ee_region %>% count(year) %>% arrange(desc(year)) %>% print(n = nrow(.))
+
+atlas_2digit_ee_region %>% distinct(country, year, gdp_current) %>% sample_n(10)
+atlas_2digit_ee_region %>% mutate(imports_from_partner_as_share_of_gdp = imports_from_partner_hs_2digit / gdp_current,
+                                  imports_from_partner_as_share_of_imports_from_world = imports_from_partner_hs_2digit / imports_from_world_hs_2digit) %>%
+        filter(hs_product_code_2digit == 27,
+               year == 2020) %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
+        select(location_name, partner_name, year, hs_product_code_2digit, hs_product_name_2digit, 
+               imports_from_partner_hs_2digit, imports_from_world_hs_2digit, gdp_current, 
+               imports_from_partner_as_share_of_gdp, imports_from_partner_as_share_of_imports_from_world) %>%
+        arrange(location_name, desc(year), desc(imports_from_partner_as_share_of_gdp)) %>%
+        group_by(location_name) %>% slice(1) %>%
+        ungroup() %>%
+        arrange(desc(imports_from_partner_as_share_of_gdp)) %>% print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# test values
+# note values are manually pulled from atlas explorer website
+# https://atlas.cid.harvard.edu/explore
+
+test_values_atlas_2digit_ee_region <- function() {
+        
+        # imports
+        
+        # albania imports of 1digit machinery from china in 2011
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Albania", year == 2011) %>% 
+                             filter(partner_country == "China") %>%
+                             filter(hs_product_code_1digit == 7) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    imports_from_partner_hs_2digit, imports_from_partner_hs_1digit, 
+                                    imports_from_world_hs_1digit, imports_from_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(imports_from_partner_hs_2digit)) %>%
+                             slice(1) %>% 
+                             mutate(imports_from_partner_hs_1digit = as.numeric(round(imports_from_partner_hs_1digit / 1000000, digits = 1))) %>%
+                             pull(imports_from_partner_hs_1digit),
+                     expected = 49.6) 
+        
+        
+        #//////////////////////
+        
+        
+        # serbia imports of 2digit minerals - hs 27 mineral fuels, etc from russia in 2020
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Serbia", year == 2020) %>% 
+                             filter(partner_country == "Russia") %>%
+                             filter(hs_product_code_1digit == 3) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    imports_from_partner_hs_2digit, imports_from_partner_hs_1digit, 
+                                    imports_from_world_hs_1digit, imports_from_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(imports_from_partner_hs_2digit)) %>%
+                             filter(hs_product_code_2digit == 27) %>%
+                             mutate(imports_from_partner_hs_2digit = as.numeric(round(imports_from_partner_hs_2digit / 1000000, digits = 1))) %>%
+                             pull(imports_from_partner_hs_2digit),
+                     expected = 347) 
+        
+        
+        #//////////////////////
+        
+        
+        # belarus imports of 1digit agriculture from world in 2016
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Belarus", year == 2016) %>% 
+                             filter(partner_country == "Russia") %>%
+                             filter(hs_product_code_1digit == 1) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    imports_from_partner_hs_2digit, imports_from_partner_hs_1digit, 
+                                    imports_from_world_hs_1digit, imports_from_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(imports_from_partner_hs_2digit)) %>%
+                             slice(1) %>% 
+                             mutate(imports_from_world_hs_1digit = as.numeric(round(imports_from_world_hs_1digit / 1000000000, digits = 1))) %>%
+                             pull(imports_from_world_hs_1digit),
+                     expected = 3.6) 
+        
+        
+        #//////////////////////
+        
+        
+        # georgia imports of 2digit vehicle = HS 86 trains from world in 2015
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Georgia", year == 2015) %>% 
+                             filter(partner_country == "Russia") %>%
+                             filter(hs_product_code_1digit == 6) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    imports_from_partner_hs_2digit, imports_from_partner_hs_1digit, 
+                                    imports_from_world_hs_2digit, imports_from_world_hs_1digit, imports_from_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(imports_from_partner_hs_2digit)) %>%
+                             filter(hs_product_code_2digit == 86) %>% 
+                             mutate(imports_from_world_hs_2digit = as.numeric(round(imports_from_world_hs_2digit / 1000000, digits = 1))) %>%
+                             pull(imports_from_world_hs_2digit),
+                     expected = 12.4) 
+        
+        
+        #///////////////////////////////////////////////////////////////////////////////////////////// 
+        
+        # exports
+        
+        # moldova exports of 1digit machinery from china in 2011
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Moldova", year == 2011) %>% 
+                             filter(partner_country == "Ukraine") %>%
+                             filter(hs_product_code_1digit == 7) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    exports_to_partner_hs_2digit, exports_to_partner_hs_1digit, 
+                                    exports_to_world_hs_1digit, exports_to_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(exports_to_partner_hs_2digit)) %>%
+                             slice(1) %>% 
+                             mutate(exports_to_partner_hs_1digit = as.numeric(round(exports_to_partner_hs_1digit / 1000000, digits = 1))) %>%
+                             pull(exports_to_partner_hs_1digit),
+                     expected = 7.9) 
+        
+        
+        #//////////////////////
+        
+        
+        # bih exports of 2digit minerals - HS 27 mineral fuels, etc to serbia in 2018
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "BiH", year == 2018) %>% 
+                             filter(partner_country == "Serbia") %>%
+                             filter(hs_product_code_1digit == 3) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    exports_to_partner_hs_2digit, exports_to_partner_hs_1digit, 
+                                    exports_to_world_hs_1digit, exports_to_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(exports_to_partner_hs_2digit)) %>%
+                             slice(1) %>% 
+                             mutate(exports_to_partner_hs_2digit = as.numeric(round(exports_to_partner_hs_2digit / 1000000, digits = 1))) %>%
+                             pull(exports_to_partner_hs_2digit),
+                     expected = 246.4) 
+        
+        
+        #//////////////////////
+        
+        
+        # azerbaijan exports of 1digit minerals to world in 2019
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Azerbaijan", year == 2019) %>% 
+                             filter(partner_country == "Serbia") %>%
+                             filter(hs_product_code_1digit == 3) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    exports_to_partner_hs_2digit, exports_to_partner_hs_1digit, 
+                                    exports_to_world_hs_1digit, exports_to_world_all_products) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(exports_to_partner_hs_2digit)) %>%
+                             slice(1) %>% 
+                             mutate(exports_to_world_hs_1digit = as.numeric(round(exports_to_world_hs_1digit / 1000000000, digits = 1))) %>%
+                             pull(exports_to_world_hs_1digit),
+                     expected = 14.7) 
+        
+        
+        #//////////////////////
+        
+        
+        # ukraine exports of 2digit agriculture - HS 10 cereals to world in 2020
+        expect_equal(object = atlas_2digit_ee_region %>%
+                             filter(country == "Ukraine", year == 2020) %>% 
+                             filter(partner_country == "Serbia") %>%
+                             filter(hs_product_code_1digit == 1) %>%
+                             
+                             select(country, partner_country, year, 
+                                    hs_product_name_1digit, hs_product_name_2digit, hs_product_code_2digit,
+                                    exports_to_partner_hs_2digit,
+                                    # exports_to_partner_hs_1digit, 
+                                    exports_to_world_hs_2digit, exports_to_world_hs_1digit, 
+                                    # exports_to_world_all_products
+                             ) %>%
+                             arrange(country, year, partner_country, hs_product_name_1digit, 
+                                     hs_product_name_2digit, desc(exports_to_partner_hs_2digit)) %>%
+                             filter(hs_product_code_2digit == 10) %>%
+                             mutate(exports_to_world_hs_2digit = as.numeric(round(exports_to_world_hs_2digit / 1000000000, digits = 1))) %>%
+                             pull(exports_to_world_hs_2digit),
+                     expected = 9.2) 
+        
+}
+test_values_atlas_2digit_ee_region()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write
+
+# atlas_2digit_ee_region %>% write_csv(file = "data/atlas_of_economic_complexity/atlas_2digit_ee_region.csv")
+atlas_2digit_ee_region <- read_csv(file = "data/atlas_of_economic_complexity/atlas_2digit_ee_region.csv")
+
+# inspect
+atlas_2digit_ee_region
+atlas_2digit_ee_region %>% glimpse()
+atlas_2digit_ee_region %>% nrow() # 8083009
+atlas_2digit_ee_region %>% ncol() # 34
+
+
+# inspect hs_products
+atlas_2digit_ee_region %>% 
+        count(hs_product_code_1digit,
+              hs_product_name_1digit)
+
+atlas_2digit_ee_region %>% 
+        count(hs_product_code_1digit,
+              hs_product_name_1digit,
+              hs_product_code_2digit,
+              hs_product_name_2digit) %>%
+        print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world ####
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world <- atlas_2digit_ee_region %>%
+        filter(partner_country == "Russia",
+               hs_product_code_2digit == 27) %>%
+        
+        select(country, partner_country, year, 
+               # hs_product_name_1digit, hs_product_code_1digit, 
+               hs_product_name_2digit, hs_product_code_2digit,
+               imports_from_partner_hs_2digit,  
+               imports_from_world_hs_2digit) %>%
+        mutate(energy_imports_from_russia_as_share_of_energy_imports_from_world = imports_from_partner_hs_2digit /
+                       imports_from_world_hs_2digit)
+
+# remove
+rm(atlas_2digit_ee_region)
+
+
+#////////////////////
+
+
+# inspect
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% glimpse()
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% nrow() # 1078
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% ncol() # 8
+
+# note atlas only goes up to 2020, so 2021 values will be carried-forward from 2020 below when 
+# the imputation overwrite is made
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% count(year) %>% print(n = nrow(.))
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>%
+        filter(is.na(energy_imports_from_russia_as_share_of_energy_imports_from_world))
+
+# note that atlas doesn't have data for kosovo or russia (russia is intentionally excluded)
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% count(country) %>% print(n = nrow(.))
+country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% select(country) %>%
+        anti_join(., atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% distinct(country),
+                  by = "country")
+
+# note that atlas data for moldova is inaccurate due to underreporting "sales" to transnistria
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>%
+        arrange(desc(energy_imports_from_russia_as_share_of_energy_imports_from_world)) %>%
+        # filter(country == "Moldova") %>%
+        print(n = 100)
+
+
+# inspect 592 country/year/fuel_type records that were not in IEA data and will need 
+# energy_imports_from_russia_as_share_of_energy_imports_from_world from atlas as backup stand-in
+# 9 countries * 3 fuel_types * 20 years 
+# 20 years missing oil products/crude oil/coal for for armenia, azerbaijan, belarus, kazakhstan, kyrgyzstan, 
+# russia, tajikistan, turkmenistan, uzbekistan
+# also missing montenegro natural gas for 4 years, and monetenegro crude and oil products each for 1 year
+# notably, moldova is not one of the countries needing imputation from atlas (since atlas has bad energy data for moldova)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
-        filter(is.na(imports_from_world)) %>%
+        filter(is.na(fuel_type_import_share_from_russia)) %>%
+        select(country, year, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
         count(country, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
+        # count(country, year, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
+        # filter(country == "Montenegro") %>%
         arrange(desc(n)) %>%
         print(n = nrow(.))
 
@@ -10553,20 +10520,35 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# add missing_from_iea_flag and join atlas russia_fuel_type_import_as_share_of_global_fuel_type_import_sum 
-# note that all country/fuel_type combos missing from IEA are missing for all 20 years, except
-# for crude, natural gas, and oil products from montenegro, which are only missing for 1, 4, and 1 years, respectively
-# so the code below filters the missing_from_iea sub-tbl to keep only those country/fuel-types with 20 records (1 per year)
-# this effectively just drops the montenegro records
+# read/write
+
+# atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>%
+#         write_csv(file = "data/atlas_of_economic_complexity/atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world.csv")
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world <- read_csv(file = "data/atlas_of_economic_complexity/atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world.csv")
+
+# inspect
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% glimpse()
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% nrow() # 1078
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% ncol() # 8
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add atlas russian_energy_shares to sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes ####
+
+# add missing_from_iea_flag and join atlas energy_imports_from_russia_as_share_of_energy_imports_from_world
+# note that all country/fuel_type combos missing from IEA are missing for all 21 years, except
+# for montenegro which is only missing natural gas from 2001-2004
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
-        filter(is.na(imports_from_world)) %>%
-        count(country, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia) %>%
-        filter(n == 20) %>% select(country, fuel_type) %>% mutate(missing_from_iea_flag = 1) %>%
-        left_join(sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes, ., 
-                  by = c("country", "fuel_type")) %>%
-        left_join(., atlas %>% select(country, year, fuel_type, 
-                                      russia_fuel_type_import_as_share_of_global_fuel_type_import_sum),
-                  by = c("country", "year", "fuel_type")) 
+        mutate(missing_from_iea_flag = case_when(is.na(fuel_type_import_share_from_russia) ~ 1,
+                                                 TRUE ~ 0)) %>%
+        left_join(., atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% 
+                          select(country, year, energy_imports_from_russia_as_share_of_energy_imports_from_world),
+                  by = c("country", "year")) 
 
 
 #/////////////////////
@@ -10575,20 +10557,40 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- sub_obj_3_2_i
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3600
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 36
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3780
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 40
 
-# there are 540 records with missing_from_iea_flag = 1 (9 countries * 3 fuel_types * 20 years)
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(missing_from_iea_flag) # 540
+# there are 592 records with missing_from_iea_flag = 1 (9 countries * 3 fuel_types * 20 years)
+# note that atlas only goes up to 2020, so imputing with atlas will still leave 2021 values NA
+# will manually pull forward 2020 fuel_type_import_share_from_russia values for these countries below
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(missing_from_iea_flag) # 592
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% filter(missing_from_iea_flag == 1 ) %>%
         count(country, fuel_type) %>% print(n = nrow(.))
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
+        filter(missing_from_iea_flag == 1) %>%
+        select(country, year, fuel_type, fuel_type_import_share_from_russia,
+               energy_imports_from_russia_as_share_of_energy_imports_from_world) %>% 
+        print(n = 100)
+
+# check atlas to confirm the imputation will still have NA's for 2021, due to atlas only going up to 2020
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% count(year) %>% print(n = nrow(.))
+atlas_energy_imports_from_russia_as_share_of_energy_imports_from_world %>% 
+        select(country, year, energy_imports_from_russia_as_share_of_energy_imports_from_world) %>%
+        filter(country == "Armenia") %>%
+        # filter(country == "Azerbaijan") %>% 
+        # filter(country == "Turkmenistan") %>% 
+        print(n = nrow(.))
 
 
 #/////////////////////////
 
 
 # compare iea-based fuel_type_import_share_from_russia with 
-# atlas-based russia_fuel_type_import_as_share_of_global_fuel_type_import_sum
+# atlas-based energy_imports_from_russia_as_share_of_energy_imports_from_world
+
+# note this code is less relevant once the change was made to use atlas_2digit, instead of atlas 4_digit,
+# since it's expected that 4_digit fuel_type russian_shares would match close between atlas and iea, but
+# its not as expected that atlas_2digit HS 27 approximation russian_shares will match close to iea fuel_type russian_shares
 
 # note there are some major differences
 # see albania for 2010 - atlas says 100% from russia ($9 mil), 
@@ -10599,13 +10601,13 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% filter(missi
 # especially considering my fuel_type coding for atlas at the 4 digit level might not line up with IEA's fuel_type coding
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         mutate(diff = fuel_type_import_share_from_russia - 
-                       russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
+                       energy_imports_from_russia_as_share_of_energy_imports_from_world,
                pct_diff = diff / fuel_type_import_share_from_russia,
                abs_diff = abs(diff),
                pct_abs_diff = abs_diff / fuel_type_import_share_from_russia) %>%
         
         # arrange(desc(abs_diff)) %>% select(country, year, fuel_type, fuel_type_import_share_from_russia,
-        #                                    russia_fuel_type_import_as_share_of_global_fuel_type_import_sum)
+        #                                    energy_imports_from_russia_as_share_of_energy_imports_from_world)
         
         # ggplot(data = ., mapping = aes(x = abs_diff)) + 
         # stat_ecdf()
@@ -10617,66 +10619,66 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# replace NA values for countries not in iea data with 
-# atlas' russia_fuel_type_import_as_share_of_global_fuel_type_import_sum
+# replace NA values for countries not in iea data with atlas' russia_fuel_type_import_as_share_of_global_fuel_type_import_sum
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
         mutate(fuel_type_import_share_from_russia = case_when(missing_from_iea_flag == 1 ~ 
-                                      russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
-                              TRUE ~ fuel_type_import_share_from_russia))
-
-
+                                                                      energy_imports_from_russia_as_share_of_energy_imports_from_world,
+                                                              TRUE ~ fuel_type_import_share_from_russia)) 
+        
+        
 #/////////////////
 
 
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3600
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 36
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3780
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 40
 
+
+# inspect imputation
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
+        # filter(country == "Armenia", year > 2018) %>%
+        filter(missing_from_iea_flag == 1) %>%
+        select(country, year, fuel_type, fuel_type_import_share_from_russia,
+               energy_imports_from_russia_as_share_of_energy_imports_from_world,
+               missing_from_iea_flag) %>% 
+        print(n = 100)
+
+# note that 22 countries have NA fuel_type_import_share_from_russia for 2021, 
+# plus montenegro 2001-2004, and russia (intentionally)
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
+        filter(is.na(fuel_type_import_share_from_russia)) %>% 
+        count(country)
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
+        filter(is.na(fuel_type_import_share_from_russia)) %>%
+        select(country, year, fuel_type, fuel_type_import_share_from_russia,
+               energy_imports_from_russia_as_share_of_energy_imports_from_world) %>%
+        count(country, fuel_type, year) %>% print(n = nrow(.))
 
 # confirm that for missing_from_iea_flag == 1 records, fuel_type_import_share_from_russia equals
 # russia_fuel_type_import_as_share_of_global_fuel_type_import_sum from atlas
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
         filter(missing_from_iea_flag == 1) %>%
         select(country, year, fuel_type, fuel_type_import_share_from_russia,
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
+               energy_imports_from_russia_as_share_of_energy_imports_from_world) %>%
         skim(fuel_type_import_share_from_russia, 
-             russia_fuel_type_import_as_share_of_global_fuel_type_import_sum)
-
-
-# check records with missing_from_iea_flag = 1
-# note that there are 80 country/year/fuel_type records still with NA fuel_type_import_share_from_russia
-# because atlas also had NAs for these
-# eg armenia, azerbaijan, turkmenistan, tajikistan are missing most crude oil, 
-# note that because these country/years do have some values for other fuel_types, they will
-# get an aggregate imports_from_russia_as_share_of_tes value when summing across fuel_types, it will just
-# exclude the NA for specific fuel_types
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
-        filter(missing_from_iea_flag == 1, is.na(fuel_type_import_share_from_russia)) %>%
-        select(country, year, fuel_type, fuel_type_import_share_from_russia,
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-        count(country, fuel_type, year) %>% print(n = nrow(.))
-# check atlas to confirm NAs
-atlas %>% select(country, year, fuel_type, 
-                 russia_fuel_type_import_as_share_of_global_fuel_type_import_sum) %>%
-        filter(country == "Armenia") %>%
-        # filter(country == "Azerbaijan") %>% 
-        # filter(country == "Turkmenistan") %>% 
-        filter(fuel_type == "Crude oil") %>%
-        print(n = nrow(.))
+             energy_imports_from_russia_as_share_of_energy_imports_from_world)
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# load iea energy balances and get fuel_type_imports_as_share_of_tes 
+# load iea energy balances and get fuel_type_imports_as_share_of_tes ####
+
 # note that fuel_type_imports_as_share_of_total_imports and natural_gas_imports_as_share_of_natural_gas_tes are also
 # added, though they aren't needed for sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes; they
 # are included because they'll be used as other 3.2 indicators, which will load from this saved iea datafile
 # note that for completeness, code is included to convert any NaN resulting from 0 / 0
 # although the only calculation where this comes up is natural_gas_imports_as_share_of_natural_gas_tes
-iea_imports <- read_csv(file = "data/iea/iea_energy_balances_cleaned_20210902.csv") %>%
+iea_imports <- read_csv(file = "data/iea/iea_energy_balances_cleaned_20221220.csv") %>%
         select(country_name, year, Imports_crude_oil, Imports_oil_products, 
                Imports_natural_gas, Imports_coal, Imports_total, TES_total, TES_natural_gas) %>%
         pivot_longer(cols = -c(country_name, year, Imports_total, TES_total, TES_natural_gas), 
@@ -10706,23 +10708,34 @@ iea_imports <- read_csv(file = "data/iea/iea_energy_balances_cleaned_20210902.cs
 # inspect
 iea_imports
 iea_imports %>% glimpse()
-iea_imports %>% nrow() # 3600
+iea_imports %>% nrow() # 3960 (45 countries & 4 fuel_types * 22 years)
 iea_imports %>% ncol() # 11
 
 iea_imports %>% count(country_name) # 45
-iea_imports %>% count(year) # 20
-iea_imports %>% count(fuel_type) # 900
+iea_imports %>% count(year) %>% print(n = nrow(.)) # 22 up to 2021
+iea_imports %>% count(fuel_type) # 990
 
 
 #/////////////////////////
 
 
+# note that 20 countries have NA values for 2021; montenegro has NA values 2000-2004
+# note that in raw iea_ee_natural_gas_imports_from_russia_and_world_2000_to_2021_20221121, that
+# macedonia has 0 imports of natural gas from russia in 2021, down from 100%; news indicates they are still dependent
+# this is an IEA error, likely due to provisional data entry issue
+# as a result of macedonia 100% to 0% natural gas, and sporadic 2021 values, will drop 2021 iea data from all indicators impute for index
+iea_imports %>% 
+        filter(is.na(Imports_total) | is.na(TES_total) | is.na(TES_natural_gas)) %>% 
+        print(n = nrow(.))
+iea_imports %>% 
+        filter(is.na(Imports_total) | is.na(TES_total) | is.na(TES_natural_gas)) %>% 
+        count(country_name)
+
 # inspect records where 0 divided by 0 was converted from NaN to 0
-# note that 37 records had 0 divided by 0 and needed conversion from NaN to 0
-# all 37 are fuel_type natural gas when calculating natural_gas_imports_as_share_of_natural_gas_tes
-# kosovo has 0 TES_natural_gas and 0 fuel_type_imports for natural gas from 2001-2020 (20 records)
-# montenegro has 0 TES_natural_gas and 0 fuel_type_imports for natural gas from 2005-2020 (16 records)
-# and tajikistan has 0 TES_natural_gas and 0 fuel_type_imports for 2020
+# note that 39 records had 0 divided by 0 and needed conversion from NaN to 0 (kosovo and montenegro)
+# all 39 records are fuel_type natural gas when calculating natural_gas_imports_as_share_of_natural_gas_tes
+# kosovo has 0 TES_natural_gas and 0 fuel_type_imports for natural gas from 2000-2021 (22 records)
+# montenegro has 0 TES_natural_gas and 0 fuel_type_imports for natural gas from 2005-2021 (17 records)
 iea_imports %>% filter(fuel_type_imports == 0 & TES_total == 0 |
                                 fuel_type_imports == 0 & Imports_total == 0 |
                                fuel_type_imports == 0 & TES_natural_gas == 0 & var == "Imports_natural_gas") %>%
@@ -10743,36 +10756,46 @@ iea_imports %>% filter(fuel_type_imports == 0 & TES_total == 0 |
 
 
 # check missing fuel_type_imports_as_share_of_tes
-# note that 96 missing values
-# note that 20 countries are missing all 2020 values (4 fuel_types * 20 years = 80 of 96 missing values)
-# the remaining missing values are montenegro missing all values for 2001-2004 (4 fuel_types * 4 years = 16 values)
+# note that 100 missing values
+# note that 20 countries are missing all 2021 values (4 fuel_types * 20 years = 80 of 96 missing values)
+# the remaining missing values are montenegro missing all values for 2000-2004 (4 fuel_types * 5 years = 20 values)
 iea_imports %>% skim(fuel_type_imports_as_share_of_tes)
-iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_tes), year == 2020) %>% 
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_tes)) %>% print(n = 100)
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_tes)) %>% count(country_name, fuel_type)
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_tes), year == 2021) %>% 
         count(country_name)
-iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_tes), year != 2020) %>%
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_tes), year != 2021) %>%
         count(country_name, year)
 
 # check missing fuel_type_imports_as_share_of_total_imports
-# note that 96 missing values
-# note that 20 countries are missing all 2020 values (4 fuel_types * 20 years = 80 of 96 missing values)
-# the remaining missing values are montenegro missing all values for 2001-2004 (4 fuel_types * 4 years = 16 values)
+# note that 100 missing values
+# note that 20 countries are missing all 2021 values (4 fuel_types * 20 years = 80 of 96 missing values)
+# the remaining missing values are montenegro missing all values for 2000-2004 (4 fuel_types * 5 years = 20 values)
 iea_imports %>% skim(fuel_type_imports_as_share_of_total_imports)
-iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_total_imports), year == 2020) %>% 
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_total_imports)) %>% print(n = 100)
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_total_imports), year == 2021) %>% 
         count(country_name)
-iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_total_imports), year != 2020) %>%
+iea_imports %>% filter(is.na(fuel_type_imports_as_share_of_total_imports), year != 2021) %>%
         count(country_name, year)
 
 # check missing natural_gas_imports_as_share_of_natural_gas_tes
-# note that 4 missing values for montenegro 2001-2004
+# note that 5 missing values for montenegro 2000-2004
 iea_imports %>% 
         filter(fuel_type == "Natural gas") %>%
         skim(natural_gas_imports_as_share_of_natural_gas_tes)
 iea_imports %>% filter(fuel_type == "Natural gas",
-                       is.na(natural_gas_imports_as_share_of_natural_gas_tes), year == 2020) %>% 
+                       is.na(natural_gas_imports_as_share_of_natural_gas_tes)) 
+iea_imports %>% filter(fuel_type == "Natural gas",
+                       is.na(natural_gas_imports_as_share_of_natural_gas_tes)) %>% 
         count(country_name)
 iea_imports %>% filter(fuel_type == "Natural gas",
                        is.na(natural_gas_imports_as_share_of_natural_gas_tes), year != 2020) %>%
         count(country_name, year)
+
+
+# check specific countries
+iea_imports %>% 
+        filter(fuel_type == "Natural gas", country_name == "N. Macedonia", year == 2021)
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -10783,6 +10806,9 @@ iea_imports %>% filter(fuel_type == "Natural gas",
 # get fuel_type_imports_from_russia_as_share_of_tes and 
 # then sum across fuel_types to country/year level to get imports_from_russia_as_share_of_tes
 # for compatibility with fmir, make copy of imports_from_russia_as_share_of_tes called "values"
+
+# as a result of macedonia 100% to 0% natural gas, and sporadic 2021 values, will drop 2021 iea data from all indicators impute for index
+
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         left_join(., iea_imports %>% select(country_name, year, fuel_type, 
                                             fuel_type_imports,
@@ -10803,7 +10829,15 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- sub_obj_3_2_i
         mutate(fossil_imports_from_russia_as_share_of_tes = sumNA(fuel_type_imports_from_russia_as_share_of_tes, na.rm = TRUE),
                values = fossil_imports_from_russia_as_share_of_tes,
                fossil_imports_from_russia_as_share_of_total_imports = sumNA(fuel_type_imports_from_russia_as_share_of_total_imports, na.rm = TRUE)) %>%
-        ungroup() 
+        ungroup() %>%
+        mutate(natural_gas_imports_from_russia_as_share_of_natural_gas_tes = case_when(year == 2021 ~ NA_real_,
+                                                                                       TRUE ~ natural_gas_imports_from_russia_as_share_of_natural_gas_tes),
+               fossil_imports_from_russia_as_share_of_tes = case_when(year == 2021 ~ NA_real_,
+                                                                      TRUE ~ fossil_imports_from_russia_as_share_of_tes),
+               values = case_when(year == 2021 ~ NA_real_,
+                                  TRUE ~ values),
+               fossil_imports_from_russia_as_share_of_total_imports = case_when(year == 2021 ~ NA_real_,
+                                                                                TRUE ~ fossil_imports_from_russia_as_share_of_total_imports))
 
 
 #//////////////////
@@ -10812,8 +10846,8 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- sub_obj_3_2_i
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3600
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 49
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3780
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 53
 
 # confirm values equals fossil_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
@@ -10859,43 +10893,41 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 
 
 # check missing fossil_imports_from_russia_as_share_of_tes
-# note 96 records with missing fossil_imports_from_russia_as_share_of_tes
-# 20 countries are missing all 4 fuel_type records for 2020 (80 of 96 records)
+# all countries have 2021 values set to NA
 # the other 16 missing records are for montenegro 2001-2004
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         skim(fossil_imports_from_russia_as_share_of_tes)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-        filter(is.na(fossil_imports_from_russia_as_share_of_tes), year == 2020) %>%
+        filter(is.na(fossil_imports_from_russia_as_share_of_tes), year == 2021) %>%
         count(country)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-        filter(is.na(fossil_imports_from_russia_as_share_of_tes), year != 2020) %>%
+        filter(is.na(fossil_imports_from_russia_as_share_of_tes), year != 2021) %>%
         count(country, year)
 
 # check missing fossil_imports_from_russia_as_share_of_total_imports
-# note 96 records with missing fossil_imports_from_russia_as_share_of_tes
-# 20 countries are missing all 4 fuel_type records for 2020 (80 of 96 records)
+# all countries have 2021 values set to NA
 # the other 16 missing records are for montenegro 2001-2004
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         skim(fossil_imports_from_russia_as_share_of_total_imports)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-        filter(is.na(fossil_imports_from_russia_as_share_of_total_imports), year == 2020) %>%
+        filter(is.na(fossil_imports_from_russia_as_share_of_total_imports), year == 2021) %>%
         count(country)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-        filter(is.na(fossil_imports_from_russia_as_share_of_total_imports), year != 2020) %>%
+        filter(is.na(fossil_imports_from_russia_as_share_of_total_imports), year != 2021) %>%
         count(country, year)
 
 # check missing natural_gas_imports_from_russia_as_share_of_natural_gas_tes
-# note 4 missing values for montenegro 2001-2004 
+# all countries have 2021 values set to NA
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         filter(fuel_type == "Natural gas") %>%
         skim(natural_gas_imports_from_russia_as_share_of_natural_gas_tes)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         filter(fuel_type == "Natural gas", 
-               is.na(natural_gas_imports_from_russia_as_share_of_natural_gas_tes), year == 2020) %>%
+               is.na(natural_gas_imports_from_russia_as_share_of_natural_gas_tes), year == 2021) %>%
         count(country)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         filter(fuel_type == "Natural gas", 
-               is.na(natural_gas_imports_from_russia_as_share_of_natural_gas_tes), year != 2020) %>%
+               is.na(natural_gas_imports_from_russia_as_share_of_natural_gas_tes), year != 2021) %>%
         count(country, year) %>% print(n = nrow(.))
 
 
@@ -10907,17 +10939,18 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 # inspect fossil_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 # iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
+        filter(year == 2010) %>%
         # filter(country == "BiH") %>%
         # filter(country == "Moldova") %>%
-        # filter(country == "Serbia") %>%
+        filter(country == "Serbia") %>%
         # filter(country == "Armenia") %>%
-        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), year == 2019) %>%
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), year == 2019) %>%
         select(country, year, fuel_type, 
                # imports_from_russia, imports_from_world, 
                fuel_type_import_share_from_russia,
                fuel_type_imports_as_share_of_tes,
                fuel_type_imports_from_russia_as_share_of_tes,
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
+               energy_imports_from_russia_as_share_of_energy_imports_from_world,
                fossil_imports_from_russia_as_share_of_tes, 
                values) %>%
         arrange(desc(fossil_imports_from_russia_as_share_of_tes), country, year) %>% print(n = nrow(.))
@@ -10972,7 +11005,7 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 
 # note that bosnia has a sharp increase in fossil_imports_from_russia_as_share_of_tes from 2013 to 2014, which is
 # driven by sharp change in coal fuel_type_import_share_from_russia going from 0% to 100% in IEA imports_by_origins data
-# interestingly, atlas_4_digit reflected russia_fuel_type_import_as_share_of_global_fuel_type_import_sum as 99% for both years...
+# interestingly, atlas_4_digit reflected energy_imports_from_russia_as_share_of_energy_imports_from_world as 99% for both years...
 # but since IEA is the primary source where available, will just go with IEA, though the abrupt change seems suspicious
 # but the subsequent decrease in bosnia's fossil_imports_from_russia_as_share_of_tes from 2017 to 2018 is
 # similarly reflected in atlas
@@ -10981,15 +11014,17 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         # filter(country == "BiH", year %in% c(2013, 2014)) %>%
         # filter(country == "BiH", year %in% c(2017, 2018)) %>%
-        filter(country == "Ukraine", year >= 2011, year <= 2016) %>% 
+        # filter(country == "Ukraine", year >= 2011, year <= 2016) %>% 
+        filter(country == "N. Macedonia", year >= 2018, fuel_type == "Natural gas") %>%
         # arrange(country, year) %>%
         arrange(country, fuel_type) %>%
         select(country, year, fuel_type, 
                fuel_type_import_share_from_russia,
                fuel_type_imports_as_share_of_tes,
                fuel_type_imports_from_russia_as_share_of_tes,
-               russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
-               fossil_imports_from_russia_as_share_of_tes) %>%
+               energy_imports_from_russia_as_share_of_energy_imports_from_world,
+               fossil_imports_from_russia_as_share_of_tes,
+               missing_from_iea_flag) %>%
         print(n = nrow(.))
 
 
@@ -10998,13 +11033,13 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 
 # plot fossil_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         ggplot(data = ., mapping = aes(x = year, y = fossil_imports_from_russia_as_share_of_tes, color = country)) + 
-        geom_line() 
+        geom_line(size = 1) 
 
 
 # plot fossil_imports_from_russia_as_share_of_total_imports
@@ -11015,18 +11050,18 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         ggplot(data = ., mapping = aes(x = year, y = fossil_imports_from_russia_as_share_of_total_imports, color = country)) + 
-        geom_line() 
+        geom_line(size = 1) 
 
 # plot natural_gas_imports_from_russia_as_share_of_natural_gas_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
         filter(fuel_type == "Natural gas") %>%
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         ggplot(data = ., mapping = aes(x = year, y = natural_gas_imports_from_russia_as_share_of_natural_gas_tes, color = country)) + 
-        geom_line() 
+        geom_line(size = 1) 
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////
@@ -11037,9 +11072,22 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 # write expanded data including fuel-type variables, although fmir index will use the reduced version without fuel-type 
 # variables (see below)
 # sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-#         write_csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20210921.csv")
-iea_fossil_fuel_imports_from_russia_as_share_of_tes <- read.csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20210921.csv") %>% 
+#         write_csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20230115.csv")
+iea_fossil_fuel_imports_from_russia_as_share_of_tes <- read.csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20230115.csv") %>% 
         as_tibble()
+
+
+# inspect
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3780
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 53
+
+# inspect
+iea_fossil_fuel_imports_from_russia_as_share_of_tes
+iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
+iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 3780
+iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 53
 
 
 #//////////////////////////////
@@ -11061,16 +11109,14 @@ iea_fossil_fuel_imports_from_russia_as_share_of_tes <- read.csv(file = "data/iea
 # this is the same tradeoff identified by legatum about either penalizing outlier countries by including them,
 # or maintaining cross-indicator comparability by excluding/avoiding outliers; they opted for comparability
 
-# note that 2020 values are set to NA for data quality purposes, 
-# because in the original raw data 20 countries were missing 2020
+# note that 2021 values are set to NA for data quality purposes, 
+# because in the original raw data 20 countries were missing 2021, and macedonia natural gas from russia went incorrectly to 0%
 # note that fuel_type-related variables are dropped and then distinct() called to go from
 # being unique at country/year/fuel_type level to unique at country/year level
 
 # sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-#         mutate(values = case_when(year == 2020 ~ NA_real_,
-#                           TRUE ~ values)) %>%
 #         select(-c(units, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia,
-#                   russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
+#                   energy_imports_from_russia_as_share_of_energy_imports_from_world,
 #                   fuel_type_imports, Imports_total, TES_total, TES_natural_gas,
 #                   fuel_type_imports_as_share_of_total_imports,
 #                   natural_gas_imports_as_share_of_natural_gas_tes,
@@ -11090,8 +11136,8 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes <- read_csv(file
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 900
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 32
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% nrow() # 945
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% ncol() # 36
 
 # check values
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(country) %>% nrow() # 45
@@ -11100,7 +11146,7 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% count(countr
 
 
 # confirm that values equals fossil_imports_from_russia_as_share_of_tes
-# note that na values for 2020 need to be dropped, since 25 countries still have values for 2020 in 
+# note that na values for 2021 needed to be dropped, since 25 countries still have values for 2020 in 
 # natural_gas_imports_as_share_of_natural_gas_tes
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
         filter(!is.na(values)) %>%
@@ -11119,9 +11165,9 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
         skim(values)
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-        filter(is.na(values), year == 2020) %>% count(country, year, values) %>% print(n = nrow(.))
+        filter(is.na(values), year == 2021) %>% count(country, year, values) %>% print(n = nrow(.))
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
-        filter(is.na(values), year != 2020) %>% select(country, year, values) %>% print(n = nrow(.))
+        filter(is.na(values), year != 2021) %>% select(country, year, values) %>% print(n = nrow(.))
 
 # inspect values
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>% 
@@ -11144,23 +11190,22 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes %>%
 # note that indicator_name and high_value_is_good_outcome_flag is assigned, 
 # and tbl is rejoined to fmir_framework based on updated indicator_name
 # because the data originally read in is based on sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports <- read_csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20210921.csv") %>%
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports <- read_csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20230115.csv") %>%
         mutate(values = fossil_imports_from_russia_as_share_of_total_imports,
-               values = case_when(year == 2020 ~ NA_real_,
-                                         TRUE ~ values),
                indicator_name = "sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports", 
                high_value_is_good_outcome_flag = 0) %>%
         select(-c(obj_num, obj, obj_short_name, sub_obj_num, sub_obj, sub_obj_short_name,
-                  concept, indicator, Description, data_documentation, data_source, notes, note_flag,
+                  concept, indicator, data_documentation, data_source, notes, note_flag,
                   units, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia,
-                  russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
+                  energy_imports_from_russia_as_share_of_energy_imports_from_world,
                   fuel_type_imports, Imports_total, TES_total, TES_natural_gas,
                   fuel_type_imports_as_share_of_total_imports,
                   natural_gas_imports_as_share_of_natural_gas_tes,
                   fuel_type_imports_from_russia_as_share_of_total_imports,
                   natural_gas_imports_from_russia_as_share_of_natural_gas_tes,
                   fuel_type_imports_as_share_of_tes, fuel_type_imports_from_russia_as_share_of_tes,
-                  missing_from_iea_flag)) %>%
+                  missing_from_iea_flag,
+                  description, `Year range`, `Coverage gaps`, `When published`)) %>%
         distinct() %>%
         left_join(., fmir_framework, by = "indicator_name")
 
@@ -11171,8 +11216,8 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports <- rea
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% nrow() # 900
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% ncol() # 32
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% nrow() # 945
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% ncol() # 36
 
 # confirm that values equals fossil_imports_from_russia_as_share_of_total_imports
 # note that NA values for 2020 need to be dropped, since 25 countries still have values for 2020 in 
@@ -11214,7 +11259,7 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + 
-        geom_line() 
+        geom_line(size = 1) 
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -11229,8 +11274,8 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports <- rea
 # inspect
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports
 sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% glimpse()
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% nrow() # 900
-sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% ncol() # 33
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% nrow() # 945
+sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% ncol() # 36
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -11240,24 +11285,29 @@ sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_total_imports %>% nc
 
 # load sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports ####
 
-
+# note that 2021 is set to NA for data quality reasons
 # note that indicator_name is assigned, and tbl is rejoined to fmir_framework based on updated indicator_name
 # because the data originally read in is based on sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes
-sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports <- read_csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20210921.csv") %>%
+sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports <- read_csv(file = "data/iea/iea_fossil_fuel_imports_from_russia_20230115.csv") %>%
         filter(fuel_type == "Natural gas") %>%
         mutate(natural_gas_imports_from_russia_as_share_of_natural_gas_imports = fuel_type_import_share_from_russia,
                 values = natural_gas_imports_from_russia_as_share_of_natural_gas_imports,
                indicator_name = "sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports", 
                high_value_is_good_outcome_flag = 0) %>%
+        mutate(natural_gas_imports_from_russia_as_share_of_natural_gas_imports = case_when(year == 2021 ~ NA_real_,
+                                                                                           TRUE ~ natural_gas_imports_from_russia_as_share_of_natural_gas_imports),
+               values = case_when(year == 2021 ~ NA_real_,
+                                  TRUE ~ values)) %>%
         select(-c(obj_num, obj, obj_short_name, sub_obj_num, sub_obj, sub_obj_short_name,
-                  concept, indicator, Description, data_documentation, data_source, notes, note_flag,
+                  concept, indicator, data_documentation, data_source, notes, note_flag,
                 units, fuel_type, imports_from_russia, imports_from_world, fuel_type_import_share_from_russia,
-                  russia_fuel_type_import_as_share_of_global_fuel_type_import_sum,
+                  energy_imports_from_russia_as_share_of_energy_imports_from_world,
                   fuel_type_imports, Imports_total, TES_total, TES_natural_gas,
                   fuel_type_imports_as_share_of_total_imports,
                   fuel_type_imports_from_russia_as_share_of_total_imports,
                   fuel_type_imports_as_share_of_tes, fuel_type_imports_from_russia_as_share_of_tes,
-                  missing_from_iea_flag)) %>%
+                  missing_from_iea_flag,
+                description, `Year range`, `Coverage gaps`, `When published`)) %>%
         left_join(., fmir_framework, by = "indicator_name")
 
 
@@ -11267,11 +11317,11 @@ sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports 
 # inspect
 sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports 
 sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% glimpse()
-sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% nrow() # 900
-sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% ncol() # 35
+sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% nrow() # 945
+sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% ncol() # 39
 
 # confirm that values equals fossil_imports_from_russia_as_share_of_total_imports
-# note that na values for 2020 need to be dropped, since 25 countries still have values for 2020 in 
+# note that na values for 2021 need to be dropped, since 25 countries still have values for 2020 in 
 # natural_gas_imports_as_share_of_natural_gas_tes
 sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% 
         skim(values, natural_gas_imports_from_russia_as_share_of_natural_gas_imports)
@@ -11325,7 +11375,7 @@ sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports 
         # filter(country == "Ukraine") %>%
         # filter(country == "Ukraine") %>%
         ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + 
-        geom_line() 
+        geom_line(size = 1) 
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -11339,8 +11389,8 @@ sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports 
 # inspect
 sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports
 sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% glimpse()
-sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% nrow() # 900
-sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% ncol() # 35
+sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% nrow() # 945
+sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports %>% ncol() # 43
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -11351,72 +11401,86 @@ sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports 
 # load sub_obj_3_3_rise_energy_efficiency_regulation_rank ####
 
 # https://rise.worldbank.org/scores
-# note historical data was sent directly from RIS team by email 5/11/2021 352pm by Daron Bedrosyan <dbedrosyan@worldbank.org>
+# note historical data was sent directly from RIS team by email 2/15/2023 1210pm by Daron Bedrosyan <dbedrosyan@worldbank.org>
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2019 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2021 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
+                                                                      sheet = "ee_website_data_2021") %>%
+        select(Country, `EE Overall Score`) %>% 
+        rename(country_name = Country, values = `EE Overall Score`) %>%
+        slice(-1) %>% mutate(values = as.numeric(values),
+                             year = 2021)
+
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2020 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
+                                                                      sheet = "ee_website_data_2020") %>%
+        select(Country, `EE Overall Score`) %>% 
+        rename(country_name = Country, values = `EE Overall Score`) %>%
+        slice(-1) %>% mutate(values = as.numeric(values),
+                             year = 2020)
+
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2019 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2019") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2019)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2018 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2018 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2018") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2018)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2017 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2017 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2017") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2017)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2016 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2016 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2016") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2016)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2015 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2015 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2015") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2015)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2014 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2014 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2014") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2014)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2013 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2013 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2013") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2013)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2012 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2012 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2012") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2012)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2011 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2011 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2011") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
                              year = 2011)
 
-sub_obj_3_3_rise_energy_efficiency_regulation_rank_2010 <- read_excel(path = "data/world_bank/RISE energy_efficiency_full time series.xlsx",
+sub_obj_3_3_rise_energy_efficiency_regulation_rank_2010 <- read_excel(path = "data/world_bank/EE Full Time Series RISE 2022.xlsx",
                                                                  sheet = "ee_website_data_2010") %>%
         select(Country, `EE Overall Score`) %>% 
         rename(country_name = Country, values = `EE Overall Score`) %>%
@@ -11428,6 +11492,11 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank_2010 <- read_excel(path = "da
 
 
 # combine years to get sub_obj_3_3_rise_energy_efficiency_regulation_rank
+
+# also, data for georgia and moldova was missing in 2021-report year release, but added in 2022-report year release
+# though manual inspection shows really weird values for georgia and moldova 
+# georgia gets all 0 ISV, close to afghanistan, and moldova has extreme rise in ISV
+# will manually set moldova and georgia back to missing to be imputed, like last year
 sub_obj_3_3_rise_energy_efficiency_regulation_rank <- sub_obj_3_3_rise_energy_efficiency_regulation_rank_2010 %>%
         bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2011) %>%
         bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2012) %>%
@@ -11438,6 +11507,8 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank <- sub_obj_3_3_rise_energy_ef
         bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2017) %>%
         bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2018) %>%
         bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2019) %>%
+        bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2020) %>%
+        bind_rows(., sub_obj_3_3_rise_energy_efficiency_regulation_rank_2021) %>%
         mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "Czech Republic" ~ "Czechia",
                                         country_name == "Kyrgyz Republic" ~ "Kyrgyzstan",
@@ -11452,7 +11523,9 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank <- sub_obj_3_3_rise_energy_ef
                overall_rise_score = values) %>%
         group_by(year) %>% arrange(desc(overall_rise_score)) %>% 
         mutate(values = as.numeric(row_number())) %>%
-        ungroup()
+        ungroup() %>%
+        mutate(values = case_when(country_name %in% c("Georgia", "Moldova") ~ NA_real_,
+                                  TRUE ~ values))
 
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11461,14 +11534,23 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank <- sub_obj_3_3_rise_energy_ef
 # inspect 
 sub_obj_3_3_rise_energy_efficiency_regulation_rank
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% glimpse()
-sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% nrow() # 1380
+sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% nrow() # 1680
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% ncol() # 6
+
+
+sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% count(year)
+sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% select(country_name, year, values, overall_rise_score) %>%
+        arrange(year, desc(overall_rise_score)) %>% print(n = 50)
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% arrange(values) %>% distinct(country_name)
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% arrange(year, values) %>% print(n = 100)
 
 # inspect country names
-# note rise does not have data for estonia, georgia, latvia, lithuania, luxembourg, moldova, slovenia
+# note rise does not have data for estonia, latvia, lithuania, luxembourg, slovenia
+# also, data for georgia and moldova was missing in 2021-report year release, but added in 2022-report year release
+# though manual inspection shows really weird values for georgia and moldova 
+# georgia gets all 0 ISV, close to afghanistan, and moldova has extreme rise in ISV
+# will manually set moldova and georgia back to missing to be imputed, like last year
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name) %>% print(n = nrow(.))
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% 
@@ -11499,8 +11581,8 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank <- sub_obj_3_3_rise_energy_ef
 # inspect
 sub_obj_3_3_rise_energy_efficiency_regulation_rank
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% glimpse()
-sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% nrow() # 900
-sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% ncol() # 30
+sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% nrow() # 945
+sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% ncol() # 35
 
 # check country/year
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% distinct(country) %>% nrow() # 45
@@ -11528,14 +11610,15 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% filter(year == 2019, valu
         select(country, year, values, overall_rise_score)
 
 # plot
+# note that georgia scores very low, and moldova very high, but i confirmed this on RISE interactive website and raw data
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
-        filter(mcp_grouping == "E&E graduates") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         # filter(mcp_grouping == "U.S.") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% group_by(indicator_name) %>% 
@@ -11555,31 +11638,25 @@ test_values_sub_obj_3_3_rise_energy_efficiency_regulation_rank <- function() {
         expect_equal(object = sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(overall_rise_score),
-                     expected = 51.1363636363636)
+                     expected = 46.4949494949495)
         
         # 2
         expect_equal(object = sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% 
                              filter(country == "Kosovo", year == 2017) %>%
                              pull(overall_rise_score),
-                     expected = 43.5606060606061)
-        
-        # 3
-        expect_equal(object = sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
-                             pull(overall_rise_score),
-                     expected = 52.8030303030303)
+                     expected = 37.2020202020202)
         
         # 4
         expect_equal(object = sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% 
                              filter(country == "Portugal", year == 2019) %>%
                              pull(overall_rise_score),
-                     expected = 89.6212121212121)
+                     expected = 82.6565656565657)
         
         # 5
         expect_equal(object = sub_obj_3_3_rise_energy_efficiency_regulation_rank %>% 
-                             filter(country == "Serbia", year == 2011) %>%
+                             filter(country == "Serbia", year == 2021) %>%
                              pull(overall_rise_score),
-                     expected = 16.3636363636364)
+                     expected = 54.969696969697)
 }
 test_values_sub_obj_3_3_rise_energy_efficiency_regulation_rank()
 
@@ -11600,84 +11677,116 @@ sub_obj_3_3_rise_energy_efficiency_regulation_rank <- read_csv(file = "data/fmir
 # load sub_obj_3_3_rise_renewable_energy_regulation_rank ####
 
 # https://rise.worldbank.org/scores
-# note historical data was sent directly from RIS team by email 5/11/2021 352pm by Daron Bedrosyan <dbedrosyan@worldbank.org>
+# note historical data was sent directly from RIS team by email 2/15/2023 1210pm by Daron Bedrosyan <dbedrosyan@worldbank.org>
 
-# note that for 2019 the variable is called "Overall Score", but for 2018-2010 it's called "RE Score"
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2019 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2019") %>%
-        select(Country, `Overall Score`) %>% 
-        rename(country_name = Country, values = `Overall Score`) %>%
+# note that for this renewable energy spreadsheet there's an error where US and Uzbekistan have two duplicate rows for each year
+# will call distinct on each year data to drop duplicate records
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2021 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                      sheet = "re_website_data_2021") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2019)
+                             year = 2021) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2018 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2018") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2020 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                      sheet = "re_website_data_2020") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2018)
+                             year = 2020) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2017 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2017") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2019 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2019") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2017)
+                             year = 2019) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2016 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2016") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2018 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2018") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2016)
+                             year = 2018) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2015 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2015") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2017 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2017") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2015)
+                             year = 2017) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2014 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2014") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2016 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2016") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2014)
+                             year = 2016) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2013 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2013") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2015 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2015") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2013)
+                             year = 2015) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2012 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2012") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2014 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2014") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2012)
+                             year = 2014) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2011 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2011") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2013 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2013") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2011)
+                             year = 2013) %>%
+        distinct()
 
-sub_obj_3_3_rise_renewable_energy_regulation_rank_2010 <- read_excel(path = "data/world_bank/RISE renewable_energy_full time series.xlsx",
-                                                                sheet = "RE_website_data_2010") %>%
-        select(Country, `RE score`) %>% 
-        rename(country_name = Country, values = `RE score`) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2012 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2012") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
         slice(-1) %>% mutate(values = as.numeric(values),
-                             year = 2010)
+                             year = 2012) %>%
+        distinct()
+
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2011 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2011") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
+        slice(-1) %>% mutate(values = as.numeric(values),
+                             year = 2011) %>%
+        distinct()
+
+sub_obj_3_3_rise_renewable_energy_regulation_rank_2010 <- read_excel(path = "data/world_bank/RE Full Time Series RISE 2022.xlsx",
+                                                                     sheet = "re_website_data_2010") %>%
+        select(Country, `RE Overall Score`) %>% 
+        rename(country_name = Country, values = `RE Overall Score`) %>%
+        slice(-1) %>% mutate(values = as.numeric(values),
+                             year = 2010) %>%
+        distinct()
 
 
 #////////////////////
 
 
 # combine years to get sub_obj_3_3_rise_renewable_energy_regulation_rank
+
+# also, data for georgia and moldova was missing in 2021-report year release, but added in 2022-report year release
+# though manual inspection shows really weird values for georgia and moldova 
+# georgia gets all 0 ISV, close to afghanistan, and moldova has extreme rise in ISV
+# will manually set moldova and georgia back to missing to be imputed, like last year
 sub_obj_3_3_rise_renewable_energy_regulation_rank <- sub_obj_3_3_rise_renewable_energy_regulation_rank_2010 %>%
         bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2011) %>%
         bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2012) %>%
@@ -11688,6 +11797,8 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank <- sub_obj_3_3_rise_renewable_
         bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2017) %>%
         bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2018) %>%
         bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2019) %>%
+        bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2020) %>%
+        bind_rows(., sub_obj_3_3_rise_renewable_energy_regulation_rank_2021) %>%
         mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "Czech Republic" ~ "Czechia",
                                         country_name == "Kyrgyz Republic" ~ "Kyrgyzstan",
@@ -11701,7 +11812,9 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank <- sub_obj_3_3_rise_renewable_
                high_value_is_good_outcome_flag = 0,
                overall_rise_score = values) %>%
         group_by(year) %>% arrange(desc(overall_rise_score)) %>% mutate(values = as.numeric(row_number())) %>%
-        ungroup()
+        ungroup() %>%
+        mutate(values = case_when(country_name %in% c("Georgia", "Moldova") ~ NA_real_,
+                                  TRUE ~ values))
 
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11710,13 +11823,20 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank <- sub_obj_3_3_rise_renewable_
 # inspect 
 sub_obj_3_3_rise_renewable_energy_regulation_rank
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% glimpse()
-sub_obj_3_3_rise_renewable_energy_regulation_rank %>% nrow() # 1380
+sub_obj_3_3_rise_renewable_energy_regulation_rank %>% nrow() # 1680
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% ncol() # 6
-sub_obj_3_3_rise_renewable_energy_regulation_rank %>% arrange(year, values) %>% print(n = 100)
 
+
+sub_obj_3_3_rise_renewable_energy_regulation_rank %>% arrange(year, values) %>% print(n = 100)
+sub_obj_3_3_rise_renewable_energy_regulation_rank %>% select(country_name, year, values, overall_rise_score) %>%
+        arrange(year, desc(overall_rise_score)) %>% print(n = 50)
 
 # inspect country names
-# note rise does not have data for estonia, georgia, latvia, lithuania, luxembourg, moldova, slovenia
+# note rise does not have data for estonia, latvia, lithuania, luxembourg, slovenia
+# also, data for georgia and moldova was missing in 2021-report year release, but added in 2022-report year release
+# though manual inspection shows really weird values for georgia and moldova 
+# georgia gets all 0 ISV, close to afghanistan, and moldova has extreme rise in ISV
+# will manually set moldova and georgia back to missing to be imputed, like last year
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
         distinct(country_name) %>% arrange(country_name) %>% print(n = nrow(.))
 country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>% 
@@ -11747,8 +11867,8 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank <- sub_obj_3_3_rise_renewable_
 # inspect
 sub_obj_3_3_rise_renewable_energy_regulation_rank
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% glimpse()
-sub_obj_3_3_rise_renewable_energy_regulation_rank %>% nrow() # 900
-sub_obj_3_3_rise_renewable_energy_regulation_rank %>% ncol() # 30
+sub_obj_3_3_rise_renewable_energy_regulation_rank %>% nrow() # 945
+sub_obj_3_3_rise_renewable_energy_regulation_rank %>% ncol() # 35
 
 # check country/year
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% distinct(country) %>% nrow() # 45
@@ -11759,7 +11879,7 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank %>% count(indicator_name) # 90
 # Missing all values (2010-2019) for Estonia, Georgia, Latvia, Lithuania, Luxembourg, Moldova, Slovenia
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% filter(is.na(values)) %>% count(country) %>% 
         arrange(desc(n)) %>% print(n = nrow(.))
-sub_obj_3_3_rise_renewable_energy_regulation_rank %>% filter(is.na(values), year >= 2010, year <= 2019) %>%
+sub_obj_3_3_rise_renewable_energy_regulation_rank %>% filter(is.na(values), year >= 2010) %>%
         count(country, year) %>% print(n = nrow(.))
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% skim(values)
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% group_by(year) %>% skim(values)
@@ -11774,14 +11894,16 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank %>%
         select(country, year, values, overall_rise_score) %>% arrange(year, values) %>% print(n = 100)
 
 # plot
+# note that georgia scores very low, and moldova very high, but i confirmed this on RISE interactive website and raw data
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(year >= 2010) %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        filter(mcp_grouping == "U.S.") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        # filter(mcp_grouping == "U.S.") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_3_3_rise_renewable_energy_regulation_rank %>% group_by(indicator_name) %>% 
@@ -11801,31 +11923,25 @@ test_values_sub_obj_3_3_rise_renewable_energy_regulation_rank <- function() {
         expect_equal(object = sub_obj_3_3_rise_renewable_energy_regulation_rank %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(overall_rise_score),
-                     expected = 53)
+                     expected = 51.2180971619576)
         
         # 2
         expect_equal(object = sub_obj_3_3_rise_renewable_energy_regulation_rank %>% 
                              filter(country == "Kosovo", year == 2017) %>%
                              pull(overall_rise_score),
-                     expected = 43)
-        
-        # 3
-        expect_equal(object = sub_obj_3_3_rise_renewable_energy_regulation_rank %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
-                             pull(overall_rise_score),
-                     expected = 44)
+                     expected = 40.4960317460317)
         
         # 4
         expect_equal(object = sub_obj_3_3_rise_renewable_energy_regulation_rank %>% 
                              filter(country == "Portugal", year == 2019) %>%
                              pull(overall_rise_score),
-                     expected = 80.3869064995764)
+                     expected = 83.0555555555556)
         
         # 5
         expect_equal(object = sub_obj_3_3_rise_renewable_energy_regulation_rank %>% 
-                             filter(country == "Serbia", year == 2011) %>%
+                             filter(country == "Serbia", year == 2021) %>%
                              pull(overall_rise_score),
-                     expected = 13)
+                     expected = 56.70657219)
 }
 test_values_sub_obj_3_3_rise_renewable_energy_regulation_rank()
 
@@ -11848,7 +11964,7 @@ sub_obj_3_3_rise_renewable_energy_regulation_rank <- read_csv(file = "data/fmir/
 # https://atlas.cid.harvard.edu/rankings
 # https://atlas.cid.harvard.edu/glossary
 
-sub_obj_4_1_atlas_eci <- read_csv(file = "data/atlas_of_economic_complexity/Country Complexity Rankings 1995 - 2019.csv") %>%
+sub_obj_4_1_atlas_eci <- read_csv(file = "data/atlas_of_economic_complexity/Country Complexity Rankings 1995 - 2020.csv") %>%
         rename(country_name = Country) %>%
         pivot_longer(cols = -country_name, names_to = "var", values_to = "values") %>%
         filter(!str_detect(string = var, pattern = regex("Rank|COI"))) %>%
@@ -11869,8 +11985,8 @@ sub_obj_4_1_atlas_eci <- read_csv(file = "data/atlas_of_economic_complexity/Coun
 # inspect
 sub_obj_4_1_atlas_eci
 sub_obj_4_1_atlas_eci %>% glimpse()
-sub_obj_4_1_atlas_eci %>% nrow() # 3325
-sub_obj_4_1_atlas_eci %>% ncol() # 4
+sub_obj_4_1_atlas_eci %>% nrow() # 3458
+sub_obj_4_1_atlas_eci %>% ncol() # 5
 
 sub_obj_4_1_atlas_eci %>% arrange(desc(values)) %>% distinct(country_name)
 sub_obj_4_1_atlas_eci %>% arrange(values) %>% distinct(country_name)
@@ -11908,8 +12024,8 @@ sub_obj_4_1_atlas_eci <- sub_obj_4_1_atlas_eci %>%
 # inspect
 sub_obj_4_1_atlas_eci
 sub_obj_4_1_atlas_eci %>% glimpse()
-sub_obj_4_1_atlas_eci %>% nrow() # 900
-sub_obj_4_1_atlas_eci %>% ncol() # 29
+sub_obj_4_1_atlas_eci %>% nrow() # 945
+sub_obj_4_1_atlas_eci %>% ncol() # 34
 
 # check country/year
 sub_obj_4_1_atlas_eci %>% distinct(country) %>% nrow() # 45
@@ -11935,10 +12051,10 @@ sub_obj_4_1_atlas_eci  %>% filter(year <= 2019) %>% group_by(country) %>% skim(v
 sub_obj_4_1_atlas_eci %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
-        # filter(mcp_grouping == "E&E graduates") %>%
+        filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 sub_obj_4_1_atlas_eci %>% group_by(indicator_name) %>% 
@@ -11958,25 +12074,25 @@ test_values_sub_obj_4_1_atlas_eci <- function() {
         expect_equal(object = sub_obj_4_1_atlas_eci %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(values),
-                     expected = -0.3487)
+                     expected = -0.351054)
         
         # 2
         expect_equal(object = sub_obj_4_1_atlas_eci %>% 
                              filter(country == "Belarus", year == 2017) %>%
                              pull(values),
-                     expected = 0.9188)
+                     expected = 0.918878)
         
         # 3
         expect_equal(object = sub_obj_4_1_atlas_eci %>% 
                              filter(country == "Belarus", year == 2018) %>%
                              pull(values),
-                     expected = 0.8672)
+                     expected = 0.86016)
         
         # 4
         expect_equal(object = sub_obj_4_1_atlas_eci %>% 
-                             filter(country == "Serbia", year == 2011) %>%
+                             filter(country == "Serbia", year == 2020) %>%
                              pull(values),
-                     expected = 0.6244)
+                     expected = 0.690341)
 }
 test_values_sub_obj_4_1_atlas_eci()
 
@@ -11995,11 +12111,11 @@ sub_obj_4_1_atlas_eci <- read_csv(file = "data/fmir/sub_obj_4_1_atlas_eci.csv")
 
 
 # load sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp ####
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- read_excel(path = "data/world_bank/API_NE.EXP.GNFS.ZS_DS2_en_excel_v2_3052498.xls", 
-           sheet = "Data", skip = 3, col_types = c(rep("text", times = 4), rep("numeric", time = 61))) %>%
-        select(-c(`Indicator Name`, `Indicator Code`)) %>%
-        pivot_longer(cols = -c(`Country Name`, `Country Code`), names_to = "year", values_to = "values") %>%
+sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- read_excel(path = "data/world_bank/API_NE.EXP.GNFS.ZS_DS2_en_excel_v2_4770554.xls", 
+           sheet = "Data", skip = 3) %>%
         rename(country_name = `Country Name`, country_code = `Country Code`) %>%
+        select(-c(`Indicator Name`, `Indicator Code`)) %>%
+        pivot_longer(cols = -c(country_name, country_code), names_to = "year", values_to = "values") %>%
         mutate(country_code = case_when(country_code == "XKX" ~ "XKS", 
                                         TRUE ~ country_code),
                year = as.numeric(year),
@@ -12013,7 +12129,9 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- read_excel(path = "
                                         country_name == "Slovak Republic" ~ "Slovakia",
                                         country_name == "United States" ~ "U.S.",
                                         country_name == "United Kingdom" ~ "U.K.",
-                                        TRUE ~ country_name))
+                                        TRUE ~ country_name)) %>%
+        filter(year >= 2000) 
+
 
 
 #///////////////////
@@ -12022,7 +12140,7 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- read_excel(path = "
 # inspect
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% glimpse()
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% nrow() # 16226
+sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% nrow() # 5852
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 6
 
 # inspect country names
@@ -12058,8 +12176,8 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- sub_obj_4_1_wb_good
 # inspect
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% glimpse()
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% nrow() # 900
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 31
+sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% nrow() # 945
+sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 35
 
 # check country/year
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% distinct(country) %>% nrow() # 45
@@ -12074,7 +12192,7 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>%
         select(country, year, values) %>% arrange(desc(values)) %>% print(n = 50)
 
 # inspect missing values
-# Missing values for Kosovo (2001), Tajikistan (2015-2016), Turkmenistan (2019-2020), Kazakhstan (2020), and U.S. (2020) 
+# Missing values for Kosovo (2001-2007), Tajikistan (2015-2016, 2021), Turkmenistan (2019-2021)
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% skim(values)
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
         filter(is.na(values)) %>% select(country, year, values)
@@ -12082,12 +12200,12 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>%
 # plot
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        filter(mcp_grouping == "U.S.") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        # filter(mcp_grouping == "U.S.") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -12096,35 +12214,20 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>%
 # test values
 test_values_sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- function() {
         
-        # albania in 2017
-        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
-                             filter(country == "Albania", year == 2017) %>%
+        # 1
+        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% filter(country == "Albania", year == 2014) %>% 
                              pull(values),
-                     expected = 31.5698206428859)
+                     expected = 28.2130014584625)
         
-        # kosovo in 2010 
-        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
-                             filter(country == "Kosovo", year == 2010) %>%
+        # 2
+        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% filter(country == "Ukraine", year == 2021) %>% 
                              pull(values),
-                     expected = 19.8428441617447)
+                     expected = 40.748673797626)
         
-        # kosovo in 2018
-        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
+        # 3
+        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% filter(country == "Belarus", year == 2017) %>% 
                              pull(values),
-                     expected = 28.8177145745677)
-        
-        # germany in 2020
-        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
-                             filter(country == "Germany", year == 2020) %>%
-                             pull(values),
-                     expected = 43.8173235340898)
-        
-        # serbia in 2016
-        expect_equal(object = sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
-                             filter(country == "Serbia", year == 2016) %>%
-                             pull(values),
-                     expected = 48.5170935445558)
+                     expected = 66.7896002012327)
 }
 test_values_sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp()
 
@@ -12133,14 +12236,15 @@ test_values_sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp()
 
 
 # read/write
-# sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% write_csv(file = "data/fmir/sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp.csv")
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- read_csv(file = "data/fmir/sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp.csv")
+# sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% 
+#         write_csv(file = "data/fmir/sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp.csv")
+# sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp <- read_csv(file = "data/fmir/sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp.csv")
 
 # inspect
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp
 sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% glimpse()
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% nrow() # 900
-sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 31
+sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% nrow() # 945
+sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 35
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -12154,6 +12258,23 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 31
 # https://data.imf.org/?sk=40313609-F037-48C1-84B1-E1F1CE54D6D5&sId=1390288795525
 # "2. Are CDIS data position or flow data?
 # CDIS includes only direct investment position (stock) data"
+
+
+# definition of IMF FDI:
+# https://www.imf.org/external/pubs/ft/fandd/basics/20_direct-invest.htm
+# "They can make a portfolio investment, buying stocks or bonds, say, often with the idea of making a short-term speculative financial gain 
+# without becoming actively engaged in the day-to-day running of the enterprise in which they invest.
+# Or they can choose the long-haul, hands-on approach-investing in an enterprise in another economy with the objective of gaining control or 
+# exerting significant influence over management of the firm (which usually involves a stake of at least 10 percent of a company's stock). 
+# In the most extreme case, investors may build new facilities from scratch, maintaining full control over operations.-"
+
+# Direct investment takes different shapes and forms. A company may enter a foreign market through so-called greenfield direct investment, 
+# in which the direct investor provides funds to build a new factory, distribution facility, or store, for example, to establish 
+# its presence in the host country.-
+# But a company might also choose brownfield direct investment. Instead of establishing a new presence the company invests in or 
+# takes over an existing local company. Brownfield investment means acquiring existing facilities, suppliers, and operations-and often 
+# the brand itself.-
+
 
 # note that reported values are used, not mirror/derived values from counterparts
 # so inward fdi from russia is taken as reported by receiving country
@@ -12170,10 +12291,10 @@ sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp %>% ncol() # 31
 # note the default assumption would be values are reported in current dollars, 
 # since that the docs don't seem to mention any adjustments
 # note that values of C for censored are converted to NA
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- read_csv(file = "data/imf/cdis/CDIS_02-14-2022 20-38-57-02_timeSeries.csv") %>% 
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- read_csv(file = "data/imf/cdis/CDIS_01-16-2023 03-26-55-99_timeSeries.csv") %>% 
         rename(country_name = `Country Name`, counterpart = `Counterpart Country Name`, 
                category = `Indicator Name`) %>%
-        select(-`...20`) %>%
+        select(-`...21`) %>%
         filter(category == "Inward Direct Investment Positions, US Dollars", Attribute == "Value") %>%
         pivot_longer(cols = -c(country_name, `Country Code`, category, `Indicator Code`,
                                counterpart, `Counterpart Country Code`,
@@ -12239,7 +12360,7 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- read_csv(file = "data/imf/cdis/
 
 # inspect
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 340860
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 370201
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 7
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% glimpse()
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% arrange(desc(values)) %>% distinct(country_name)
@@ -12301,7 +12422,7 @@ sub_obj_4_1_cdis_fdi_from_world <- sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi
 # inspect
 sub_obj_4_1_cdis_fdi_from_world
 sub_obj_4_1_cdis_fdi_from_world %>% glimpse()
-sub_obj_4_1_cdis_fdi_from_world %>% nrow() # 1692
+sub_obj_4_1_cdis_fdi_from_world %>% nrow() # 1833
 sub_obj_4_1_cdis_fdi_from_world %>% ncol() # 7
 
 # check values
@@ -12310,7 +12431,7 @@ sub_obj_4_1_cdis_fdi_from_world %>% count(year)
 sub_obj_4_1_cdis_fdi_from_world %>% count(country_name)
 
 # will handle NAs below after joining to country_crosswalk
-sub_obj_4_1_cdis_fdi_from_world %>% filter(is.na(official_inward_fdi_from_world)) # 0
+sub_obj_4_1_cdis_fdi_from_world %>% filter(is.na(official_inward_fdi_from_world)) # 216
 
 # unique at country/year level; each country/year has only one record
 sub_obj_4_1_cdis_fdi_from_world %>% count(country_name, year) %>% arrange(desc(n))
@@ -12323,11 +12444,11 @@ sub_obj_4_1_cdis_fdi_from_world %>% filter(country_name == "Albania", year == 20
 # get official_inward_fdi_from_eu, join official_inward_fdi_from_world, 
 # and calculate values for eu_fdi_as_share_of_total_fdi
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-        filter(counterpart %in% (country_crosswalk %>% filter(mcp_grouping == "EU-15") %>% pull(country))) %>% 
+        filter(counterpart %in% (country_crosswalk %>% filter(eu_27_flag == 1) %>% pull(country))) %>% 
         group_by(country_name, year) %>% mutate(official_inward_fdi_from_eu = sumNA(values, na.rm = TRUE)) %>%
         ungroup() %>% 
         arrange(country_name, year) %>%
-        mutate(counterpart = "EU-15") %>% select(-values) %>% 
+        mutate(counterpart = "EU-27") %>% select(-values) %>% 
         distinct(country_name, counterpart, year, category, indicator_name, high_value_is_good_outcome_flag, 
                  official_inward_fdi_from_eu) %>%
         left_join(., sub_obj_4_1_cdis_fdi_from_world %>% select(country_name, year, official_inward_fdi_from_world),
@@ -12341,7 +12462,7 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- sub_obj_4_1_cdis_eu_fdi_as_shar
 # inspect
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% glimpse()
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 1656
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 1768
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 9
 
 # check values 
@@ -12376,8 +12497,8 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- sub_obj_4_1_cdis_eu_fdi_as_shar
 # inspect
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% glimpse()
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 900
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 34
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 945
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 38
 
 # check country/year
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% distinct(country) %>% nrow() # 45
@@ -12394,10 +12515,9 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% group_by(year) %>%
         skim(values)
 
 # check values
-# note there are 437 total records with NA values, but most of these are pre-2009 and 2020 when imf doesn't have data
-# only 32 records that have actual NA values for 2009-2019 year range for which data is available
-# Missing all values for 2001-2008; also missing Turkmenistan (2009-2020), Uzbekistan (2009-2020),
-# Tajikistan (2009-2014), Albania (2009-2010), Kosovo (2009), Montenegro (2009), and serbia (2020)
+# from 2010 onward, missing 32 country/years: 
+# from E&E, missing serbia (2020-2021), albania(2010)
+# also turkmenistan (2010-2021), uzbekistan (2010-2021), tajikistan (2010-2014), 
 # because the missing country/years appear to reflect continuous periods of non-reporting, which might not be due to 
 # actual zero values, these NAs will be left as NAs, and therefore imputed, rather than assign a zero value
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% group_by(year) %>% 
@@ -12407,11 +12527,11 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>%
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
         filter(is.na(values)) %>% count(official_inward_fdi_from_eu, official_inward_fdi_from_world)
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-        filter(is.na(values), year >= 2009) %>% count(official_inward_fdi_from_eu, official_inward_fdi_from_world)
+        filter(is.na(values), year >= 2010) %>% count(official_inward_fdi_from_eu, official_inward_fdi_from_world)
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-        filter(is.na(values), year >= 2009) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
+        filter(is.na(values), year >= 2010) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-        filter(is.na(values), year >= 2009) %>% count(country, year) %>% 
+        filter(is.na(values), year >= 2010) %>% count(country, year) %>% 
         add_count(country, name = "country_count") %>% 
         arrange(desc(country_count)) %>% print(n = nrow(.))
 
@@ -12421,13 +12541,13 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>%
 
 # plot
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #///////////////////
@@ -12440,31 +12560,20 @@ test_values_sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- function() {
         expect_equal(object = sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(values),
-                     expected = 3304223188 / 6739300256)
+                     expected = 3763606776.2991 / 6739300255.56856)
         
         # 2
         expect_equal(object = sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Kosovo", year == 2017) %>%
+                             filter(country == "Kosovo", year == 2018) %>%
                              pull(values),
-                     expected = 1026433868 / 4220245761)
+                     expected = 1301673336.39664 / 4226810352.06043)
         
         # 3
         expect_equal(object = sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
+                             filter(country == "Belarus", year == 2021) %>%
                              pull(values),
-                     expected = 1196404032 / 4226810352)
+                     expected = 6179637617.80375 / 14657054616.7925)
         
-        # 4
-        expect_equal(object = sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Portugal", year == 2020) %>%
-                             pull(values),
-                     expected = 153457285177 / 184180249232)
-        
-        # 5
-        expect_equal(object = sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Serbia", year == 2011) %>%
-                             pull(values),
-                     expected = 13453485100 / 22873736013)
 }
 test_values_sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi()
 
@@ -12481,8 +12590,8 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi <- read.csv(file = "data/fmir/sub_
 # inspect
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi
 sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% glimpse()
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 900
-sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 34
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% nrow() # 945
+sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 38
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -12496,6 +12605,21 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 34
 # https://data.imf.org/?sk=40313609-F037-48C1-84B1-E1F1CE54D6D5&sId=1390288795525
 # "2. Are CDIS data position or flow data?
 # CDIS includes only direct investment position (stock) data"
+
+# definition of IMF FDI:
+# https://www.imf.org/external/pubs/ft/fandd/basics/20_direct-invest.htm
+# "They can make a portfolio investment, buying stocks or bonds, say, often with the idea of making a short-term speculative financial gain 
+# without becoming actively engaged in the day-to-day running of the enterprise in which they invest.
+# Or they can choose the long-haul, hands-on approach-investing in an enterprise in another economy with the objective of gaining control or 
+# exerting significant influence over management of the firm (which usually involves a stake of at least 10 percent of a company's stock). 
+# In the most extreme case, investors may build new facilities from scratch, maintaining full control over operations.-"
+
+# Direct investment takes different shapes and forms. A company may enter a foreign market through so-called greenfield direct investment, 
+# in which the direct investor provides funds to build a new factory, distribution facility, or store, for example, to establish 
+# its presence in the host country.-
+# But a company might also choose brownfield direct investment. Instead of establishing a new presence the company invests in or 
+# takes over an existing local company. Brownfield investment means acquiring existing facilities, suppliers, and operations-and often 
+# the brand itself.-
 
 # note that reported values are used, not mirror/derived values from counterparts
 # so inward fdi from russia is taken as reported by receiving country
@@ -12511,10 +12635,10 @@ sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi %>% ncol() # 34
 # note the default assumption would be values are reported in current dollars, 
 # since that the docs don't seem to mention any adjustments
 # note that values of C for censored are converted to NA
-sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi <- read_csv(file = "data/imf/cdis/CDIS_02-14-2022 20-38-57-02_timeSeries.csv") %>% 
+sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi <- read_csv(file = "data/imf/cdis/CDIS_01-16-2023 03-26-55-99_timeSeries.csv") %>% 
         rename(country_name = `Country Name`, counterpart = `Counterpart Country Name`, 
                category = `Indicator Name`) %>%
-        select(-`...20`) %>%
+        select(-`...21`) %>%
         filter(category == "Inward Direct Investment Positions, US Dollars", Attribute == "Value") %>%
         pivot_longer(cols = -c(country_name, `Country Code`, category, `Indicator Code`,
                                counterpart, `Counterpart Country Code`,
@@ -12580,7 +12704,7 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi <- read_csv(file = "data/imf/
 
 # inspect
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi
-sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% nrow() # 340860
+sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% nrow() # 370201
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% ncol() # 7
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% glimpse()
 
@@ -12629,7 +12753,7 @@ sub_obj_4_1_cdis_fdi_from_world <- sub_obj_4_1_cdis_russian_fdi_as_share_of_tota
 # inspect
 sub_obj_4_1_cdis_fdi_from_world
 sub_obj_4_1_cdis_fdi_from_world %>% glimpse()
-sub_obj_4_1_cdis_fdi_from_world %>% nrow() # 1692
+sub_obj_4_1_cdis_fdi_from_world %>% nrow() # 1833
 sub_obj_4_1_cdis_fdi_from_world %>% ncol() # 7
 
 # check values
@@ -12664,7 +12788,7 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi <- sub_obj_4_1_cdis_russian_f
 # inspect
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% glimpse()
-sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% nrow() # 1452
+sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% nrow() # 1573
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% ncol() # 9
 
 # check values
@@ -12699,13 +12823,13 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi <- sub_obj_4_1_cdis_russian_f
 # inspect
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% glimpse()
-sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% nrow() # 900
-sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% ncol() # 34
+sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% nrow() # 945
+sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% ncol() # 38
 
 # check country/year
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% distinct(country) %>% nrow() # 45
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
-sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% count(year)
+sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% count(year) %>% print(n = nrow(.))
 
 # check values
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% group_by(year) %>%
@@ -12729,12 +12853,11 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% group_by(year) %>%
 # err on side of not pushing countries toward extremes by coding as actual zero; 
 # imputing averages is a less extreme decision in the face of uncertainty
 
-# Missing all values (2009-2019) for Albania, Russia, Turkmenistan, and Uzbekistan;
-# (mix of blanks, "C", and complete lack of records in raw data); 
-# also missing values for Portugal (2009-2015), Tajikistan (2009-2014), UK (2012, 2013, 2015, 2017-2020), 
-# Sweden (2009; 2014-2016; 2018), 
-# Denmark (2016-2020), Kosovo (2009, 2016, 2018-2020), 
-# Belgium (2009-2010), Montenegro (2009), Serbia (2020), and Slovakia (2014)
+# Missing all values for Russia, Turkmenistan, and uzbekistan
+# also missing values for albania (2010-2019), Portugal (2010-2015), Tajikistan (2010-2014), UK (2012-2013, 2015, 2017-2020), 
+# Sweden (2014-2016; 2018), 
+# Denmark (2016-2020), Kosovo (2016, 2018-2021), 
+# Belgium (2009-2010), Montenegro (2009), Serbia (2020-2021), and Slovakia (2014)
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% group_by(year) %>% 
         skim(official_inward_fdi_from_world)
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
@@ -12742,9 +12865,9 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>%
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
         filter(is.na(values)) %>% count(official_inward_fdi_from_russia, official_inward_fdi_from_world)
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
-        filter(is.na(values), year >= 2009) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
+        filter(is.na(values), year >= 2010) %>% count(country) %>% arrange(desc(n)) %>% print(n = nrow(.))
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
-        filter(is.na(values), year >= 2009) %>% count(country, year) %>% 
+        filter(is.na(values), year >= 2010) %>% count(country, year) %>% 
         add_count(country, name = "country_count") %>% 
         arrange(desc(country_count)) %>% print(n = nrow(.))
 
@@ -12752,8 +12875,8 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>%
 #///////////////////////
 
 
-# inspect 31 country/year combos with negative official_inward_fdi_from_russia (fdi_from_world is always positive)
-# note belgium, ireland, luxembourg, slovakia, slovenia, and sweden are only countries with negative fdi_from_russia
+# inspect 38 country/year combos with negative official_inward_fdi_from_russia (fdi_from_world is always positive)
+# note belgium, ireland, luxembourg, germany, slovakia, slovenia, and sweden are only countries with negative fdi_from_russia
 # result: these negative values are very small (largest is -.02), so they won't have a dramatic effect on the frontier
 # since kosovo has several zero values, and other countries have effectively zero values
 # technically the negative values have an explanation buried in IMF docs, 
@@ -12778,13 +12901,13 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>%
 
 # plot
 sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #///////////////////
@@ -12799,29 +12922,23 @@ test_values_sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi <- function() {
                              pull(values),
                      expected = NA_real_)
         
+        # 1
+        expect_equal(object = sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
+                             filter(country == "Albania", year == 2020) %>%
+                             pull(values),
+                     expected = 11088490.0589021 / 9603264859.8563)
+        
         # 2
         expect_equal(object = sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
                              filter(country == "Kosovo", year == 2017) %>%
                              pull(values),
-                     expected = 179895 / 4220245761)
-        
-        # 3
-        expect_equal(object = sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
-                             pull(values),
-                     expected = NA_real_)
-        
-        # 4
-        expect_equal(object = sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Portugal", year == 2020) %>%
-                             pull(values),
-                     expected = 302762383 / 184180249232)
+                     expected = 179895 / 4220245761.07246)
         
         # 5
         expect_equal(object = sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% 
-                             filter(country == "Serbia", year == 2011) %>%
+                             filter(country == "Belarus", year == 2021) %>%
                              pull(values),
-                     expected = 1005257695 / 22873736013)
+                     expected = 4148842963.66948 / 14657054616.7925)
 }
 test_values_sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi()
 
@@ -12851,14 +12968,14 @@ sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi %>% ncol() # 33
 
 # data is available up to 2020 from IMF server
 
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- read_csv(file = "data/imf/dots/DOT_04-21-2021 03-56-50-68_timeSeries.csv") %>%
+sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- read_csv(file = "data/imf/dots/DOT_10-14-2022 04-44-51-18_timeSeries.csv") %>%
         rename(country_name = `Country Name`,
                counterpart = `Counterpart Country Name`,
                category = `Indicator Name`) %>%
         filter(category == "Goods, Value of Exports, Free on board (FOB), US Dollars",
                Attribute == "Value",
                counterpart %in% c("Russian Federation", "World")) %>%
-        select(-c(`Country Code`, `Counterpart Country Code`, `Indicator Code`, Attribute, ...28)) %>%
+        select(-c(`Country Code`, `Counterpart Country Code`, `Indicator Code`, Attribute, ...29)) %>%
         pivot_longer(cols = -c(country_name, counterpart, category), names_to = "year", values_to = "official_exports") %>%
         mutate(country_name = case_when(country_name == "Armenia, Rep. of" ~ "Armenia",
                                         country_name == "Azerbaijan, Rep. of" ~ "Azerbaijan",
@@ -12908,7 +13025,7 @@ sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- read_csv(file = 
                                        TRUE ~ counterpart),
                official_exports = as.numeric(official_exports),
                year = as.numeric(year),
-               indicator_name = "sub_obj_4_1_dots_exports_to_russia_as_share_of_gdp",
+               indicator_name = "sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports",
                high_value_is_good_outcome_flag = 0) %>%
         pivot_wider(id_cols = c(country_name, category, year), names_from = counterpart, values_from = official_exports) %>%
         rename(official_exports_to_russia = Russia, official_exports_to_world = World) %>%
@@ -12921,7 +13038,7 @@ sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- read_csv(file = 
 # inspect
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% nrow() # 4540
+sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% nrow() # 4767
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% ncol() # 6
 
 # check
@@ -12960,8 +13077,8 @@ sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- sub_obj_4_1_dots
 # inspect
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% nrow() # 900
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% ncol() # 33
+sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% nrow() # 945
+sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% ncol() # 37
 
 # check country/year
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% distinct(country) %>% nrow() # 45
@@ -13001,12 +13118,12 @@ sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% filter(country 
 # plot
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% 
         # filter(year >= 2009) %>%
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1)
 
 
 #////////////////
@@ -13041,9 +13158,9 @@ test_values_sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- func
         
         # 5
         expect_equal(object = sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% 
-                             filter(country == "Serbia", year == 2011) %>%
+                             filter(country == "Serbia", year == 2021) %>%
                              pull(values),
-                     expected = 792310062 / 11785088915)
+                     expected = 995794494 / 25559357250)
         
         # 6
         expect_equal(object = sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% 
@@ -13058,15 +13175,224 @@ test_values_sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports()
 
 
 # read/write
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% write_csv(file = "data/fmir/sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports.csv")
+# sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% 
+#         write_csv(file = "data/fmir/sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports.csv")
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports <- read.csv(file = "data/fmir/sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports.csv") %>% 
         as_tibble()
 
 # inspect
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% nrow() # 900
-sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% ncol() # 33
+sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% nrow() # 945
+sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% ncol() # 37
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# load sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports ####
+
+# data is available up to 2020 from IMF server
+
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports <- read_csv(file = "data/imf/dots/DOT_10-14-2022 04-44-51-18_timeSeries.csv") %>%
+        rename(country_name = `Country Name`,
+               counterpart = `Counterpart Country Name`,
+               category = `Indicator Name`) %>%
+        filter(category == "Goods, Value of Imports, Cost, Insurance, Freight (CIF), US Dollars",
+               Attribute == "Value",
+               counterpart %in% c("Russian Federation", "World")) %>%
+        select(-c(`Country Code`, `Counterpart Country Code`, `Indicator Code`, Attribute, ...29)) %>%
+        pivot_longer(cols = -c(country_name, counterpart, category), names_to = "year", values_to = "official_imports") %>%
+        mutate(country_name = case_when(country_name == "Armenia, Rep. of" ~ "Armenia",
+                                        country_name == "Azerbaijan, Rep. of" ~ "Azerbaijan",
+                                        country_name == "Belarus, Rep. of" ~ "Belarus",
+                                        country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Croatia, Rep. of" ~ "Croatia",
+                                        country_name == "Czech Rep." ~ "Czechia",
+                                        country_name == "Estonia, Rep. of" ~ "Estonia",
+                                        country_name == "Kazakhstan, Rep. of" ~ "Kazakhstan",
+                                        country_name == "Kosovo, Rep. of" ~ "Kosovo",
+                                        country_name == "Kyrgyz Rep." ~ "Kyrgyzstan",
+                                        country_name == "Moldova, Rep. of" ~ "Moldova",
+                                        country_name == "Netherlands, The" ~ "Netherlands",
+                                        country_name == "North Macedonia, Republic of" ~ "N. Macedonia",
+                                        country_name == "Poland, Rep. of" ~ "Poland",
+                                        country_name == "Russian Federation" ~ "Russia",
+                                        country_name == "Serbia, Rep. of" ~ "Serbia",
+                                        country_name == "Slovak Rep." ~ "Slovakia",
+                                        country_name == "Slovenia, Rep. of" ~ "Slovenia",
+                                        country_name == "Tajikistan, Rep. of" ~ "Tajikistan",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States" ~ "U.S.",
+                                        country_name == "Uzbekistan, Rep. of" ~ "Uzbekistan",
+                                        TRUE ~ country_name),
+               counterpart = case_when(counterpart == "Armenia, Rep. of" ~ "Armenia",
+                                       counterpart == "Azerbaijan, Rep. of" ~ "Azerbaijan",
+                                       counterpart == "Belarus, Rep. of" ~ "Belarus",
+                                       counterpart == "Bosnia and Herzegovina" ~ "BiH",
+                                       counterpart == "Croatia, Rep. of" ~ "Croatia",
+                                       counterpart == "Czech Rep." ~ "Czechia",
+                                       counterpart == "Estonia, Rep. of" ~ "Estonia",
+                                       counterpart == "Kazakhstan, Rep. of" ~ "Kazakhstan",
+                                       counterpart == "Kosovo, Rep. of" ~ "Kosovo",
+                                       counterpart == "Kyrgyz Rep." ~ "Kyrgyzstan",
+                                       counterpart == "Moldova, Rep. of" ~ "Moldova",
+                                       counterpart == "Netherlands, The" ~ "Netherlands",
+                                       counterpart == "North Macedonia, Republic of" ~ "N. Macedonia",
+                                       counterpart == "Poland, Rep. of" ~ "Poland",
+                                       counterpart == "Russian Federation" ~ "Russia",
+                                       counterpart == "Serbia, Rep. of" ~ "Serbia",
+                                       counterpart == "Slovak Rep." ~ "Slovakia",
+                                       counterpart == "Slovenia, Rep. of" ~ "Slovenia",
+                                       counterpart == "Tajikistan, Rep. of" ~ "Tajikistan",
+                                       counterpart == "United Kingdom" ~ "U.K.",
+                                       counterpart == "United States" ~ "U.S.",
+                                       counterpart == "Uzbekistan, Rep. of" ~ "Uzbekistan",
+                                       TRUE ~ counterpart),
+               official_imports = as.numeric(official_imports),
+               year = as.numeric(year),
+               indicator_name = "sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports",
+               high_value_is_good_outcome_flag = 0) %>%
+        pivot_wider(id_cols = c(country_name, category, year), names_from = counterpart, values_from = official_imports) %>%
+        rename(official_imports_from_russia = Russia, official_imports_from_world = World) %>%
+        mutate(values = official_imports_from_russia / official_imports_from_world)
+
+
+#/////////////////////
+
+
+# inspect
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% glimpse()
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% nrow() # 4767
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% ncol() # 6
+
+# check
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% count(category)
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% count(year) %>% print(n = nrow(.))
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% count(country_name) %>% print(n = nrow(.))
+
+# inspect country names
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>%
+        distinct(country_name) %>% arrange(country_name) %>% print(n = nrow(.))
+country_crosswalk %>% filter(ee_region_flag == 1 | country == "U.S.") %>%
+        anti_join(., sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports, by = c("country" = "country_name")) %>% select(country)
+
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>%
+        filter(str_detect(string = country_name, pattern = regex("yemen", ignore_case = TRUE))) %>%
+        distinct(country_name)
+country_crosswalk %>% filter(str_detect(string = country, pattern = regex("gamb", ignore_case = TRUE))) %>% select(country)
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# join to country_crosswalk and fmir_framework
+# need to update indicator_name and high_value_is_good_outcome_flag for records with NA values from country/year join
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports <- sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>%
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), .,
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        mutate(indicator_name = "sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports",
+               high_value_is_good_outcome_flag = 0) %>%
+        left_join(., fmir_framework, by = "indicator_name")
+
+
+#///////////////////////////
+
+
+# inspect
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% glimpse()
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% nrow() # 945
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% ncol() # 37
+
+# check country/year
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% distinct(country) %>% nrow() # 45
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% count(year) %>% print(n = nrow(.))
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% count(country) %>% print(n = nrow(.))
+
+# check values
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% count(category)
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% filter(is.na(category)) %>%
+        select(country, year, category, official_imports_from_russia)
+
+# note that exports_to_world are only ever missing for kosovo (2001-2006), monetenegro (2001-2005), and serbia (2001-2005)
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% group_by(year) %>% skim(official_imports_from_russia)
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% group_by(year) %>% skim(official_imports_from_world)
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% filter(is.na(official_imports_from_world))
+# only missing a few early years for balkans
+# kosovo (2001-2007), montenegro (2001-2005), russia (2001-2021), serbia (2001-2005)
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% filter(is.na(official_imports_from_russia)) %>%
+        select(country, year, category, official_imports_from_russia) %>% print(n = nrow(.))
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% filter(is.na(official_imports_from_world)) %>%
+        select(country, year, category, official_imports_from_russia) %>% print(n = nrow(.))
+
+
+#/////////////////
+
+
+# plot
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% 
+        # filter(year >= 2009) %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
+        # filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1)
+
+
+#////////////////
+
+
+# test values
+test_values_sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports <- function() {
+        
+        # 1
+        expect_equal(object = sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% 
+                             filter(country == "Albania", year == 2017) %>%
+                             pull(values),
+                     expected = 108744499 / 5670492837)
+        
+        # 2
+        expect_equal(object = sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% 
+                             filter(country == "Kosovo", year == 2006) %>%
+                             pull(values),
+                     expected = NA_real_)
+        
+        # 3
+        expect_equal(object = sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% 
+                             filter(country == "Kosovo", year == 2018) %>%
+                             pull(values),
+                     expected = 36843581 / 3932409367)
+        
+        # 5
+        expect_equal(object = sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% 
+                             filter(country == "Serbia", year == 2021) %>%
+                             pull(values),
+                     expected = 1742277241 / 33643863367)
+}
+test_values_sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports()
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write
+# sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>%
+#         write_csv(file = "data/fmir/sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports.csv")
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports <- read.csv(file = "data/fmir/sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports.csv") %>% 
+        as_tibble()
+
+# inspect
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% glimpse()
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% nrow() # 945
+sub_obj_4_1_dots_imports_from_russia_as_share_of_total_imports %>% ncol() # 37
+
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -13082,17 +13408,19 @@ sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports %>% ncol() # 33
 # https://www.cs.mcgill.ca/~rwest/wikispeedia/wpcd/wp/l/List_of_European_Union_member_states_by_accession.htm
 # https://europa.eu/european-union/about-eu/countries_en#tab-0-1
 
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- read_csv(file = "data/imf/dots/DOT_04-21-2021 03-56-50-68_timeSeries.csv") %>%
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- read_csv(file = "data/imf/dots/DOT_10-14-2022 04-44-51-18_timeSeries.csv") %>%
         rename(country_name = `Country Name`,
                counterpart = `Counterpart Country Name`,
                category = `Indicator Name`) %>%
         filter(category == "Goods, Value of Exports, Free on board (FOB), US Dollars",
                Attribute == "Value",
-               counterpart %in% c("Austria", "Belgium", "Denmark", "Finland", "France", "Germany",
-                                  "Greece", "Ireland", "Italy", "Luxembourg", "Netherlands, The",
-                                  "Portugal", "Spain", "Sweden", "United Kingdom",
+               counterpart %in% c("Austria", "Belgium", "Bulgaria", "Croatia, Rep. of", "Cyprus", "Czech Rep.", 
+                                  "Denmark", "Estonia, Rep. of", "Finland", "France", "Germany",
+                                  "Greece", "Hungary", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", 
+                                  "Malta", "Netherlands, The", "Poland, Rep. of", 
+                                  "Portugal", "Romania", "Slovak Rep.", "Slovenia, Rep. of", "Spain", "Sweden", 
                                   "World")) %>%
-        select(-c(`Country Code`, `Counterpart Country Code`, `Indicator Code`, Attribute, ...28)) %>%
+        select(-c(`Country Code`, `Counterpart Country Code`, `Indicator Code`, Attribute, ...29)) %>%
         pivot_longer(cols = -c(country_name, counterpart, category), names_to = "year", values_to = "official_exports") %>%
         mutate(country_name = case_when(country_name == "Armenia, Rep. of" ~ "Armenia",
                                         country_name == "Azerbaijan, Rep. of" ~ "Azerbaijan",
@@ -13150,24 +13478,24 @@ sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- read_csv(file = "dat
 # inspect
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 71540
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 129129
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% ncol() # 5
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# sum up exports to eu-15, and pivot to get one record per country/year, having columns for exports_to_eu and exports_to_world
+# sum up exports to eu-27, and pivot to get one record per country/year, having columns for exports_to_eu and exports_to_world
 # get values for exports_to_eu_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>%
-        mutate(counterpart = case_when(counterpart %in% c(country_crosswalk %>% filter(mcp_grouping == "EU-15") %>% 
-                                                                             pull(country)) ~ "EU-15",
+        mutate(counterpart = case_when(counterpart %in% c(country_crosswalk %>% filter(eu_27_flag == 1) %>% 
+                                                                             pull(country)) ~ "EU-27",
                                                   counterpart == "World" ~ counterpart)) %>%
         group_by(country_name, year, category, counterpart) %>%
         mutate(official_exports_sum = sumNA(official_exports, na.rm = TRUE)) %>%
         ungroup() %>% distinct(country_name, year, category, counterpart, official_exports_sum) %>%
         pivot_wider(id_cols = c(country_name, category, year), names_from = counterpart, values_from = official_exports_sum) %>%
-        rename(official_exports_to_eu = `EU-15`, official_exports_to_world = World) %>%
+        rename(official_exports_to_eu = `EU-27`, official_exports_to_world = World) %>%
         mutate(values = official_exports_to_eu / official_exports_to_world)
 
 
@@ -13177,7 +13505,7 @@ sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- sub_obj_4_1_dots_exp
 # inspect
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 4540
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 4767
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% ncol() # 6
 
 # check
@@ -13216,8 +13544,8 @@ sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- sub_obj_4_1_dots_exp
 # inspect
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 900
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% ncol() # 33
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 945
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% ncol() # 37
 
 # check country/year
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% distinct(country) %>% nrow() # 45
@@ -13255,12 +13583,12 @@ sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% filter(country == "
 # plot
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
         # filter(year >= 2009) %>%
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line()
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1)
 
 
 #/////////////////
@@ -13272,8 +13600,9 @@ test_values_sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- function
         # 1
         expect_equal(object = sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
                              filter(country == "Albania", year == 2017) %>%
+                             select(country, year, official_exports_to_eu, official_exports_to_world, values) %>%
                              pull(values),
-                     expected = 1739024823 / 2463201513)
+                     expected = 1896602914 / 2463201513)
         
         # 2
         expect_equal(object = sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
@@ -13285,19 +13614,14 @@ test_values_sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- function
         expect_equal(object = sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
                              filter(country == "Kosovo", year == 2018) %>%
                              pull(values),
-                     expected = 91791087 / 432183268)
+                     expected = 118817231 / 432183268)
         
-        # 4
-        expect_equal(object = sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
-                             filter(country == "Portugal", year == 2019) %>%
-                             pull(values),
-                     expected = 47524826097 / 67062910104)
         
         # 5
         expect_equal(object = sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
-                             filter(country == "Serbia", year == 2011) %>%
+                             filter(country == "Serbia", year == 2021) %>%
                              pull(values),
-                     expected = 4156689975 / 11785088915)
+                     expected = 16493477363 / 25559357250)
         
         # 6
         expect_equal(object = sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% 
@@ -13312,15 +13636,16 @@ test_values_sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports()
 
 
 # read/write
-# sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% write_csv(file = "data/fmir/sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports.csv")
+# sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>%
+#         write_csv(file = "data/fmir/sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports.csv")
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports <- read.csv(file = "data/fmir/sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports.csv") %>%
         as_tibble()
 
 # inspect
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports
 sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% glimpse()
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 900
-sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% ncol() # 33
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% nrow() # 945
+sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports %>% ncol() # 37
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -13380,8 +13705,8 @@ sub_obj_4_1_eaeu_membership <- sub_obj_4_1_eaeu_membership %>%
 # inspect
 sub_obj_4_1_eaeu_membership
 sub_obj_4_1_eaeu_membership %>% glimpse()
-sub_obj_4_1_eaeu_membership %>% nrow() # 900
-sub_obj_4_1_eaeu_membership %>% ncol() # 34
+sub_obj_4_1_eaeu_membership %>% nrow() # 945
+sub_obj_4_1_eaeu_membership %>% ncol() # 38
 
 # check country/year
 sub_obj_4_1_eaeu_membership %>% count(country) %>% print(n = nrow(.))
@@ -13430,8 +13755,8 @@ sub_obj_4_1_eaeu_membership <- sub_obj_4_1_eaeu_membership %>%
 # inspect
 sub_obj_4_1_eaeu_membership
 sub_obj_4_1_eaeu_membership %>% glimpse()
-sub_obj_4_1_eaeu_membership %>% nrow() # 900
-sub_obj_4_1_eaeu_membership %>% ncol() # 36
+sub_obj_4_1_eaeu_membership %>% nrow() # 945
+sub_obj_4_1_eaeu_membership %>% ncol() # 40
 
 # check country/year
 sub_obj_4_1_eaeu_membership %>% count(country) %>% print(n = nrow(.))
@@ -13445,7 +13770,8 @@ sub_obj_4_1_eaeu_membership %>%
         filter(country == "Armenia") %>%
         # filter(country == "Georgia") %>%
         # filter(country == "Belarus") %>%
-        select(country, year, first_year_eaeu_member_since_2010, last_year_eaeu_member_since_2010, eaeu_flag, values) 
+        select(country, year, first_year_eaeu_member_since_2010, last_year_eaeu_member_since_2010, eaeu_flag, values) %>%
+        print(n = nrow(.))
 
 # check breach_flag
 sub_obj_4_1_eaeu_membership %>% skim(eaeu_flag, values)
@@ -13460,13 +13786,13 @@ sub_obj_4_1_eaeu_membership %>%
 
 # plot
 sub_obj_4_1_eaeu_membership %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         filter(year >= 2010) %>%
-        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line() +
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line(size = 1) +
         scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 1))
 
 
@@ -13521,8 +13847,573 @@ sub_obj_4_1_eaeu_membership <- read.csv(file = "data/fmir/sub_obj_4_1_eaeu_membe
 # inspect
 sub_obj_4_1_eaeu_membership
 sub_obj_4_1_eaeu_membership %>% glimpse()
-sub_obj_4_1_eaeu_membership %>% nrow() # 900
-sub_obj_4_1_eaeu_membership %>% ncol() # 36
+sub_obj_4_1_eaeu_membership %>% nrow() # 945
+sub_obj_4_1_eaeu_membership %>% ncol() # 40
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# load sub_obj_4_1_eu_membership ####
+
+# https://european-union.europa.eu/principles-countries-history/country-profiles_en; 
+# https://neighbourhood-enlargement.ec.europa.eu/enlargement-policy/6-27-members_en; 
+# https://ec.europa.eu/environment/enlarg/candidates.htm
+
+sub_obj_4_1_eu_membership <- read_excel(path = "data/eu/eu_membership_20230221.xlsx") %>% as_tibble() %>%
+        mutate(year = first_year_in_eu_since_2010,
+               high_value_is_good_outcome_flag = 1,
+               indicator_name = "sub_obj_4_1_eu_membership")
+
+
+#/////////////////
+
+
+# inspect
+sub_obj_4_1_eu_membership
+sub_obj_4_1_eu_membership %>% glimpse()
+sub_obj_4_1_eu_membership %>% nrow() # 34
+sub_obj_4_1_eu_membership %>% ncol() # 10
+
+# test that year_joined_is_before_or_equal_to_first_year_since_2010
+expect_equal(object = sub_obj_4_1_eu_membership %>% 
+                     mutate(year_joined_is_before_or_equal_to_first_year_since_2010_flag = case_when(
+                             year_joined_eu <=  first_year_in_eu_since_2010 ~ 1,
+                             TRUE ~ 0)) %>% 
+                     distinct(year_joined_is_before_or_equal_to_first_year_since_2010_flag) %>%
+                     pull(year_joined_is_before_or_equal_to_first_year_since_2010_flag),
+             expected = 1)
+
+# check countries
+sub_obj_4_1_eu_membership %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
+        distinct(country_name) %>% arrange(country_name)
+
+sub_obj_4_1_eu_membership %>% 
+        filter(str_detect(string = country_name, pattern = regex("yemen", ignore_case = TRUE))) %>%
+        distinct(country_name)
+country_crosswalk %>% filter(str_detect(string = country, pattern = regex("gamb", ignore_case = TRUE))) %>% select(country)
+
+
+#/////////////////
+
+
+# join country_crosswalk and fmir_framework
+sub_obj_4_1_eu_membership <- sub_obj_4_1_eu_membership %>% 
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        mutate(indicator_name = "sub_obj_4_1_eu_membership",
+               high_value_is_good_outcome_flag = 1) %>%
+        left_join(., fmir_framework, by = "indicator_name")
+
+
+#/////////////////
+
+
+# inspect
+sub_obj_4_1_eu_membership
+sub_obj_4_1_eu_membership %>% glimpse()
+sub_obj_4_1_eu_membership %>% nrow() # 945
+sub_obj_4_1_eu_membership %>% ncol() # 39
+
+# check country/year
+sub_obj_4_1_eu_membership %>% count(country) %>% print(n = nrow(.))
+sub_obj_4_1_eu_membership %>% distinct(country) %>% nrow() # 45
+sub_obj_4_1_eu_membership %>% count(year)
+sub_obj_4_1_eu_membership %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
+
+# check specific country
+sub_obj_4_1_eu_membership %>% 
+        select(country, year, first_year_in_eu_since_2010, last_year_in_eu_since_2010, membership_status) %>%
+        group_by(country) %>%
+        fill(first_year_in_eu_since_2010, .direction = "updown") %>%
+        fill(last_year_in_eu_since_2010, .direction = "updown") %>%
+        fill(membership_status, .direction = "updown") %>%
+        ungroup() %>%
+        mutate(eu_member_flag = case_when((year >= first_year_in_eu_since_2010) & 
+                                                    ((is.na(last_year_in_eu_since_2010) | year <= last_year_in_eu_since_2010)) &
+                                                    membership_status == "full_member" ~ 1,
+                                            (year >= first_year_in_eu_since_2010) & 
+                                                    ((is.na(last_year_in_eu_since_2010) | year <= last_year_in_eu_since_2010)) &
+                                                    membership_status == "observer" ~ .5,
+                                            TRUE ~ 0),
+               values = eu_member_flag) %>%
+        filter(country == "Serbia") %>%
+        # filter(country == "Russia") %>%
+        # filter(country == "Uzbekistan") %>%
+        # filter(country == "Armenia") %>%
+        print(n = nrow(.))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add eu_member_flag and set it equal to "values" variable
+
+# note that the eu_member_flag variable is only accurate from 2010 onward due to way it's manually tabulated; but no issue because
+# the RI data will be filtered to only begin in 2010
+# also manually add candidate status for croatia pre-2013 accession 
+# (the way the data is structured it doesn't have variable for start year of candidate status AND start year of member status - hack, but not big issue or worth changes)
+sub_obj_4_1_eu_membership <- sub_obj_4_1_eu_membership %>% 
+        group_by(country) %>%
+        fill(first_year_in_eu_since_2010, .direction = "updown") %>%
+        fill(last_year_in_eu_since_2010, .direction = "updown") %>%
+        fill(membership_status, .direction = "updown") %>%
+        ungroup() %>%
+        mutate(eu_member_flag = case_when((year >= first_year_in_eu_since_2010) & 
+                                                    (is.na(last_year_in_eu_since_2010) | year <= last_year_in_eu_since_2010) &
+                                                    membership_status == "full_member" ~ 1,
+                                            (year >= first_year_in_eu_since_2010) & 
+                                                    (is.na(last_year_in_eu_since_2010) | year <= last_year_in_eu_since_2010) &
+                                                    membership_status == "candidate" ~ .5,
+                                          country == "Croatia" & year <= 2012 ~ .5,
+                                            TRUE ~ 0),
+               values = eu_member_flag)
+
+
+#/////////////////
+
+
+# inspect
+sub_obj_4_1_eu_membership
+sub_obj_4_1_eu_membership %>% glimpse()
+sub_obj_4_1_eu_membership %>% nrow() # 945
+sub_obj_4_1_eu_membership %>% ncol() # 41
+
+# check country/year
+sub_obj_4_1_eu_membership %>% count(country) %>% print(n = nrow(.))
+sub_obj_4_1_eu_membership %>% distinct(country) %>% nrow() # 45
+sub_obj_4_1_eu_membership %>% count(year) %>% print(n = nrow(.))
+sub_obj_4_1_eu_membership %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
+
+# check specific country
+sub_obj_4_1_eu_membership %>% 
+        # filter(country == "Albania") %>%
+        # filter(country == "Russia") %>%
+        # filter(country == "Uzbekistan") %>%
+        # filter(country == "Serbia") %>%
+        filter(country == "Croatia") %>%
+        # filter(country == "Belarus") %>%
+        select(country, year, first_year_in_eu_since_2010, last_year_in_eu_since_2010, eu_member_flag, values) %>%
+        print(n = nrow(.))
+
+# check eu_member_flag
+sub_obj_4_1_eu_membership %>% skim(eu_member_flag, values)
+sub_obj_4_1_eu_membership %>% 
+        filter(values > 0) %>% 
+        select(country, year, year_joined_eu, eu_member_flag, values) %>%
+        count(country) %>% print(n = nrow(.))
+sub_obj_4_1_eu_membership %>% 
+        filter(values > 0) %>% 
+        select(country, year, year_joined_eu, eu_member_flag, values) %>%
+        print(n = nrow(.))
+sub_obj_4_1_eu_membership %>% 
+        filter(values == .5) %>% 
+        count(country, eu_member_flag, values)
+
+
+#/////////////////////
+
+
+# plot
+sub_obj_4_1_eu_membership %>% 
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E graduates") %>%
+        # filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "EU-15") %>%
+        filter(year >= 2010) %>%
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values), color = country)) + geom_line(size = 1) +
+        scale_x_continuous(breaks = seq(from = 2010, to = 2021, by = 1))
+
+
+#////////////////
+
+
+# test values
+test_values_sub_obj_4_1_eu_membership <- function() {
+        
+        # macedonia 
+        expect_equal(object = sub_obj_4_1_eu_membership %>% filter(country == "N. Macedonia", year >= 2010) %>%
+                             distinct(values) %>% pull(values),
+                     expected = .5)
+        
+        # albania 
+        expect_equal(object = sub_obj_4_1_eu_membership %>% filter(country == "Albania", year <= 2013) %>%
+                             distinct(values) %>% pull(values),
+                     expected = 0)
+        
+        # albania 
+        expect_equal(object = sub_obj_4_1_eu_membership %>% filter(country == "Albania", year >= 2014) %>%
+                             distinct(values) %>% pull(values),
+                     expected = .5)
+        
+        # croatia
+        expect_equal(object = sub_obj_4_1_eu_membership %>% filter(country == "Croatia", year <= 2012) %>%
+                             distinct(values) %>% pull(values),
+                     expected = .5)
+        
+        # croatia
+        expect_equal(object = sub_obj_4_1_eu_membership %>% filter(country == "Croatia", year >= 2013) %>%
+                             distinct(values) %>% pull(values),
+                     expected = 1)
+}
+test_values_sub_obj_4_1_eu_membership()
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write
+# sub_obj_4_1_eu_membership %>% write_csv(file = "data/fmir/sub_obj_4_1_eu_membership.csv")
+sub_obj_4_1_eu_membership <- read.csv(file = "data/fmir/sub_obj_4_1_eu_membership.csv") %>%
+        as_tibble()
+
+# inspect
+sub_obj_4_1_eu_membership
+sub_obj_4_1_eu_membership %>% glimpse()
+sub_obj_4_1_eu_membership %>% nrow() # 945
+sub_obj_4_1_eu_membership %>% ncol() # 41
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+# sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp ####
+
+# go to russian central bank statistics site :https://www.cbr.ru/eng/statistics/
+# then search for "remittances", and then option for "Cross-border Remittances via Payment Systems in Breakdown by Countries" with
+# individual sub-links for each year
+# https://www.cbr.ru/eng/statistics/?CF.Search=remittances&CF.TagId=&CF.Date.Time=Any&CF.Date.DateFrom=&CF.Date.DateTo=
+
+# note the original raw data has a weird space character that does not get recognized as a traditional space
+# eg for 2011 spreadsheet, it lists "United States", but a regex str_detect or other case_when will not match as it appears
+# but it will match "United.States" regex, because once the non-space character is wildcarded over
+# or the dollar amount will have a space instead of a comma, but also have a decimal point, so i clean as string dropping 
+# non-numbers and non-decimal, then convert back into numeric
+
+# note that in 2009, georgia has two different entries on raw spreadsheet
+# in the code below, i keep the record that fits closest with the subsequent year's values, and drop the extra 2009 record
+
+# current_path <- "data/russian_remittances/36e-rem_07.xlsx"
+# current_path <- "data/russian_remittances/36e-rem_09.xlsx"
+
+load_russian_remittances_data <- function(current_path) {
+        
+        # get current_year
+        current_year <- str_sub(string = current_path, start = -7, end = -1) %>%
+                str_replace(string = ., pattern = "\\.xlsx", replacement = "") %>%
+                str_c("20", .)
+        
+        print(current_year)
+        
+        # get current_data
+        current_data <- read_excel(path = current_path, skip = 4, sheet = current_year)
+        
+        # clean data when current_year <= 2012
+        if(current_year <= 2012) {
+                
+                current_data <- current_data %>% 
+                        rename(country = 1,
+                               remittance_to_counterpart = 2,
+                               remittance_to_counterpart_avg = 3,
+                               remittance_from_counterpart = 4,
+                               remittance_from_counterpart_avg = 5) %>%
+                        select(country, remittance_to_counterpart, remittance_to_counterpart_avg,
+                               remittance_from_counterpart, remittance_from_counterpart_avg) %>%
+                        filter(!(str_detect(string = country, pattern = regex("Total|Non-CIS countries|of which|CIS countries", 
+                                                                              ignore_case = TRUE))),
+                               !(str_detect(string = remittance_to_counterpart, pattern = regex("total amount", ignore_case = TRUE)))) %>%
+                        mutate(remittance_to_counterpart = as.numeric(str_replace(string = remittance_to_counterpart, pattern = "[^0-9|\\.]", 
+                                                                                  replacement = "")) * 1000000,
+                               remittance_to_counterpart_avg = as.numeric(str_replace(string = remittance_to_counterpart_avg, pattern = "[^0-9|\\.]", 
+                                                                                      replacement = "")),
+                               remittance_from_counterpart = as.numeric(str_replace(string = remittance_from_counterpart, pattern = "[^0-9|\\.]", 
+                                                                                    replacement = "")) * 1000000,
+                               remittance_from_counterpart_avg = as.numeric(str_replace(string = remittance_from_counterpart_avg, pattern = "[^0-9|\\.]", 
+                                                                                        replacement = "")),
+                               year = as.numeric(current_year),
+                               unit = "Dollars (it's assumed to be current dollars)",
+                               counterpart = "Russia",
+                               country = str_to_title(string = country),
+                               country = case_when(str_detect(string = country, pattern = regex("United.States")) ~ "U.S.",
+                                                   country == "United States Of America" ~ "U.S.",
+                                                   str_detect(string = country, pattern = regex("United.Kingdom")) ~ "U.K.",
+                                                   country == "Czech Republic" ~ "Czechia",
+                                                   country == "Armenia, Republic Of" ~ "Armenia",
+                                                   country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                                   country == "Azerbaijan, Republic Of" ~ "Azerbaijan",
+                                                   country == "Moldova, Republic Of" ~ "Moldova",
+                                                   country == "Serbia, Republic Of" ~ "Serbia",
+                                                   country == "Poland, Republic Of" ~ "Poland",
+                                                   str_detect(string = country, pattern = regex("China")) ~ "China",
+                                                   TRUE ~ country)) %>%
+                        relocate(year, .after = country) %>%
+                        filter(!(country == "Georgia" & year == 2009 & remittance_to_counterpart == 12000000))
+                
+                return(current_data)
+        }
+        
+        # clean data when current_year >= 2013 (extra column A has been added to format)
+        if(current_year >= 2013) {
+                
+                current_data <- current_data %>% 
+                        select(-1) %>%
+                        rename(country = 1,
+                               remittance_to_counterpart = 2,
+                               remittance_to_counterpart_avg = 3,
+                               remittance_from_counterpart = 4,
+                               remittance_from_counterpart_avg = 5) %>%
+                        select(country, remittance_to_counterpart, remittance_to_counterpart_avg,
+                               remittance_from_counterpart, remittance_from_counterpart_avg) %>%
+                        filter(!(str_detect(string = country, pattern = regex("Total|Non-CIS countries|of which|CIS countries", 
+                                                                              ignore_case = TRUE))),
+                               !(str_detect(string = remittance_to_counterpart, pattern = regex("total amount", ignore_case = TRUE)))) %>%
+                        mutate(remittance_to_counterpart = as.numeric(str_replace(string = remittance_to_counterpart, pattern = "[^0-9|\\.]", 
+                                                                                  replacement = "")) * 1000000,
+                               remittance_to_counterpart_avg = as.numeric(str_replace(string = remittance_to_counterpart_avg, pattern = "[^0-9|\\.]", 
+                                                                                      replacement = "")),
+                               remittance_from_counterpart = as.numeric(str_replace(string = remittance_from_counterpart, pattern = "[^0-9|\\.]", 
+                                                                                    replacement = "")) * 1000000,
+                               remittance_from_counterpart_avg = as.numeric(str_replace(string = remittance_from_counterpart_avg, pattern = "[^0-9|\\.]", 
+                                                                                        replacement = "")),
+                               year = as.numeric(current_year),
+                               unit = "Dollars (it's assumed to be current dollars)",
+                               counterpart = "Russia",
+                               country = str_to_title(string = country),
+                               country = case_when(str_detect(string = country, pattern = regex("United.States")) ~ "U.S.",
+                                                   country == "United States Of America" ~ "U.S.",
+                                                   str_detect(string = country, pattern = regex("United.Kingdom")) ~ "U.K.",
+                                                   country == "Czech Republic" ~ "Czechia",
+                                                   country == "Armenia, Republic Of" ~ "Armenia",
+                                                   country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                                   country == "Azerbaijan, Republic Of" ~ "Azerbaijan",
+                                                   country == "Moldova, Republic Of" ~ "Moldova",
+                                                   country == "Serbia, Republic Of" ~ "Serbia",
+                                                   country == "Poland, Republic Of" ~ "Poland",
+                                                   str_detect(string = country, pattern = regex("China")) ~ "China",
+                                                   TRUE ~ country)) %>%
+                        relocate(year, .after = country)
+                
+                return(current_data)
+        }
+}
+
+# get russian_remittances
+# note skip 2006 since the spreadsheet format is different (lacks a tabbed named "2006", and also it's not needed)
+russian_remittances <- map(.x = dir_ls("data/russian_remittances") %>% tibble(path = .) %>%
+                                   filter(str_detect(string = path, pattern = regex("[0-9]{2}.xlsx"))) %>% 
+                                   filter(path != "data/russian_remittances/36e-rem_06.xlsx") %>%
+                                   pull(path), 
+                           .f = ~ load_russian_remittances_data(current_path = .x)) %>% bind_rows()
+
+
+
+#///////////////////////
+
+
+# inspect
+russian_remittances
+russian_remittances %>% glimpse()
+russian_remittances %>% nrow() # 452
+russian_remittances %>% ncol() # 8
+
+russian_remittances %>% count(country) %>% print(n = nrow(.))
+russian_remittances %>% count(year) # 2007-2021
+russian_remittances %>% count(counterpart)
+
+# check country names 
+russian_remittances %>% anti_join(., country_crosswalk, by = "country") %>% count(country) %>% print(n = nrow(.))
+russian_remittances %>% filter(str_detect(string = country, pattern = regex("serbia", ignore_case = TRUE)))
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# load gdp_current ####
+# https://data.worldbank.org/indicator/NY.GDP.MKTP.CD
+
+gdp_current <- read_excel(path = "data/world_bank/API_NY.GDP.MKTP.CD_DS2_en_excel_v2_4334130.xls", sheet = "Data", skip = 3) %>%
+        rename(country_name = `Country Name`, iso3 = `Country Code`) %>%
+        select(-c(`Indicator Name`, `Indicator Code`)) %>%
+        pivot_longer(cols = -c(country_name, iso3), names_to = "year", values_to = "gdp_current") %>%
+        mutate(year = as.numeric(year))
+
+
+#/////////////////
+
+
+# inspect
+gdp_current
+gdp_current %>% glimpse()
+gdp_current %>% nrow() # 16492
+gdp_current %>% ncol() # 4
+
+gdp_current %>% count(year) %>% arrange(desc(year))
+gdp_current %>% filter(year == 2021) %>% distinct(gdp_current)
+gdp_current %>% filter(is.na(gdp_current), year >= 2010) %>% count(country_name) %>% arrange(desc(n)) %>% print(n = 20)
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# add country_crosswalk, gdp_current, and remittances_to/from_russia_as_share_of_gdp
+
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp <- russian_remittances %>% 
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., by = c("country", "year")) %>%
+        left_join(., gdp_current %>% select(-country_name), by = c("iso3", "year")) %>%
+        mutate(remittance_from_counterpart_as_share_of_gdp = remittance_from_counterpart / gdp_current,
+               remittance_to_counterpart_as_share_of_gdp = remittance_to_counterpart / gdp_current,
+               values = remittance_from_counterpart_as_share_of_gdp,
+               high_value_is_good_outcome_flag = 0,
+               indicator_name = "sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp") %>%
+        left_join(., fmir_framework, by = "indicator_name")
+        
+
+#///////////////////////
+
+
+# inspect
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% glimpse()
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% nrow() # 945
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% ncol() # 43
+
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% count(country) %>% print(n = nrow(.)) # 45
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% distinct(mcp_grouping, country) %>% count(mcp_grouping) 
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% count(year) %>% print(n = nrow(.))
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>%
+        filter(country == "Serbia") %>% 
+        select(country, mcp_grouping, year, remittance_to_counterpart, remittance_from_counterpart, gdp_current,
+               remittance_to_counterpart_as_share_of_gdp, remittance_from_counterpart_as_share_of_gdp)
+
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% select(starts_with("remittance")) %>% skim() %>% as_tibble() %>%
+        select(-c(skim_type, numeric.hist))
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% select(country, mcp_grouping, year, remittance_to_counterpart, remittance_from_counterpart, gdp_current,
+                               remittance_to_counterpart_as_share_of_gdp, remittance_from_counterpart_as_share_of_gdp) %>%
+        arrange(desc(remittance_from_counterpart_as_share_of_gdp))
+
+# check missing
+# note missing all data for 4 balkans, 7 graduates, and 7 eu-15 countries 
+# (albania, bih, kosovo, macedonia; also serbia only has 2008)
+# 3 graduates have only partial data
+# note that the balkans, grads, and eu countries missing all data will impute with regional averages < .0003, so effectively zero - non-issue
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% 
+        filter(is.na(remittance_from_counterpart_as_share_of_gdp)) %>%
+        filter(year >= 2010) %>%
+        count(country, mcp_grouping) %>% arrange(mcp_grouping) %>% print(n = nrow(.))
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>%
+        group_by(mcp_grouping) %>%
+        summarize(regional_avg = mean(remittance_from_counterpart_as_share_of_gdp, na.rm = TRUE)) %>% 
+        ungroup()
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(is.na(remittance_from_counterpart_as_share_of_gdp)) %>%
+        count(country, year) %>% print(n = nrow(.))
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(is.na(remittance_from_counterpart_as_share_of_gdp)) %>%
+        count(country, mcp_grouping) %>%
+        filter(n < 15) %>%
+        left_join(., sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(!is.na(remittance_from_counterpart_as_share_of_gdp)) %>%
+                          count(country, year),
+                  by = "country") %>% print(n = nrow(.))
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(!is.na(remittance_from_counterpart_as_share_of_gdp)) %>%
+        count(country, year) %>% print(n = nrow(.))
+
+# check most recent year of data availability
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% 
+        pivot_longer(cols = c(remittance_from_counterpart_as_share_of_gdp, 
+                              remittance_to_counterpart_as_share_of_gdp), names_to = "var", values_to = "values") %>%
+        select(country, mcp_grouping, year, var, values) %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        group_by(country, var) %>%
+        arrange(desc(year)) %>%
+        mutate(row_number = row_number(),
+               most_recent_non_na_year_flag = case_when(row_number == 1 & !is.na(values) ~ 1,
+                                                        TRUE ~ 0)) %>%
+        ungroup() %>%
+        filter(most_recent_non_na_year_flag == 1) %>%
+        distinct(country, year) %>%
+        left_join(country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% select(country), .,
+                  by = "country") %>%
+        arrange(year)
+
+
+# plot missing data
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% 
+        pivot_longer(cols = c(remittance_from_counterpart_as_share_of_gdp, 
+                              remittance_to_counterpart_as_share_of_gdp), names_to = "var", values_to = "values") %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        select(country, mcp_grouping, year, var, values) %>%
+        group_by(country, mcp_grouping, year, var) %>%
+        miss_var_summary() %>%
+        ungroup() %>%
+        arrange(desc(n_miss)) %>%
+        unite(col = "var", var, year) %>%
+        ggplot(data = ., mapping = aes(x = var, y = country, fill = pct_miss)) +
+        geom_tile() + 
+        theme(
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 6, color = "#333333", 
+                                           margin = margin(t = 3, r = 0, b = 0, l = 0), angle = 45, hjust = 1)
+        )
+
+# plot
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
+        filter(mcp_grouping == "CARs") %>%
+        
+        
+        filter(!is.na(values)) %>%
+        arrange(desc(values)) %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1)
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# test values
+test_values_sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp <- function() {
+        
+        # 1
+        expect_equal(object = sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(country == "Tajikistan", year == 2021) %>%
+                             select(country, year, remittance_from_counterpart, gdp_current, remittance_from_counterpart_as_share_of_gdp) %>%
+                             pull(remittance_from_counterpart_as_share_of_gdp),
+                     expected = (1794.8 * 1000000) / 8746270636.40142)
+        
+        # 2
+        expect_equal(object = sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(country == "Tajikistan", year == 2008) %>%
+                             select(country, year, remittance_from_counterpart, gdp_current, remittance_from_counterpart_as_share_of_gdp) %>%
+                             pull(remittance_from_counterpart_as_share_of_gdp),
+                     expected = (2516 * 1000000) / 5161337336.40365)
+        
+        # 3
+        expect_equal(object = sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% filter(country == "Ukraine", year == 2015) %>%
+                             select(country, year, remittance_from_counterpart, gdp_current, remittance_from_counterpart_as_share_of_gdp) %>%
+                             pull(remittance_from_counterpart_as_share_of_gdp),
+                     expected = (988 * 1000000) / 91030959454.6961)
+}
+
+test_values_sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp()
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write
+# sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>%
+#       write_csv(file = "data/fmir/sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp.csv")
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp <- read.csv(file = "data/fmir/sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp.csv") %>%
+        as_tibble()
+
+# inspect
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% glimpse()
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% nrow() # 945
+sub_obj_4_1_cbr_remittances_from_russia_as_share_of_gdp %>% ncol() # 43
+
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -13608,8 +14499,9 @@ sub_obj_4_2_legatum_financing_ecosystem <- sub_obj_4_2_legatum_financing_ecosyst
 # inspect
 sub_obj_4_2_legatum_financing_ecosystem 
 sub_obj_4_2_legatum_financing_ecosystem %>% glimpse()
-sub_obj_4_2_legatum_financing_ecosystem %>% nrow() # 900
-sub_obj_4_2_legatum_financing_ecosystem %>% ncol() # 31
+sub_obj_4_2_legatum_financing_ecosystem %>% nrow() # 945
+sub_obj_4_2_legatum_financing_ecosystem %>% ncol() # 35
+
 sub_obj_4_2_legatum_financing_ecosystem %>% distinct(country) %>% nrow() # 45
 
 # check values
@@ -13639,7 +14531,7 @@ sub_obj_4_2_legatum_financing_ecosystem %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -13780,8 +14672,9 @@ sub_obj_4_2_legatum_fiscal_sustainability <- sub_obj_4_2_legatum_fiscal_sustaina
 # inspect
 sub_obj_4_2_legatum_fiscal_sustainability 
 sub_obj_4_2_legatum_fiscal_sustainability %>% glimpse()
-sub_obj_4_2_legatum_fiscal_sustainability %>% nrow() # 900
-sub_obj_4_2_legatum_fiscal_sustainability %>% ncol() # 31
+sub_obj_4_2_legatum_fiscal_sustainability %>% nrow() # 945
+sub_obj_4_2_legatum_fiscal_sustainability %>% ncol() # 35
+
 sub_obj_4_2_legatum_fiscal_sustainability %>% distinct(country) %>% nrow() # 45
 
 # check values
@@ -13811,7 +14704,7 @@ sub_obj_4_2_legatum_fiscal_sustainability %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -13894,42 +14787,47 @@ sub_obj_4_2_legatum_fiscal_sustainability <- read.csv(file = "data/fmir/sub_obj_
 
 
 # load bti data by year tabs
-bti_banking_system_2020 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2020", na = c("", "-")) %>%
+bti_banking_system_2022 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2022", na = c("", "-")) %>%
+        rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
+               banking_system = `Q7.4 | Banking system`) %>% 
+        mutate(year = 2021) %>% select(country_name, year, banking_system)
+
+bti_banking_system_2020 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2020", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2019) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2018 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2018", na = c("", "-")) %>%
+bti_banking_system_2018 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2018", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2017) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2016 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2016", na = c("", "-")) %>%
+bti_banking_system_2016 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2016", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2015) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2014 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2014", na = c("", "-")) %>%
+bti_banking_system_2014 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2014", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2013) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2012 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2012", na = c("", "-")) %>%
+bti_banking_system_2012 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2012", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2011) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2010 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2010", na = c("", "-")) %>%
+bti_banking_system_2010 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2010", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2009) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2008 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2008", na = c("", "-")) %>%
+bti_banking_system_2008 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2008", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2007) %>% select(country_name, year, banking_system)
 
-bti_banking_system_2006 <- read_excel(path = "data/bti/BTI 2006-2020 Scores.xlsx", sheet = "BTI 2006", na = c("", "-")) %>%
+bti_banking_system_2006 <- read_excel(path = "data/bti/BTI_2006-2022_Scores.xlsx", sheet = "BTI 2006", na = c("", "-")) %>%
         rename(country_name = "Regions:\r\n1 | East-Central and Southeast Europe\r\n2 | Latin America and the Caribbean\r\n3 | West and Central Africa\r\n4 | Middle East and North Africa\r\n5 | Southern and Eastern Africa\r\n6 | Post-Soviet Eurasia\r\n7 | Asia and Oceania",
                banking_system = `Q7.4 | Banking system`) %>% 
         mutate(year = 2005) %>% select(country_name, year, banking_system)
@@ -13947,6 +14845,7 @@ sub_obj_4_2_bti_banking_system <- bti_banking_system_2006 %>%
         bind_rows(., bti_banking_system_2016) %>%
         bind_rows(., bti_banking_system_2018) %>% 
         bind_rows(., bti_banking_system_2020) %>%
+        bind_rows(., bti_banking_system_2022) %>%
         pivot_wider(id_cols = country_name, names_from = year, values_from = banking_system) %>%
         mutate(`2006` = ((`2007` - `2005`) / 2) + `2005`,
                `2008` = ((`2009` - `2007`) / 2) + `2007`,
@@ -13954,7 +14853,8 @@ sub_obj_4_2_bti_banking_system <- bti_banking_system_2006 %>%
                `2012` = ((`2013` - `2011`) / 2) + `2011`,
                `2014` = ((`2015` - `2013`) / 2) + `2013`,
                `2016` = ((`2017` - `2015`) / 2) + `2015`,
-               `2018` = ((`2019` - `2017`) / 2) + `2017`) %>%
+               `2018` = ((`2019` - `2017`) / 2) + `2017`,
+               `2020` = ((`2021` - `2019`) / 2) + `2019`) %>%
         pivot_longer(cols = -country_name, names_to = "year", values_to = "values") %>%
         mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
@@ -13971,7 +14871,7 @@ sub_obj_4_2_bti_banking_system <- bti_banking_system_2006 %>%
 # inspect
 sub_obj_4_2_bti_banking_system
 sub_obj_4_2_bti_banking_system %>% glimpse()
-sub_obj_4_2_bti_banking_system %>% nrow() # 2055
+sub_obj_4_2_bti_banking_system %>% nrow() # 2329
 sub_obj_4_2_bti_banking_system %>% ncol() # 5
 sub_obj_4_2_bti_banking_system %>% skim()
 sub_obj_4_2_bti_banking_system %>% group_by(year) %>% skim()
@@ -14014,8 +14914,8 @@ sub_obj_4_2_bti_banking_system <- sub_obj_4_2_bti_banking_system %>%
 # inspect
 sub_obj_4_2_bti_banking_system 
 sub_obj_4_2_bti_banking_system %>% glimpse()
-sub_obj_4_2_bti_banking_system %>% nrow() # 900
-sub_obj_4_2_bti_banking_system %>% ncol() # 29
+sub_obj_4_2_bti_banking_system %>% nrow() # 945
+sub_obj_4_2_bti_banking_system %>% ncol() # 34
 sub_obj_4_2_bti_banking_system %>% distinct(country) %>% nrow() # 45
 
 sub_obj_4_2_bti_banking_system %>% filter(is.na(values)) %>% count(country) %>% 
@@ -14029,18 +14929,18 @@ sub_obj_4_2_bti_banking_system %>% filter(year >= 2009) %>% group_by(country) %>
 
 
 # inspect interpolation
-sub_obj_4_2_bti_banking_system %>% filter(year >= 2006, year <= 2019) %>%
+sub_obj_4_2_bti_banking_system %>% filter(year >= 2006) %>%
         select(country, year, values) %>% print(n = 50)
 
 # Missing values for Kosovo (2006-2009), Montenegro (2006-2007), and all EU-15 and US
-sub_obj_4_2_bti_banking_system %>% filter(is.na(values), year >= 2006, year <= 2019) %>% 
+sub_obj_4_2_bti_banking_system %>% filter(is.na(values), year >= 2006) %>% 
         count(country, mcp_grouping) %>% arrange(mcp_grouping) %>% print(n = nrow(.))
 sub_obj_4_2_bti_banking_system %>% filter(is.na(values),
                                           mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "CARs", "E&E graduates", "Russia"),
-                                          year >= 2006, year <= 2019) %>%
+                                          year >= 2006) %>%
         select(country, mcp_grouping, year, values) %>% arrange(mcp_grouping) %>% print(n = nrow(.))
 sub_obj_4_2_bti_banking_system %>% group_by(mcp_grouping) %>% skim(values)
-sub_obj_4_2_bti_banking_system %>% filter(year >= 2006, year <= 2019) %>% group_by(mcp_grouping) %>% skim(values)
+sub_obj_4_2_bti_banking_system %>% filter(year >= 2006) %>% group_by(mcp_grouping) %>% skim(values)
 
 
 # plot
@@ -14051,7 +14951,7 @@ sub_obj_4_2_bti_banking_system %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
         # ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
-        ggplot(data = ., mapping = aes(x = year, y = jitter(values, 1), color = country)) + geom_line()
+        ggplot(data = ., mapping = aes(x = year, y = jitter(values, 1), color = country)) + geom_line(size = 1)
 
 
 #/////////////////
@@ -14116,7 +15016,8 @@ sub_obj_4_2_bti_banking_system <- read_csv(file = "data/fmir/sub_obj_4_2_bti_ban
 # FD Index doesn't capture several concepts from Legatum - financing ecosystem indicator; like depth of credit, 
 # soundness of banks, venture capital, financing small/medium enterprises, obstacles to financing
 
-sub_obj_4_2_imf_financial_development_index <- read_excel(path = "data/imf/financial_development_index/FD Index Database (Excel).xlsx", sheet = "Sheet1") %>%
+sub_obj_4_2_imf_financial_development_index <- read_excel(path = "data/imf/financial_development_index/FD Index Database (Excel).xlsx", 
+                                                          sheet = "Sheet1") %>%
         filter(year >= 2001) %>%
         select(country, year, FD) %>% 
         rename(country_name = country) %>%
@@ -14140,7 +15041,7 @@ sub_obj_4_2_imf_financial_development_index <- read_excel(path = "data/imf/finan
 # inspect
 sub_obj_4_2_imf_financial_development_index
 sub_obj_4_2_imf_financial_development_index %>% glimpse()
-sub_obj_4_2_imf_financial_development_index %>% nrow() # 3648
+sub_obj_4_2_imf_financial_development_index %>% nrow() # 3840
 sub_obj_4_2_imf_financial_development_index %>% ncol() # 6
 
 # check values
@@ -14180,8 +15081,8 @@ sub_obj_4_2_imf_financial_development_index <- sub_obj_4_2_imf_financial_develop
 # inspect
 sub_obj_4_2_imf_financial_development_index
 sub_obj_4_2_imf_financial_development_index %>% glimpse()
-sub_obj_4_2_imf_financial_development_index %>% nrow() # 900
-sub_obj_4_2_imf_financial_development_index %>% ncol() # 31
+sub_obj_4_2_imf_financial_development_index %>% nrow() # 945
+sub_obj_4_2_imf_financial_development_index %>% ncol() # 35
 
 # inspect
 sub_obj_4_2_imf_financial_development_index %>% distinct(country) %>% nrow() # 45
@@ -14206,11 +15107,11 @@ sub_obj_4_2_imf_financial_development_index %>% group_by(year) %>% skim(values)
 # plot
 sub_obj_4_2_imf_financial_development_index %>% 
         # filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
-        filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -14223,7 +15124,7 @@ test_values_sub_obj_4_2_imf_financial_development_index <- function() {
         expect_equal(object = sub_obj_4_2_imf_financial_development_index %>% 
                              filter(country == "Albania", year == 2017) %>%
                              pull(values),
-                     expected = 0.190227374434471)
+                     expected = 0.193181782960892)
         
         # 2
         expect_equal(object = sub_obj_4_2_imf_financial_development_index %>% 
@@ -14235,19 +15136,19 @@ test_values_sub_obj_4_2_imf_financial_development_index <- function() {
         expect_equal(object = sub_obj_4_2_imf_financial_development_index %>% 
                              filter(country == "Belarus", year == 2010) %>%
                              pull(values),
-                     expected = 0.185022383928299)
+                     expected = 0.185939639806747)
         
         # 4
         expect_equal(object = sub_obj_4_2_imf_financial_development_index %>% 
                              filter(country == "Portugal", year == 2019) %>%
                              pull(values),
-                     expected = 0.644603192806243)
+                     expected = 0.654914319515228)
         
         # 5
         expect_equal(object = sub_obj_4_2_imf_financial_development_index %>% 
-                             filter(country == "Serbia", year == 2013) %>%
+                             filter(country == "Serbia", year == 2020) %>%
                              pull(values),
-                     expected = 0.234664902091026)
+                     expected = 0.251217931509018)
 }
 test_values_sub_obj_4_2_imf_financial_development_index()
 
@@ -14263,8 +15164,8 @@ sub_obj_4_2_imf_financial_development_index <- read.csv(file = "data/fmir/sub_ob
 # inspect
 sub_obj_4_2_imf_financial_development_index
 sub_obj_4_2_imf_financial_development_index %>% glimpse()
-sub_obj_4_2_imf_financial_development_index %>% nrow() # 900
-sub_obj_4_2_imf_financial_development_index %>% ncol() # 31
+sub_obj_4_2_imf_financial_development_index %>% nrow() # 945
+sub_obj_4_2_imf_financial_development_index %>% ncol() # 35
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -14276,6 +15177,12 @@ sub_obj_4_2_imf_financial_development_index %>% ncol() # 31
 
 # https://www.worldbank.org/en/programs/debt-statistics/ids
 # https://datahelpdesk.worldbank.org/knowledgebase/topics/19287-external-debt
+
+# note that clicking on "DataBank" brings you to data download menu where parameters are set for bulk download
+# by clicking on specific country it brings you to data explorer for specific country - can be useful for quick viewing/checking
+# view old spreadsheet to see parameters 
+# click checkbox for all countries, counterparts are just russia/china/world, a few indicators, 2000-current
+
 
 # detailed definition of "external debt" here: https://data.worldbank.org/indicator/DT.DOD.DECT.CD
 # Total external debt is debt owed to nonresidents repayable in currency, goods, or services. 
@@ -14311,7 +15218,7 @@ sub_obj_4_2_imf_financial_development_index %>% ncol() # 31
 # would lead to more jumpy shifts, whereas stocks are more stable over time, which is what we want for the index
 
 # note that as of 20220228 download, there were no values for 2021-2022
-sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- read_excel(path = "data/world_bank/external_debt_stock/Data_Extract_From_International_Debt_Statistics.xlsx", 
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- read_excel(path = "data/world_bank/external_debt_stock/P_Data_Extract_From_International_Debt_Statistics.xlsx", 
            na = "..") %>%
         rename(country_name = `Country Name`, 
                counterpart = `Counterpart-Area Name`,
@@ -14329,7 +15236,7 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- read_excel(path 
                                         TRUE ~ country_name),
                counterpart = case_when(counterpart == "Russian Federation" ~ "Russia",
                                        TRUE ~ counterpart)) %>%
-        filter(year <= 2020,
+        filter(year <= 2021,
                variable == "External debt stocks, total (DOD, current US$)",
                counterpart %in% c("Russia", "World"),
                !(country_name %in% c("Data from database: International Debt Statistics")),
@@ -14349,11 +15256,11 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- read_excel(path 
 # inspect
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% glimpse()
-sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% nrow() # 2856
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% nrow() # 2970
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% ncol() # 9
 
 # inspect country names
-# note that 25 of 45 countries do not have a world bank IDS record because they arent' required to report external debt as
+# note that 26 of 45 countries do not have a world bank IDS record because they arent' required to report external debt as
 # a condition of any assistance package; will analyze missing data further below
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% 
         anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
@@ -14386,8 +15293,8 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- sub_obj_4_2_wb_e
 # inspect
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% glimpse()
-sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% nrow() # 900
-sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% ncol() # 34
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% nrow() # 945
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% ncol() # 38
 
 # check country/year
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% count(country) # 45
@@ -14431,13 +15338,31 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
 # eg in the case of kosovo, it seems plausible that it's a true zero as opposed to lack of reporting
 # result: since many countries have non-NA values interspersed with NA values (eg armenia), and we do want to impute those NAs,
 # then the best choice is to leave all NAs and impute them, and so the only zero values will be those actually reported as zero
-# note that the balkans and graduates with non-NA values are all close to zero (under 3%), 
+# note that the balkans with non-NA values are all close to zero (under 3%),
+# graduates only have montenegro and bulgaria with non-NA values both <1%, so imputation for missing grads and EU is negligible
 # so the regional_avg used to impute for those countries missing all values will
 # be close to zero, and therefore not much difference for them
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
+        filter(year >= 2010) %>%
+        group_by(country, mcp_grouping) %>%
+        skim(values) %>%
+        as_tibble() %>% select(skim_variable, country, mcp_grouping, n_missing, complete_rate) %>%
+        arrange(desc(n_missing)) %>% 
+        print(n = nrow(.))
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
+        filter(year >= 2010) %>%
+        group_by(country, mcp_grouping) %>%
+        skim(values) %>%
+        as_tibble() %>% select(skim_variable, country, mcp_grouping, n_missing, complete_rate) %>%
+        count(mcp_grouping, n_missing) %>%
+        arrange(desc(n_missing))
+
+
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
         filter(!is.na(variable)) %>% skim(ext_debt_to_russia, ext_debt_to_world)
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
         filter(!is.na(variable)) %>%
+        filter(year >= 2010) %>%
         group_by(country) %>%
         skim(ext_debt_to_russia, ext_debt_to_world) %>%
         as_tibble() %>% select(skim_variable, country, n_missing, complete_rate) %>%
@@ -14445,22 +15370,26 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
         print(n = nrow(.))
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
         filter(!is.na(variable),
-               is.na(values)) %>% count(country) %>% arrange(desc(n))
+               is.na(values)) %>% 
+        filter(year >= 2010) %>%
+        count(country) %>% arrange(desc(n))
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
         filter(!is.na(variable), is.na(values)) %>%
+        filter(year >= 2010) %>%
         count(country, year) %>% arrange(country, year) %>% 
         select(-n) %>% add_count(country) %>%
         filter(n != 20) %>%
         print(n = nrow(.))
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% 
-        # filter(country == "Montenegro") %>% 
-        # filter(country == "Azerbaijan") %>%
+        # filter(country == "Montenegro") %>%
+        filter(country == "Azerbaijan") %>%
         # filter(country == "Bulgaria") %>%
         # filter(country == "Tajikistan") %>%
         # filter(country == "Armenia") %>%
+        # filter(country == "Albania") %>%
         # filter(country == "Kyrgyzstan") %>%
-        filter(country == "Uzbekistan") %>%
-        select(country, year, ext_debt_to_russia, ext_debt_to_world) %>% print(n = nrow(.))
+        # filter(country == "Uzbekistan") %>%
+        select(country, year, ext_debt_to_russia, ext_debt_to_world, values) %>% print(n = nrow(.))
 
 
 #//////////////////
@@ -14468,15 +15397,15 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
 
 # plot
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% 
-        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
-        # filter(mcp_grouping == "E&E graduates") %>%
+        filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
-#//////////////////
+# //////////////////
 
 
 # test
@@ -14491,9 +15420,9 @@ test_values_sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- func
         
         # belarus in 2017
         expect_equal(object = sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
-                             filter(country == "Serbia", year == 2020) %>%
+                             filter(country == "Serbia", year == 2021) %>%
                              pull(values),
-                     expected = 845311000 / 38467088092)
+                     expected = 884997681.8 / 41143534458)
         
         # armenia in 2012
         expect_equal(object = sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>%
@@ -14529,8 +15458,8 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt <- read.csv(file = 
 # inspect
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt
 sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% glimpse()
-sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% nrow() # 900
-sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% ncol() # 34
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% nrow() # 945
+sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% ncol() # 38
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -14543,7 +15472,7 @@ sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt %>% ncol() # 34
 # note all variables must first be converted to character, since some have "#N/A" and some dont, 
 # and pivot wont combine numeric and character columns
 # note that wgi data skips 2001, so here 2001 is imputed as midpoint between 2000 and 2002 values
-cross_cutting_obj_wgi_control_of_corruption <- read_excel(path = "data/world_bank/wgidataset.xlsx", 
+cross_cutting_obj_wgi_control_of_corruption <- read_excel(path = "data/world_bank/wgidataset_20230115.xlsx", 
                                                           sheet = "ControlofCorruption", skip = 14) %>%
         rename(country_name = `Country/Territory`) %>%
         select(-Code) %>% mutate_all(.funs = as.character) %>%
@@ -14551,7 +15480,7 @@ cross_cutting_obj_wgi_control_of_corruption <- read_excel(path = "data/world_ban
         mutate(var = case_when(str_detect(string = var, pattern = "^Estimate") ~ "estimate",
                                TRUE ~ var)) %>%
         filter(var == "estimate") %>% 
-        mutate(year = rep(c(1996, 1998, 2000, seq(from = 2002, to = 2020, by = 1)), times = 214),
+        mutate(year = rep(c(1996, 1998, 2000, seq(from = 2002, to = 2021, by = 1)), times = 214),
                values = case_when(values == "#N/A" ~ NA_character_, 
                                   TRUE ~ values),
                values = as.numeric(values),
@@ -14566,7 +15495,7 @@ cross_cutting_obj_wgi_control_of_corruption <- read_excel(path = "data/world_ban
                                         TRUE ~ country_name),
                high_value_is_good_outcome_flag = 1,
                indicator_name = "cross_cutting_obj_wgi_control_of_corruption") %>%
-        pivot_wider(id_cols = -c(year, values), names_from = year, values_from = values) %>%
+        pivot_wider(names_from = year, values_from = values) %>%
         mutate(`2001` = ((`2002` - `2000`) / 2) + `2000`) %>%
         pivot_longer(cols = -c(country_name, var, high_value_is_good_outcome_flag, indicator_name), 
                      names_to = "year", values_to = "values") %>%
@@ -14580,10 +15509,11 @@ cross_cutting_obj_wgi_control_of_corruption <- read_excel(path = "data/world_ban
 # inspect
 cross_cutting_obj_wgi_control_of_corruption
 cross_cutting_obj_wgi_control_of_corruption %>% glimpse()
-cross_cutting_obj_wgi_control_of_corruption %>% nrow() # 4280
+cross_cutting_obj_wgi_control_of_corruption %>% nrow() # 4494
 cross_cutting_obj_wgi_control_of_corruption %>% ncol() # 6       
 
 # inspect
+cross_cutting_obj_wgi_control_of_corruption %>% count(year) %>% print(n = nrow(.))
 cross_cutting_obj_wgi_control_of_corruption %>% arrange(desc(values))
 cross_cutting_obj_wgi_control_of_corruption %>% arrange(values)
 cross_cutting_obj_wgi_control_of_corruption %>% skim()
@@ -14622,8 +15552,8 @@ cross_cutting_obj_wgi_control_of_corruption <- cross_cutting_obj_wgi_control_of_
 # inspect
 cross_cutting_obj_wgi_control_of_corruption
 cross_cutting_obj_wgi_control_of_corruption %>% glimpse()
-cross_cutting_obj_wgi_control_of_corruption %>% nrow() # 900
-cross_cutting_obj_wgi_control_of_corruption %>% ncol() # 30     
+cross_cutting_obj_wgi_control_of_corruption %>% nrow() # 945
+cross_cutting_obj_wgi_control_of_corruption %>% ncol() # 35    
 
 # inspect
 cross_cutting_obj_wgi_control_of_corruption %>% distinct(country) %>% nrow() # 45
@@ -14644,12 +15574,12 @@ cross_cutting_obj_wgi_control_of_corruption %>% filter(year >= 2009) %>% group_b
 
 # plot
 cross_cutting_obj_wgi_control_of_corruption %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
-        filter(mcp_grouping == "E&E Eurasia") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 # inspect summary stats on indicators
@@ -14667,34 +15597,19 @@ cross_cutting_obj_wgi_control_of_corruption %>% group_by(indicator_name) %>%
 test_values_cross_cutting_obj_wgi_control_of_corruption <- function() {
         
         # 1
-        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% 
-                             filter(country == "Albania", year == 2017) %>%
+        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% filter(country == "Serbia", year == 2020) %>% 
                              pull(values),
-                     expected = -0.420721828937531)
+                     expected = -0.429459095001221)
         
         # 2
-        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% 
-                             filter(country == "Kosovo", year == 2017) %>%
+        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% filter(country == "Albania", year == 2018) %>% 
                              pull(values),
-                     expected = -0.507772326469421)
+                     expected = -0.524145126342773)
         
         # 3
-        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% 
-                             filter(country == "Kosovo", year == 2018) %>%
+        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% filter(country == "Kosovo", year == 2017) %>% 
                              pull(values),
-                     expected = -0.512875497341156)
-        
-        # 4
-        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% 
-                             filter(country == "Portugal", year == 2019) %>%
-                             pull(values),
-                     expected = 0.778424620628356)
-        
-        # 5
-        expect_equal(object = cross_cutting_obj_wgi_control_of_corruption %>% 
-                             filter(country == "Serbia", year == 2020) %>%
-                             pull(values),
-                     expected = -0.425881594419479)
+                     expected = -0.502136826515197)
 }
 test_values_cross_cutting_obj_wgi_control_of_corruption()
 
@@ -14725,13 +15640,16 @@ cross_cutting_obj_wgi_control_of_corruption <- read_csv(file = "data/fmir/cross_
 # https://freedomhouse.org/reports/nations-transit/nations-transit-methodology
 # https://freedomhouse.org/report/nations-transit
 
-cross_cutting_obj_fh_corruption <- read_excel(path = "data/freedom_house/NationsinTransit--FreedomHouse--1996 to 2020.xlsx", sheet = "Data") %>% 
-        rename(country_name = `Country name`, year = `Data Year`, democracy_score = `Democracy Score`,
+cross_cutting_obj_fh_corruption <- read_excel(path = "data/freedom_house/All_Data_Nations_in_Transit_NIT_2005-2022_For_website.xlsx", 
+                                              sheet = "NIT 2005-2022") %>% 
+        rename(country_name = Country, report_year = Year, democracy_score = `Democracy Score`,
                corruption = `Corruption`,
+               judicial_framework_and_indep = `Judicial Framework and Independence`,
                electoral_process = `Electoral Process`,
                civil_society = `Civil Society`,
                regime_class = `Regime Classification`) %>%
         mutate(values = corruption,
+               year = report_year - 1,
                high_value_is_good_outcome_flag = 1,
                country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
                                         country_name == "North Macedonia" ~ "N. Macedonia",
@@ -14751,8 +15669,10 @@ cross_cutting_obj_fh_corruption <- read_excel(path = "data/freedom_house/Nations
 # inspect
 cross_cutting_obj_fh_corruption
 cross_cutting_obj_fh_corruption %>% glimpse()
-cross_cutting_obj_fh_corruption %>% nrow() # 692
+cross_cutting_obj_fh_corruption %>% nrow() # 522
 cross_cutting_obj_fh_corruption %>% ncol() # 4
+
+cross_cutting_obj_fh_corruption %>% count(year) %>% print(n = nrow(.))
 cross_cutting_obj_fh_corruption %>% count(country_name) %>% print(n = nrow(.)) # 29
 cross_cutting_obj_fh_corruption %>% arrange(desc(values)) %>% distinct(country_name)
 cross_cutting_obj_fh_corruption %>% arrange(values) %>% distinct(country_name)
@@ -14788,8 +15708,8 @@ cross_cutting_obj_fh_corruption <- cross_cutting_obj_fh_corruption %>%
 # inspect
 cross_cutting_obj_fh_corruption
 cross_cutting_obj_fh_corruption %>% glimpse()
-cross_cutting_obj_fh_corruption %>% nrow() # 900
-cross_cutting_obj_fh_corruption %>% ncol() # 29
+cross_cutting_obj_fh_corruption %>% nrow() # 945
+cross_cutting_obj_fh_corruption %>% ncol() # 34
 
 # check country/year
 cross_cutting_obj_fh_corruption %>% count(country) %>% print(n = nrow(.))
@@ -14824,7 +15744,7 @@ cross_cutting_obj_fh_corruption %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
         # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 # inspect summary stats on indicators
 cross_cutting_obj_fh_corruption %>% group_by(indicator_name) %>% 
@@ -14880,465 +15800,469 @@ cross_cutting_obj_fh_corruption <- read_csv(file = "data/fmir/cross_cutting_obj_
 #/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# load cross_cutting_obj_state_money_laundering ####
-
-# https://2009-2017.state.gov/j/inl/rls/nrcrpt/index.htm
-# https://www.state.gov/international-narcotics-control-strategy-reports/
-
-# state dept definition from 2009 report:
-# "Jurisdictions of Primary Concern" are those that are identified, pursuant to INCSR reporting requirements,
-# as "major money laundering countries." A major money laundering country is defined by statute as one
-# "whose financial institutions engage in currency transactions involving significant amounts of proceeds from
-# international narcotics trafficking." However, the complex nature of money laundering transactions today makes
-# it difficult in many cases to distinguish the proceeds of narcotics trafficking from the proceeds of other serious crime.
-# Moreover, financial institutions engaged in transactions that involve significant amounts of proceeds from other
-# serious crimes are vulnerable to narcotics-related money laundering. The category "Jurisdiction of Primary Concern"
-# recognizes this relationship by including all countries and other jurisdictions whose financial institutions engage in
-# transactions involving significant amounts of proceeds from all serious crimes. Thus, the focus in considering whether a
-# country or jurisdiction should be included in this category is on the significance of the amount of proceeds laundered,
-# not of the anti-money laundering measures taken.
-
-
-# fatf summary on money laundering: https://www.fatf-gafi.org/faq/moneylaundering/
-# fatf paper on trade-based money laundering: https://www.fatf-gafi.org/publications/methodsandtrends/documents/trade-basedmoneylaundering.html
-# "There are three main methods by which criminal organisations and terrorist financiers move money for the purpose of 
-# disguising its origins and integrating it into the formal economy. The first is through the use of the financial system; 
-# the second involves the physical movement of money (e.g. through the use of cash couriers); and the third is through the 
-# physical movement of goods through the trade system."
-
-# tax justice network has illicit finanicial flows index: https://iff.taxjustice.net/#/
-# "Illicit financial flows are transfers of money from one country to another that are forbidden by law, rules or custom. 
-# By enabling money laundering and corruption and by reducing government funding available in a country, illicit financial flows 
-# damage economies, societies and the governance of countries around the globe. A key challenge to addressing these illegal 
-# transfers has been the difficulty for countries to identify which channels and trading partners pose the greatest risks for 
-# illicit financial flows. The vulnerability tracker solves this problem by reporting the level of vulnerability to illicit 
-# financial flows each country faces in relation to eight main channels: trade (exports and imports), banking positions 
-# (claims and liabilities), foreign direct investment (outward and inward) and portfolio investment (outward and inward). 
-# The vulnerability tracker also compares countries' vulnerability levels and identifies the trading partners that generate the 
-# greatest illicit financial flows vulnerability for each country. Click here for more information about methodology."
-
-# Atlantic Council paper summarizing good info on Russian money-laundering via FDI:
-#         https://www.atlanticcouncil.org/in-depth-research-reports/report/defending-the-united-states-against-russian-dark-money/
-
-# NBER research looking at round-trip money laundering from and back into Russia as foreign investment
-# notably, the NBER paper cites the Perez paper that uses the gravity model to estimate money laundering via FDI
-# https://www.nber.org/system/files/working_papers/w19019/w19019.pdf
-# " And as in accordance to Perez et al. (2012) study over 20% FDI to money laundering countries from a selection of 
-# transition countries were made to facilitate illicit money flows, it is plausible to suggest that there should be a 
-# strong relationship between corruption money laundering and round-trip investment in Russia."
-
-# Eu study summarizing research estimation methods on fdi and money laundering
-# https://www.google.com/url?sa=t&source=web&rct=j&url=https://www.europarl.europa.eu/RegData/etudes/STUD/2020/648789/IPOL_STU(2020)648789_EN.pdf&ved=2ahUKEwiIweXFw5bzAhVPGVkFHdggCY44ChAWegQIGRAB&usg=AOvVaw2IAyEf4s4E7BJ8QvG-rh7v
-
-# paper developing model of illicit financial flows via FDI: 
-# https://www.freit.org/WorkingPapers/Papers/ForeignInvestment/FREIT130.pdf
-# "we estimate that around 10% of the total FDI from the
-# transition economies in our sample is caused by capital flight and money laundering"
-# also: "Ways of moving capital illegally include unreported
-# movements of money abroad by carrying large amounts of cash on trips, using couriers to carry
-# cash, hiding cash in freight or the post, and over- and under-invoicing of international trade transactions.
-# What illegal capital flight and money laundering have in common is the desire of
-# the investor to hide his or her connection to the funds being moved and the need to move the
-# funds through unrecorded, and often illegal, channels. We argue below that, for large sums of
-# money, establishing affiliates overseas through FDI may be a relatively safe and cost-effective
-# way of meeting both these objectives."
-
-
-#////////////////////////
-
-
-# load state_desig_mmlc ####
-
-# note that country_name are being made to match country_crosswalk, which pulls either from official state list,
-# or if not listed there, then pulls from world bank
-# since only ee_region names need to be spelled out in analysis, and all those have good short names, we can 
-# ignore the odd/long names for some countries (eg hong kong sar, china)
-state_desig_mmlc <- read_excel(path = "data/state/major_money_laundering_countries.xlsx", sheet = "Sheet1") %>%
-        rename(country_name = country, mmlc_flag = major_money_laundering_country_flag) %>%
-        select(country_name, year, mmlc_flag) %>%
-        mutate(country_name = case_when(country_name == "United Kingdom" ~ "U.K.",
-                                        country_name == "United States" ~ "U.S.",
-                                        country_name == "Bosnia and Herzegovina" ~ "BiH",
-                                        country_name == "Bahamas" ~ "Bahamas, The",
-                                        country_name == "Hong Kong" ~ "Hong Kong SAR, China",
-                                        country_name == "St. Maarten" ~ "Sint Maarten (Dutch part)",
-                                        country_name == "North Korea" ~ "Korea, North",
-                                        country_name == "St. Kitts and Nevis" ~ "Saint Kitts and Nevis",
-                                        country_name == "St. Lucia" ~ "Saint Lucia",
-                                        country_name == "St. Vincent and the Grenadines" ~ "Saint Vincent and the Grenadines",
-                                        TRUE ~ country_name))
-
-
-#////////////////////////
-
-
-# inspect
-state_desig_mmlc
-state_desig_mmlc %>% glimpse()
-state_desig_mmlc %>% nrow() # 936
-state_desig_mmlc %>% ncol() # 3
-
-# check values
-# 113 mmlc countries, with earliest data for 2008 (which is needed to calculated 2010-5yr moving avg)
-state_desig_mmlc %>% skim(mmlc_flag)
-state_desig_mmlc %>% count(country_name) %>% print(n = nrow(.)) # 113
-state_desig_mmlc %>% count(year) # 13
-
-# note there are 936 country/year records where mmlc_flag = 1
-state_desig_mmlc %>% summarize(mmlc_flag_sum = sumNA(mmlc_flag, na.rm = TRUE))
-
-# note that several coutnries drop off mmlc list from 2015 to 2016  e.g. france, germany, greece
-# this may be artifact of policy change with new administration; the mmlc_flag_moving_avg should moderate the spikes though
-state_desig_mmlc %>% mutate(mmlc_flag_2015 = case_when(year == 2015 & mmlc_flag == 1 ~ 1,
-                                                       TRUE ~ 0),
-                            mmlc_flag_2016 = case_when(year == 2016 & mmlc_flag == 1 ~ 1,
-                                                       TRUE ~ 0)) %>%
-        group_by(country_name) %>% 
-        mutate(mmlc_flag_2015_sum = sumNA(mmlc_flag_2015, na.rm = TRUE),
-               mmlc_flag_2016_sum = sumNA(mmlc_flag_2016, na.rm = TRUE)) %>%
-        ungroup() %>% 
-        filter(mmlc_flag_2015_sum > 0, mmlc_flag_2016_sum == 0) %>%
-        distinct(country_name) %>%
-        print(n = nrow(.))
-
-# note that several coutnries are added to mmlc list from 2015 to 2016  e.g. albania, azerbaijan, bih, georgia, serbia
-# this may be artifact of policy change with new administration; the mmlc_flag_moving_avg should moderate the spikes though
-state_desig_mmlc %>% mutate(mmlc_flag_2015 = case_when(year == 2015 & mmlc_flag == 1 ~ 1,
-                                                       TRUE ~ 0),
-                            mmlc_flag_2016 = case_when(year == 2016 & mmlc_flag == 1 ~ 1,
-                                                       TRUE ~ 0)) %>%
-        group_by(country_name) %>% 
-        mutate(mmlc_flag_2015_sum = sumNA(mmlc_flag_2015, na.rm = TRUE),
-               mmlc_flag_2016_sum = sumNA(mmlc_flag_2016, na.rm = TRUE)) %>%
-        ungroup() %>% 
-        filter(mmlc_flag_2015_sum == 0, mmlc_flag_2016_sum > 0) %>%
-        distinct(country_name) %>%
-        print(n = nrow(.))
-
-# check names
-# note that guernsey, jersey, and macau are not listed in country_crosswalk
-state_desig_mmlc %>%
-        # mutate(country_name = case_when(country_name == "United Kingdom" ~ "U.K.",
-        #                          country_name == "United States" ~ "U.S.",
-        #                          country_name == "Bosnia and Herzegovina" ~ "BiH",
-        #                          TRUE ~ country_name)) %>%
-        distinct(country_name) %>%
-        anti_join(., country_crosswalk,
-                  by = c("country_name" = "country"))
-
-state_desig_mmlc %>% filter(str_detect(string = country_name, pattern = "Macedo")) %>% distinct(country_name)
-country_crosswalk %>% filter(str_detect(string = country, pattern = regex("saint", ignore_case = TRUE))) %>% count(country)
-
-
-#//////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# join state_desig_mmlc to a fully crossed country/year tbl
-# get mmlc_flag_moving_avg
-# note the fully crossed country/year gives all mmlc countries a record 
-# for every year 2008-2020, which is necessary so that they can all 
-# get 5 yr moving avg (eg 2010 moving avg is avg of 2008-2012)
-# the 5 yr moving avg is needed for all mmlc for two reasons: 1) to smooth/discount counterpart trade/fdi with countries 
-# eg avoid trade/fdi with germany from being counted in mmlc numerator in 2015, but abruptly not in 2016 when they drop off mmlc
-# otherwise these large countries dropping off mmlc in 2016 cause a steep drop in numerator, but not in denominator, which
-# causes a steep drop in trade_fdi_w_mmlc_as_share_of_trade_fdi_w_world that is somewhat an artifact of policy 
-# 2) to smooth/discount trade_fdi_w_mmlc_as_share_of_trade_fdi_w_world for countries
-
-state_desig_mmlc <- tibble(country_name = rep(c(state_desig_mmlc %>% distinct(country_name) %>% pull(country_name)), 
-                          times = state_desig_mmlc %>% count(year) %>% nrow()),
-       year = c(rep(2008, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2009, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2010, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2011, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2012, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2013, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2014, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2015, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2016, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2017, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2018, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2019, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
-                rep(2020, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()))) %>%
-        left_join(., state_desig_mmlc, by = c("country_name", "year")) %>%
-        mutate(mmlc_flag = case_when(is.na(mmlc_flag) ~ 0,
-                                     TRUE ~ mmlc_flag)) %>%
-        group_by(country_name) %>%
-        arrange(year) %>%
-        mutate(prior_year_1 = lag(mmlc_flag, n = 1),
-               prior_year_2 = lag(mmlc_flag, n = 2),
-               post_year_1 = lead(mmlc_flag, n = 1),
-               post_year_2 = lead(mmlc_flag, n = 2)) %>%
-        ungroup() %>%
-        rowwise() %>%
-        mutate(mmlc_flag_moving_avg = mean(c_across(cols = c(mmlc_flag, prior_year_1, prior_year_2,
-                                                             post_year_1, post_year_2)), na.rm = TRUE)) %>%
-        ungroup()
-
-
-#//////////////////
-
-
-# inspect
-state_desig_mmlc
-state_desig_mmlc %>% glimpse()
-state_desig_mmlc %>% nrow() # 1469 (113 countries * 13 years)
-state_desig_mmlc %>% ncol() # 8
-
-# check country/year
-# 113 mmlc countries, with earliest data for 2008 (which is needed to calculated 2010-5yr moving avg)
-state_desig_mmlc %>% count(country_name) %>% print(n = nrow(.)) # 113
-state_desig_mmlc %>% count(year) # 13
-
-# check values
-# no missing values
-state_desig_mmlc %>% count(mmlc_flag)
-state_desig_mmlc %>% count(mmlc_flag_moving_avg)
-state_desig_mmlc %>% skim(mmlc_flag, mmlc_flag_moving_avg)
-
-# note there are 936 country/year records where mmlc_flag = 1
-# there are 1113 country/year records where mmlc_flag_moving_avg > 0
-state_desig_mmlc %>% filter(mmlc_flag == 1) %>% nrow() # 936
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > 0) %>% nrow() # 1113
-
-# inspect countries/years designated as major money launderers
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > 0) %>%
-        select(country_name, year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        print(n = 50)
-state_desig_mmlc %>% filter(year >= 2008, mmlc_flag_moving_avg > 0) %>% count(country_name) %>%
-        arrange(desc(n)) %>% print(n = nrow(.))
-state_desig_mmlc %>% filter(year >= 2008, mmlc_flag_moving_avg > 0) %>%
-        select(country_name, year, mmlc_flag_moving_avg) %>% arrange(country_name, year) %>% print(n = nrow(.))
-state_desig_mmlc %>% filter(year >= 2010,
-                        country_name %in% c(country_crosswalk %>% 
-                                                    filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
-                                                    pull(country))) %>%
-        select(country_name, year, mmlc_flag_moving_avg, mmlc_flag) %>% arrange(country_name, year) %>% print(n = nrow(.))
-
-
-#/////////////////////////
-
-
-# check moving average combinations producing each of the four values
-# note that there are some cases where late years like 2019 don't have both post_year values, and
-# these then get NA, which means that the mean() drops the NA observations and so what will probably
-# be 1 year in 5 with money_laundering_flag = 1, becomes 1 year in 4; etc
-# this doesn't create huge change though (value of .25 instead of .2), and is a worthwhile tradeoff for a smoother
-# time series
-state_desig_mmlc %>% count(mmlc_flag_moving_avg)
-
-
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg == 1) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .19, mmlc_flag_moving_avg < .21) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .24, mmlc_flag_moving_avg < .26) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .32, mmlc_flag_moving_avg < .34) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .39, mmlc_flag_moving_avg < .41) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .49, mmlc_flag_moving_avg < .51) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .59, mmlc_flag_moving_avg < .61) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .65, mmlc_flag_moving_avg < .67) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .74, mmlc_flag_moving_avg < .76) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .79, mmlc_flag_moving_avg < .81) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-state_desig_mmlc %>% filter(mmlc_flag_moving_avg == 0) %>%
-        count(year, prior_year_2, prior_year_1, mmlc_flag,
-              post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
-        select(year, prior_year_2, prior_year_1, mmlc_flag,
-               post_year_1, post_year_2, mmlc_flag_moving_avg, n)
-
-
-#////////////////////
-
-
-# plot
-state_desig_mmlc %>% 
-        filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Balkans") %>% pull(country))) %>%
-        # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Eurasia") %>% pull(country))) %>%
-        # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E graduates") %>% pull(country))) %>%
-        # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "EU-15") %>% pull(country))) %>%
-        # ggplot(data = ., mapping = aes(x = year, y = mmlc_flag, color = country_name)) + geom_line() +
-        ggplot(data = ., mapping = aes(x = year, y = mmlc_flag_moving_avg, color = country_name)) + geom_line() +
-        scale_x_continuous(limits = c(2010, 2020)) + 
-        scale_y_continuous(limits = c(0, 1))
-
-# plot indicator_standardized_values
-state_desig_mmlc %>% 
-        # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Balkans") %>% pull(country))) %>%
-        filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Eurasia") %>% pull(country))) %>%
-        # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E graduates") %>% pull(country))) %>%
-        # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "EU-15") %>% pull(country))) %>%
-        rename(values = mmlc_flag_moving_avg) %>%
-        mutate(high_value_is_good_outcome_flag = 0,
-                indicator_mean = mean(values, na.rm = TRUE),
-               indicator_sd = sd(values, na.rm = TRUE),
-               values_z_std = (values - indicator_mean) / indicator_sd,
-               indicator_standardized_values = case_when(
-                       high_value_is_good_outcome_flag == 1 ~ (values_z_std - (-1.5)) / (1.5 - (-1.5)),
-                       high_value_is_good_outcome_flag == 0 ~ 1 - (values_z_std - (-1.5)) / (1.5 - (-1.5))),
-               indicator_standardized_values = case_when(indicator_standardized_values > 1 ~ 1,
-                                                         indicator_standardized_values < 0 ~ 0,
-                                                         TRUE ~ indicator_standardized_values)) %>%
-        select(country_name, year, values, indicator_mean, indicator_sd, values_z_std, indicator_standardized_values) %>%
-        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country_name)) + geom_line() +
-        scale_x_continuous(limits = c(2010, 2020)) + 
-        scale_y_continuous(limits = c(0, 1))
-
-
-#/////////////////
-
-
-# test values
-
-test_values_state_desig_mmlc <- function() {
-
-        # 1
-        expect_equal(object = state_desig_mmlc %>%
-                             filter(country_name == "Azerbaijan", year == 2015) %>%
-                             pull(mmlc_flag_moving_avg),
-                     expected = mean(c(0, 0, 0, 1, 1)))
-
-        # 2
-        expect_equal(object = state_desig_mmlc %>%
-                             filter(country_name == "Azerbaijan", year == 2016) %>%
-                             pull(mmlc_flag_moving_avg),
-                     expected = mean(c(0, 0, 1, 1, 1)))
-
-        # 3
-        expect_equal(object = state_desig_mmlc %>%
-                             filter(country_name == "Azerbaijan", year == 2017) %>%
-                             pull(mmlc_flag_moving_avg),
-                     expected = mean(c(0, 1, 1, 1, 1)))
-
-        # 4
-        expect_equal(object = state_desig_mmlc %>%
-                             filter(country_name == "Azerbaijan", year == 2018) %>%
-                             pull(mmlc_flag_moving_avg),
-                     expected = mean(c(1, 1, 1, 1, 0)))
-
-        # 5
-        expect_equal(object = state_desig_mmlc %>%
-                             filter(country_name == "Azerbaijan", year == 2019) %>%
-                             pull(mmlc_flag_moving_avg),
-                     expected = mean(c(1, 1, 1, 0, NA_real_), na.rm = TRUE))
-
-        # 6
-        expect_equal(object = state_desig_mmlc %>%
-                             filter(country_name == "Azerbaijan", year == 2020) %>%
-                             pull(mmlc_flag_moving_avg),
-                     expected = mean(c(1, 1, 0, NA_real_, NA_real_), na.rm = TRUE))
-}
-test_values_state_desig_mmlc()
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# get cross_cutting_obj_state_money_laundering and join country_crosswalk and fmir_framework
-# convert NA values for mmlc_flag and mmlc_flag_moving_avg to zeroes (non-mmlc countries had no mmlc_flag value to join with)
-cross_cutting_obj_state_money_laundering <- state_desig_mmlc %>%
-        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), .,
-                  by = c("country" = "country_name", "year" = "year")) %>%
-        mutate(high_value_is_good_outcome_flag = 0,
-               indicator_name = "cross_cutting_obj_state_money_laundering") %>%
-        left_join(., fmir_framework, by = "indicator_name") %>%
-        mutate(mmlc_flag = case_when(is.na(mmlc_flag) ~ 0,
-                                     TRUE ~ mmlc_flag),
-               mmlc_flag_moving_avg = case_when(is.na(mmlc_flag_moving_avg) ~ 0,
-                                                TRUE ~ mmlc_flag_moving_avg),
-               values = mmlc_flag_moving_avg)
-
-
-#////////////////////
-
-
-# inspect
-cross_cutting_obj_state_money_laundering
-cross_cutting_obj_state_money_laundering %>% glimpse()
-cross_cutting_obj_state_money_laundering %>% nrow() # 900
-cross_cutting_obj_state_money_laundering %>% ncol() # 36
-
-# check country/year
-cross_cutting_obj_state_money_laundering %>% count(country) %>% print(n = nrow(.))
-cross_cutting_obj_state_money_laundering %>% distinct(country) %>% nrow() # 45
-cross_cutting_obj_state_money_laundering %>% count(year)
-cross_cutting_obj_state_money_laundering %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
-
-# check values
-cross_cutting_obj_state_money_laundering %>% count(mmlc_flag)
-cross_cutting_obj_state_money_laundering %>% count(mmlc_flag_moving_avg)
-cross_cutting_obj_state_money_laundering %>% filter(mmlc_flag == 1) %>%  nrow() # 191
-cross_cutting_obj_state_money_laundering %>% filter(mmlc_flag_moving_avg > 0) %>% nrow() # 239
-cross_cutting_obj_state_money_laundering %>% group_by(year) %>% skim(mmlc_flag)
-cross_cutting_obj_state_money_laundering %>% group_by(year) %>% skim(mmlc_flag_moving_avg)
-
-
-#////////////////
-
-
-# plot
-cross_cutting_obj_state_money_laundering %>%
-        filter(year >= 2010) %>%
-        filter(mcp_grouping == "E&E Balkans") %>%
-        # filter(mcp_grouping == "E&E Eurasia") %>%
-        # filter(mcp_grouping == "E&E graduates") %>%
-        # filter(mcp_grouping == "CARs") %>%
-        # filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() +
-        scale_x_continuous(limits = c(2010, 2020)) + 
-        scale_y_continuous(limits = c(0, 1))
-
-
-#/////////////////////////////////////////////////////////////////////////////////////////////
-
-
-# read/write
-# cross_cutting_obj_state_money_laundering %>% write_csv(file = "data/fmir/cross_cutting_obj_state_money_laundering.csv")
-cross_cutting_obj_state_money_laundering <- read.csv(file = "data/fmir/cross_cutting_obj_state_money_laundering.csv") %>%
-        as_tibble()
-
-# inspect
-cross_cutting_obj_state_money_laundering
-cross_cutting_obj_state_money_laundering %>% glimpse()
-cross_cutting_obj_state_money_laundering %>% nrow() # 900
-cross_cutting_obj_state_money_laundering %>% ncol() # 36
+# # historic: load cross_cutting_obj_state_money_laundering ####
+# 
+# # https://2009-2017.state.gov/j/inl/rls/nrcrpt/index.htm
+# # https://www.state.gov/international-narcotics-control-strategy-reports/
+# 
+# # state dept definition from 2009 report:
+# # "Jurisdictions of Primary Concern" are those that are identified, pursuant to INCSR reporting requirements,
+# # as "major money laundering countries." A major money laundering country is defined by statute as one
+# # "whose financial institutions engage in currency transactions involving significant amounts of proceeds from
+# # international narcotics trafficking." However, the complex nature of money laundering transactions today makes
+# # it difficult in many cases to distinguish the proceeds of narcotics trafficking from the proceeds of other serious crime.
+# # Moreover, financial institutions engaged in transactions that involve significant amounts of proceeds from other
+# # serious crimes are vulnerable to narcotics-related money laundering. The category "Jurisdiction of Primary Concern"
+# # recognizes this relationship by including all countries and other jurisdictions whose financial institutions engage in
+# # transactions involving significant amounts of proceeds from all serious crimes. Thus, the focus in considering whether a
+# # country or jurisdiction should be included in this category is on the significance of the amount of proceeds laundered,
+# # not of the anti-money laundering measures taken.
+# 
+# 
+# # fatf summary on money laundering: https://www.fatf-gafi.org/faq/moneylaundering/
+# # fatf paper on trade-based money laundering: https://www.fatf-gafi.org/publications/methodsandtrends/documents/trade-basedmoneylaundering.html
+# # "There are three main methods by which criminal organisations and terrorist financiers move money for the purpose of 
+# # disguising its origins and integrating it into the formal economy. The first is through the use of the financial system; 
+# # the second involves the physical movement of money (e.g. through the use of cash couriers); and the third is through the 
+# # physical movement of goods through the trade system."
+# 
+# # tax justice network has illicit finanicial flows index: https://iff.taxjustice.net/#/
+# # "Illicit financial flows are transfers of money from one country to another that are forbidden by law, rules or custom. 
+# # By enabling money laundering and corruption and by reducing government funding available in a country, illicit financial flows 
+# # damage economies, societies and the governance of countries around the globe. A key challenge to addressing these illegal 
+# # transfers has been the difficulty for countries to identify which channels and trading partners pose the greatest risks for 
+# # illicit financial flows. The vulnerability tracker solves this problem by reporting the level of vulnerability to illicit 
+# # financial flows each country faces in relation to eight main channels: trade (exports and imports), banking positions 
+# # (claims and liabilities), foreign direct investment (outward and inward) and portfolio investment (outward and inward). 
+# # The vulnerability tracker also compares countries' vulnerability levels and identifies the trading partners that generate the 
+# # greatest illicit financial flows vulnerability for each country. Click here for more information about methodology."
+# 
+# # Atlantic Council paper summarizing good info on Russian money-laundering via FDI:
+# #         https://www.atlanticcouncil.org/in-depth-research-reports/report/defending-the-united-states-against-russian-dark-money/
+# 
+# # NBER research looking at round-trip money laundering from and back into Russia as foreign investment
+# # notably, the NBER paper cites the Perez paper that uses the gravity model to estimate money laundering via FDI
+# # https://www.nber.org/system/files/working_papers/w19019/w19019.pdf
+# # " And as in accordance to Perez et al. (2012) study over 20% FDI to money laundering countries from a selection of 
+# # transition countries were made to facilitate illicit money flows, it is plausible to suggest that there should be a 
+# # strong relationship between corruption money laundering and round-trip investment in Russia."
+# 
+# # Eu study summarizing research estimation methods on fdi and money laundering
+# # https://www.google.com/url?sa=t&source=web&rct=j&url=https://www.europarl.europa.eu/RegData/etudes/STUD/2020/648789/IPOL_STU(2020)648789_EN.pdf&ved=2ahUKEwiIweXFw5bzAhVPGVkFHdggCY44ChAWegQIGRAB&usg=AOvVaw2IAyEf4s4E7BJ8QvG-rh7v
+# 
+# # paper developing model of illicit financial flows via FDI: 
+# # https://www.freit.org/WorkingPapers/Papers/ForeignInvestment/FREIT130.pdf
+# # "we estimate that around 10% of the total FDI from the
+# # transition economies in our sample is caused by capital flight and money laundering"
+# # also: "Ways of moving capital illegally include unreported
+# # movements of money abroad by carrying large amounts of cash on trips, using couriers to carry
+# # cash, hiding cash in freight or the post, and over- and under-invoicing of international trade transactions.
+# # What illegal capital flight and money laundering have in common is the desire of
+# # the investor to hide his or her connection to the funds being moved and the need to move the
+# # funds through unrecorded, and often illegal, channels. We argue below that, for large sums of
+# # money, establishing affiliates overseas through FDI may be a relatively safe and cost-effective
+# # way of meeting both these objectives."
+# 
+# 
+# #////////////////////////
+# 
+# 
+# # historic: load state_desig_mmlc ####
+# 
+# # note that annual report is published in march, describing conditions in prior year
+# # when i do manual data entry from pdf report to excel file, i have a variable for "year" which is the year of conditions described,
+# # and a variable "report_year" for the year the report was published; the code below uses the "year" variable 
+# 
+# # note that country_name are being made to match country_crosswalk, which pulls either from official state list,
+# # or if not listed there, then pulls from world bank
+# # since only ee_region names need to be spelled out in analysis, and all those have good short names, we can 
+# # ignore the odd/long names for some countries (eg hong kong sar, china)
+# state_desig_mmlc <- read_excel(path = "data/state/major_money_laundering_countries.xlsx", sheet = "Sheet1") %>%
+#         rename(country_name = country, mmlc_flag = major_money_laundering_country_flag) %>%
+#         select(country_name, year, mmlc_flag) %>%
+#         mutate(country_name = case_when(country_name == "United Kingdom" ~ "U.K.",
+#                                         country_name == "United States" ~ "U.S.",
+#                                         country_name == "Bosnia and Herzegovina" ~ "BiH",
+#                                         country_name == "Bahamas" ~ "Bahamas, The",
+#                                         country_name == "Hong Kong" ~ "Hong Kong SAR, China",
+#                                         country_name == "St. Maarten" ~ "Sint Maarten (Dutch part)",
+#                                         country_name == "North Korea" ~ "Korea, North",
+#                                         country_name == "St. Kitts and Nevis" ~ "Saint Kitts and Nevis",
+#                                         country_name == "St. Lucia" ~ "Saint Lucia",
+#                                         country_name == "St. Vincent and the Grenadines" ~ "Saint Vincent and the Grenadines",
+#                                         TRUE ~ country_name))
+# 
+# 
+# #////////////////////////
+# 
+# 
+# # inspect
+# state_desig_mmlc
+# state_desig_mmlc %>% glimpse()
+# state_desig_mmlc %>% nrow() # 936
+# state_desig_mmlc %>% ncol() # 3
+# 
+# # check values
+# # 113 mmlc countries, with earliest data for 2008 (which is needed to calculated 2010-5yr moving avg)
+# state_desig_mmlc %>% skim(mmlc_flag)
+# state_desig_mmlc %>% count(country_name) %>% print(n = nrow(.)) # 113
+# state_desig_mmlc %>% count(year) # 13
+# 
+# # note there are 936 country/year records where mmlc_flag = 1
+# state_desig_mmlc %>% summarize(mmlc_flag_sum = sumNA(mmlc_flag, na.rm = TRUE))
+# 
+# # note that several coutnries drop off mmlc list from 2015 to 2016  e.g. france, germany, greece
+# # this may be artifact of policy change with new administration; the mmlc_flag_moving_avg should moderate the spikes though
+# state_desig_mmlc %>% mutate(mmlc_flag_2015 = case_when(year == 2015 & mmlc_flag == 1 ~ 1,
+#                                                        TRUE ~ 0),
+#                             mmlc_flag_2016 = case_when(year == 2016 & mmlc_flag == 1 ~ 1,
+#                                                        TRUE ~ 0)) %>%
+#         group_by(country_name) %>% 
+#         mutate(mmlc_flag_2015_sum = sumNA(mmlc_flag_2015, na.rm = TRUE),
+#                mmlc_flag_2016_sum = sumNA(mmlc_flag_2016, na.rm = TRUE)) %>%
+#         ungroup() %>% 
+#         filter(mmlc_flag_2015_sum > 0, mmlc_flag_2016_sum == 0) %>%
+#         distinct(country_name) %>%
+#         print(n = nrow(.))
+# 
+# # note that several coutnries are added to mmlc list from 2015 to 2016  e.g. albania, azerbaijan, bih, georgia, serbia
+# # this may be artifact of policy change with new administration; the mmlc_flag_moving_avg should moderate the spikes though
+# state_desig_mmlc %>% mutate(mmlc_flag_2015 = case_when(year == 2015 & mmlc_flag == 1 ~ 1,
+#                                                        TRUE ~ 0),
+#                             mmlc_flag_2016 = case_when(year == 2016 & mmlc_flag == 1 ~ 1,
+#                                                        TRUE ~ 0)) %>%
+#         group_by(country_name) %>% 
+#         mutate(mmlc_flag_2015_sum = sumNA(mmlc_flag_2015, na.rm = TRUE),
+#                mmlc_flag_2016_sum = sumNA(mmlc_flag_2016, na.rm = TRUE)) %>%
+#         ungroup() %>% 
+#         filter(mmlc_flag_2015_sum == 0, mmlc_flag_2016_sum > 0) %>%
+#         distinct(country_name) %>%
+#         print(n = nrow(.))
+# 
+# # check names
+# # note that guernsey, jersey, and macau are not listed in country_crosswalk
+# state_desig_mmlc %>%
+#         # mutate(country_name = case_when(country_name == "United Kingdom" ~ "U.K.",
+#         #                          country_name == "United States" ~ "U.S.",
+#         #                          country_name == "Bosnia and Herzegovina" ~ "BiH",
+#         #                          TRUE ~ country_name)) %>%
+#         distinct(country_name) %>%
+#         anti_join(., country_crosswalk,
+#                   by = c("country_name" = "country"))
+# 
+# state_desig_mmlc %>% filter(str_detect(string = country_name, pattern = "Macedo")) %>% distinct(country_name)
+# country_crosswalk %>% filter(str_detect(string = country, pattern = regex("saint", ignore_case = TRUE))) %>% count(country)
+# 
+# 
+# #//////////////////////////////////////////////////////////////////////////////////////////////////
+# 
+# 
+# # join state_desig_mmlc to a fully crossed country/year tbl
+# # get mmlc_flag_moving_avg
+# # note the fully crossed country/year gives all mmlc countries a record 
+# # for every year 2008-2020, which is necessary so that they can all 
+# # get 5 yr moving avg (eg 2010 moving avg is avg of 2008-2012)
+# # the 5 yr moving avg is needed for all mmlc for two reasons: 1) to smooth/discount counterpart trade/fdi with countries 
+# # eg avoid trade/fdi with germany from being counted in mmlc numerator in 2015, but abruptly not in 2016 when they drop off mmlc
+# # otherwise these large countries dropping off mmlc in 2016 cause a steep drop in numerator, but not in denominator, which
+# # causes a steep drop in trade_fdi_w_mmlc_as_share_of_trade_fdi_w_world that is somewhat an artifact of policy 
+# # 2) to smooth/discount trade_fdi_w_mmlc_as_share_of_trade_fdi_w_world for countries
+# 
+# state_desig_mmlc <- tibble(country_name = rep(c(state_desig_mmlc %>% distinct(country_name) %>% pull(country_name)), 
+#                           times = state_desig_mmlc %>% count(year) %>% nrow()),
+#        year = c(rep(2008, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2009, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2010, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2011, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2012, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2013, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2014, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2015, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2016, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2017, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2018, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2019, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()),
+#                 rep(2020, times = state_desig_mmlc %>% distinct(country_name) %>% nrow()))) %>%
+#         left_join(., state_desig_mmlc, by = c("country_name", "year")) %>%
+#         mutate(mmlc_flag = case_when(is.na(mmlc_flag) ~ 0,
+#                                      TRUE ~ mmlc_flag)) %>%
+#         group_by(country_name) %>%
+#         arrange(year) %>%
+#         mutate(prior_year_1 = lag(mmlc_flag, n = 1),
+#                prior_year_2 = lag(mmlc_flag, n = 2),
+#                post_year_1 = lead(mmlc_flag, n = 1),
+#                post_year_2 = lead(mmlc_flag, n = 2)) %>%
+#         ungroup() %>%
+#         rowwise() %>%
+#         mutate(mmlc_flag_moving_avg = mean(c_across(cols = c(mmlc_flag, prior_year_1, prior_year_2,
+#                                                              post_year_1, post_year_2)), na.rm = TRUE)) %>%
+#         ungroup()
+# 
+# 
+# #//////////////////
+# 
+# 
+# # inspect
+# state_desig_mmlc
+# state_desig_mmlc %>% glimpse()
+# state_desig_mmlc %>% nrow() # 1469 (113 countries * 13 years)
+# state_desig_mmlc %>% ncol() # 8
+# 
+# # check country/year
+# # 113 mmlc countries, with earliest data for 2008 (which is needed to calculated 2010-5yr moving avg)
+# state_desig_mmlc %>% count(country_name) %>% print(n = nrow(.)) # 113
+# state_desig_mmlc %>% count(year) # 13
+# 
+# # check values
+# # no missing values
+# state_desig_mmlc %>% count(mmlc_flag)
+# state_desig_mmlc %>% count(mmlc_flag_moving_avg)
+# state_desig_mmlc %>% skim(mmlc_flag, mmlc_flag_moving_avg)
+# 
+# # note there are 936 country/year records where mmlc_flag = 1
+# # there are 1113 country/year records where mmlc_flag_moving_avg > 0
+# state_desig_mmlc %>% filter(mmlc_flag == 1) %>% nrow() # 936
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > 0) %>% nrow() # 1113
+# 
+# # inspect countries/years designated as major money launderers
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > 0) %>%
+#         select(country_name, year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         print(n = 50)
+# state_desig_mmlc %>% filter(year >= 2008, mmlc_flag_moving_avg > 0) %>% count(country_name) %>%
+#         arrange(desc(n)) %>% print(n = nrow(.))
+# state_desig_mmlc %>% filter(year >= 2008, mmlc_flag_moving_avg > 0) %>%
+#         select(country_name, year, mmlc_flag_moving_avg) %>% arrange(country_name, year) %>% print(n = nrow(.))
+# state_desig_mmlc %>% filter(year >= 2010,
+#                         country_name %in% c(country_crosswalk %>% 
+#                                                     filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+#                                                     pull(country))) %>%
+#         select(country_name, year, mmlc_flag_moving_avg, mmlc_flag) %>% arrange(country_name, year) %>% print(n = nrow(.))
+# 
+# 
+# #/////////////////////////
+# 
+# 
+# # check moving average combinations producing each of the four values
+# # note that there are some cases where late years like 2019 don't have both post_year values, and
+# # these then get NA, which means that the mean() drops the NA observations and so what will probably
+# # be 1 year in 5 with money_laundering_flag = 1, becomes 1 year in 4; etc
+# # this doesn't create huge change though (value of .25 instead of .2), and is a worthwhile tradeoff for a smoother
+# # time series
+# state_desig_mmlc %>% count(mmlc_flag_moving_avg)
+# 
+# 
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg == 1) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .19, mmlc_flag_moving_avg < .21) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .24, mmlc_flag_moving_avg < .26) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .32, mmlc_flag_moving_avg < .34) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .39, mmlc_flag_moving_avg < .41) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .49, mmlc_flag_moving_avg < .51) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .59, mmlc_flag_moving_avg < .61) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .65, mmlc_flag_moving_avg < .67) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .74, mmlc_flag_moving_avg < .76) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg > .79, mmlc_flag_moving_avg < .81) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# state_desig_mmlc %>% filter(mmlc_flag_moving_avg == 0) %>%
+#         count(year, prior_year_2, prior_year_1, mmlc_flag,
+#               post_year_1, post_year_2, mmlc_flag_moving_avg) %>%
+#         select(year, prior_year_2, prior_year_1, mmlc_flag,
+#                post_year_1, post_year_2, mmlc_flag_moving_avg, n)
+# 
+# 
+# #////////////////////
+# 
+# 
+# # plot
+# state_desig_mmlc %>% 
+#         filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Balkans") %>% pull(country))) %>%
+#         # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Eurasia") %>% pull(country))) %>%
+#         # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E graduates") %>% pull(country))) %>%
+#         # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "EU-15") %>% pull(country))) %>%
+#         # ggplot(data = ., mapping = aes(x = year, y = mmlc_flag, color = country_name)) + geom_line() +
+#         ggplot(data = ., mapping = aes(x = year, y = mmlc_flag_moving_avg, color = country_name)) + geom_line() +
+#         scale_x_continuous(limits = c(2010, 2020)) + 
+#         scale_y_continuous(limits = c(0, 1))
+# 
+# # plot indicator_standardized_values
+# state_desig_mmlc %>% 
+#         # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Balkans") %>% pull(country))) %>%
+#         filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E Eurasia") %>% pull(country))) %>%
+#         # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "E&E graduates") %>% pull(country))) %>%
+#         # filter(country_name %in% c(country_crosswalk %>% filter(mcp_grouping == "EU-15") %>% pull(country))) %>%
+#         rename(values = mmlc_flag_moving_avg) %>%
+#         mutate(high_value_is_good_outcome_flag = 0,
+#                 indicator_mean = mean(values, na.rm = TRUE),
+#                indicator_sd = sd(values, na.rm = TRUE),
+#                values_z_std = (values - indicator_mean) / indicator_sd,
+#                indicator_standardized_values = case_when(
+#                        high_value_is_good_outcome_flag == 1 ~ (values_z_std - (-1.5)) / (1.5 - (-1.5)),
+#                        high_value_is_good_outcome_flag == 0 ~ 1 - (values_z_std - (-1.5)) / (1.5 - (-1.5))),
+#                indicator_standardized_values = case_when(indicator_standardized_values > 1 ~ 1,
+#                                                          indicator_standardized_values < 0 ~ 0,
+#                                                          TRUE ~ indicator_standardized_values)) %>%
+#         select(country_name, year, values, indicator_mean, indicator_sd, values_z_std, indicator_standardized_values) %>%
+#         ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country_name)) + geom_line() +
+#         scale_x_continuous(limits = c(2010, 2020)) + 
+#         scale_y_continuous(limits = c(0, 1))
+# 
+# 
+# #/////////////////
+# 
+# 
+# # test values
+# 
+# test_values_state_desig_mmlc <- function() {
+# 
+#         # 1
+#         expect_equal(object = state_desig_mmlc %>%
+#                              filter(country_name == "Azerbaijan", year == 2015) %>%
+#                              pull(mmlc_flag_moving_avg),
+#                      expected = mean(c(0, 0, 0, 1, 1)))
+# 
+#         # 2
+#         expect_equal(object = state_desig_mmlc %>%
+#                              filter(country_name == "Azerbaijan", year == 2016) %>%
+#                              pull(mmlc_flag_moving_avg),
+#                      expected = mean(c(0, 0, 1, 1, 1)))
+# 
+#         # 3
+#         expect_equal(object = state_desig_mmlc %>%
+#                              filter(country_name == "Azerbaijan", year == 2017) %>%
+#                              pull(mmlc_flag_moving_avg),
+#                      expected = mean(c(0, 1, 1, 1, 1)))
+# 
+#         # 4
+#         expect_equal(object = state_desig_mmlc %>%
+#                              filter(country_name == "Azerbaijan", year == 2018) %>%
+#                              pull(mmlc_flag_moving_avg),
+#                      expected = mean(c(1, 1, 1, 1, 0)))
+# 
+#         # 5
+#         expect_equal(object = state_desig_mmlc %>%
+#                              filter(country_name == "Azerbaijan", year == 2019) %>%
+#                              pull(mmlc_flag_moving_avg),
+#                      expected = mean(c(1, 1, 1, 0, NA_real_), na.rm = TRUE))
+# 
+#         # 6
+#         expect_equal(object = state_desig_mmlc %>%
+#                              filter(country_name == "Azerbaijan", year == 2020) %>%
+#                              pull(mmlc_flag_moving_avg),
+#                      expected = mean(c(1, 1, 0, NA_real_, NA_real_), na.rm = TRUE))
+# }
+# test_values_state_desig_mmlc()
+# 
+# 
+# #/////////////////////////////////////////////////////////////////////////////////////////////
+# 
+# 
+# # get cross_cutting_obj_state_money_laundering and join country_crosswalk and fmir_framework
+# # convert NA values for mmlc_flag and mmlc_flag_moving_avg to zeroes (non-mmlc countries had no mmlc_flag value to join with)
+# cross_cutting_obj_state_money_laundering <- state_desig_mmlc %>%
+#         left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), .,
+#                   by = c("country" = "country_name", "year" = "year")) %>%
+#         mutate(high_value_is_good_outcome_flag = 0,
+#                indicator_name = "cross_cutting_obj_state_money_laundering") %>%
+#         left_join(., fmir_framework, by = "indicator_name") %>%
+#         mutate(mmlc_flag = case_when(is.na(mmlc_flag) ~ 0,
+#                                      TRUE ~ mmlc_flag),
+#                mmlc_flag_moving_avg = case_when(is.na(mmlc_flag_moving_avg) ~ 0,
+#                                                 TRUE ~ mmlc_flag_moving_avg),
+#                values = mmlc_flag_moving_avg)
+# 
+# 
+# #////////////////////
+# 
+# 
+# # inspect
+# cross_cutting_obj_state_money_laundering
+# cross_cutting_obj_state_money_laundering %>% glimpse()
+# cross_cutting_obj_state_money_laundering %>% nrow() # 900
+# cross_cutting_obj_state_money_laundering %>% ncol() # 36
+# 
+# # check country/year
+# cross_cutting_obj_state_money_laundering %>% count(country) %>% print(n = nrow(.))
+# cross_cutting_obj_state_money_laundering %>% distinct(country) %>% nrow() # 45
+# cross_cutting_obj_state_money_laundering %>% count(year)
+# cross_cutting_obj_state_money_laundering %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
+# 
+# # check values
+# cross_cutting_obj_state_money_laundering %>% count(mmlc_flag)
+# cross_cutting_obj_state_money_laundering %>% count(mmlc_flag_moving_avg)
+# cross_cutting_obj_state_money_laundering %>% filter(mmlc_flag == 1) %>%  nrow() # 191
+# cross_cutting_obj_state_money_laundering %>% filter(mmlc_flag_moving_avg > 0) %>% nrow() # 239
+# cross_cutting_obj_state_money_laundering %>% group_by(year) %>% skim(mmlc_flag)
+# cross_cutting_obj_state_money_laundering %>% group_by(year) %>% skim(mmlc_flag_moving_avg)
+# 
+# 
+# #////////////////
+# 
+# 
+# # plot
+# cross_cutting_obj_state_money_laundering %>%
+#         filter(year >= 2010) %>%
+#         filter(mcp_grouping == "E&E Balkans") %>%
+#         # filter(mcp_grouping == "E&E Eurasia") %>%
+#         # filter(mcp_grouping == "E&E graduates") %>%
+#         # filter(mcp_grouping == "CARs") %>%
+#         # filter(mcp_grouping == "EU-15") %>%
+#         ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() +
+#         scale_x_continuous(limits = c(2010, 2020)) + 
+#         scale_y_continuous(limits = c(0, 1))
+# 
+# 
+# #/////////////////////////////////////////////////////////////////////////////////////////////
+# 
+# 
+# # read/write
+# # cross_cutting_obj_state_money_laundering %>% write_csv(file = "data/fmir/cross_cutting_obj_state_money_laundering.csv")
+# cross_cutting_obj_state_money_laundering <- read.csv(file = "data/fmir/cross_cutting_obj_state_money_laundering.csv") %>%
+#         as_tibble()
+# 
+# # inspect
+# cross_cutting_obj_state_money_laundering
+# cross_cutting_obj_state_money_laundering %>% glimpse()
+# cross_cutting_obj_state_money_laundering %>% nrow() # 900
+# cross_cutting_obj_state_money_laundering %>% ncol() # 36
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -15382,9 +16306,9 @@ cross_cutting_obj_state_money_laundering %>% ncol() # 36
 # but it also has other sources using 2020 vintage that are known to reflect 2020 actual conditions (VDEM)
 
 
-cross_cutting_obj_ti_cpi <- read_excel(path = "data/transparency_intl/CPI2020_GlobalTablesTS_210125.xlsx",
-                                       sheet = "CPI Timeseries 2012 - 2020", skip = 2) %>%
-        rename(country_name = Country) %>%
+cross_cutting_obj_ti_cpi <- read_excel(path = "data/transparency_intl/CPI2022_GlobalResultsTrends.xlsx",
+                                       sheet = "CPI Timeseries 2012 - 2022", skip = 2) %>%
+        rename(country_name = `Country / Territory`) %>%
         pivot_longer(cols = -c(country_name, ISO3, Region), names_to = "var", values_to = "values") %>%
         filter(str_detect(string = var, pattern = regex("CPI score", ignore_case = TRUE))) %>%
         mutate(year = as.numeric(str_extract(string = var, pattern = regex("[0-9]{4}"))),
@@ -15403,11 +16327,11 @@ cross_cutting_obj_ti_cpi <- read_excel(path = "data/transparency_intl/CPI2020_Gl
 
 cross_cutting_obj_ti_cpi
 cross_cutting_obj_ti_cpi %>% glimpse()
-cross_cutting_obj_ti_cpi %>% nrow() # 1620
+cross_cutting_obj_ti_cpi %>% nrow() # 1991
 cross_cutting_obj_ti_cpi %>% ncol() # 5
 
 # check values
-cross_cutting_obj_ti_cpi %>% count(country_name) %>% print(n = nrow(.)) # 180
+cross_cutting_obj_ti_cpi %>% count(country_name) %>% print(n = nrow(.)) # 181
 cross_cutting_obj_ti_cpi %>% arrange(desc(values)) %>% distinct(country_name)
 cross_cutting_obj_ti_cpi %>% arrange(values) %>% distinct(country_name)
 
@@ -15442,8 +16366,8 @@ cross_cutting_obj_ti_cpi <- cross_cutting_obj_ti_cpi %>%
 # inspect
 cross_cutting_obj_ti_cpi
 cross_cutting_obj_ti_cpi %>% glimpse()
-cross_cutting_obj_ti_cpi %>% nrow() # 900
-cross_cutting_obj_ti_cpi %>% ncol() # 30
+cross_cutting_obj_ti_cpi %>% nrow() # 945
+cross_cutting_obj_ti_cpi %>% ncol() # 34
 
 # check country/year
 cross_cutting_obj_ti_cpi %>% count(country) %>% print(n = nrow(.))
@@ -15461,12 +16385,12 @@ cross_cutting_obj_ti_cpi %>% filter(year >= 2012) %>% group_by(country) %>% skim
 
 # plot
 cross_cutting_obj_ti_cpi %>% 
-        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Balkans") %>%
         # filter(mcp_grouping == "E&E Eurasia") %>%
         # filter(mcp_grouping == "E&E graduates") %>%
         # filter(mcp_grouping == "CARs") %>%
-        filter(mcp_grouping == "EU-15") %>%
-        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line() 
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
 
 
 #/////////////////
@@ -15513,8 +16437,117 @@ cross_cutting_obj_ti_cpi <- read.csv(file = "data/fmir/cross_cutting_obj_ti_cpi.
 # inspect
 cross_cutting_obj_ti_cpi
 cross_cutting_obj_ti_cpi %>% glimpse()
-cross_cutting_obj_ti_cpi %>% nrow() # 900
-cross_cutting_obj_ti_cpi %>% ncol() # 30
+cross_cutting_obj_ti_cpi %>% nrow() # 945
+cross_cutting_obj_ti_cpi %>% ncol() # 34
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# load cross_cutting_obj_vdem_political_corruption ####
+cross_cutting_obj_vdem_political_corruption <- vdem %>% select(country_name, year, v2x_corr) %>%
+        filter(year >= 2001) %>% 
+        rename(cross_cutting_obj_vdem_political_corruption = "v2x_corr") %>%
+        pivot_longer(cols = cross_cutting_obj_vdem_political_corruption, names_to = "indicator_name", values_to = "values") %>%
+        mutate(high_value_is_good_outcome_flag = 0) %>%
+        mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Burma/Myanmar" ~ "Burma",
+                                        country_name == "Cape Verde" ~ "Cabo Verde",
+                                        country_name == "Czech Republic" ~ "Czechia",
+                                        country_name == "Democratic Republic of the Congo" ~ "Congo (Kinshasa)",
+                                        country_name == "Hong Kong" ~ "Hong Kong SAR, China",
+                                        country_name == "Ivory Coast" ~ "Cote d'Ivoire",
+                                        country_name == "North Korea" ~ "Korea, North",
+                                        country_name == "North Macedonia" ~ "N. Macedonia",
+                                        country_name == "Palestine/West Bank" ~ "West Bank and Gaza",
+                                        country_name == "Papal States" ~ "Holy See",
+                                        country_name == "Republic of the Congo" ~ "Congo (Brazzaville)",
+                                        country_name == "Republic of Vietnam" ~ "Vietnam",
+                                        country_name == "South Korea" ~ "Korea, South",
+                                        country_name == "The Gambia" ~ "Gambia, The",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States of America" ~ "U.S.",
+                                        TRUE ~ country_name))
+
+
+#/////////////////
+
+
+# inspect
+cross_cutting_obj_vdem_political_corruption
+cross_cutting_obj_vdem_political_corruption %>% glimpse()
+cross_cutting_obj_vdem_political_corruption %>% nrow() # 3743
+cross_cutting_obj_vdem_political_corruption %>% ncol() # 5
+
+var_info("v2x_corr")
+cross_cutting_obj_vdem_political_corruption %>% count(year) %>% print(n = nrow(.))
+cross_cutting_obj_vdem_political_corruption %>% arrange(desc(values)) %>% distinct(country_name)
+cross_cutting_obj_vdem_political_corruption %>% arrange(values) %>% distinct(country_name)
+cross_cutting_obj_vdem_political_corruption %>% skim()
+
+# inspect country names
+cross_cutting_obj_vdem_political_corruption %>% anti_join(., country_crosswalk, by = c("country_name" = "country")) %>% 
+        distinct(country_name) %>% arrange(country_name)
+cross_cutting_obj_vdem_political_corruption %>% 
+        filter(str_detect(string = country_name, pattern = regex("yemen", ignore_case = TRUE))) %>%
+        distinct(country_name)
+country_crosswalk %>% filter(str_detect(string = country, pattern = regex("gamb", ignore_case = TRUE))) %>% select(country)
+
+
+#/////////////////
+
+
+# join country_crosswalk and fmir_framework
+cross_cutting_obj_vdem_political_corruption <- cross_cutting_obj_vdem_political_corruption %>% 
+        left_join(country_crosswalk_expanded %>% filter(ee_region_flag == 1 | country == "U.S."), ., 
+                  by = c("country" = "country_name", "year" = "year")) %>%
+        left_join(., fmir_framework, by = "indicator_name") 
+
+
+#/////////////////
+
+
+# inspect
+cross_cutting_obj_vdem_political_corruption
+cross_cutting_obj_vdem_political_corruption %>% glimpse()
+cross_cutting_obj_vdem_political_corruption %>% nrow() # 945
+cross_cutting_obj_vdem_political_corruption %>% ncol() # 34
+
+cross_cutting_obj_vdem_political_corruption %>% distinct(country) %>% nrow() # 45
+cross_cutting_obj_vdem_political_corruption %>% distinct(country, mcp_grouping, ee_region_flag) %>% print(n = nrow(.))
+cross_cutting_obj_vdem_political_corruption %>% count(indicator_name) # 900 (20 years * 45 countries = 900)
+cross_cutting_obj_vdem_political_corruption %>% count(year)
+cross_cutting_obj_vdem_political_corruption %>% filter(indicator_name == "cross_cutting_obj_vdem_political_corruption") %>% skim(values)
+cross_cutting_obj_vdem_political_corruption %>% filter(is.na(values), year >= 2009, year <= 2019) %>%
+        count(country, year) %>% print(n = nrow(.))
+cross_cutting_obj_vdem_political_corruption %>% group_by(year) %>% skim(values)
+
+
+# plot
+cross_cutting_obj_vdem_political_corruption %>% 
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
+        # filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = values, color = country)) + geom_line(size = 1) 
+
+# inspect summary stats on indicators
+cross_cutting_obj_vdem_political_corruption %>% group_by(indicator_name) %>% 
+        mutate(year_start = min(year, na.rm = TRUE), year_end = max(year, na.rm = TRUE),
+               missing_flag = case_when(is.na(values) ~ 1, TRUE ~ 0),
+               missing_pct = mean(missing_flag, na.rm = TRUE)) %>% 
+        distinct(indicator_name, year_start, year_end, missing_pct)
+
+
+#/////////////////
+
+
+# read/write
+# cross_cutting_obj_vdem_political_corruption %>% write_csv(file = "data/fmir/cross_cutting_obj_vdem_political_corruption.csv")
+cross_cutting_obj_vdem_political_corruption <- read_csv(file = "data/fmir/cross_cutting_obj_vdem_political_corruption.csv")
 
 
 #/////////////////////////////////////////////////////////////////////////////////////////////
@@ -15533,14 +16566,16 @@ var_list
 # filter year to begin at 2010, drop russia and us 
 fmir <- dir_ls("data/fmir") %>% tibble(path = as.character(.)) %>%
         select(path) %>% filter(str_detect(string = path, pattern = "data/fmir/sub_obj_|data/fmir/cross_cutting_obj_")) %>%
-        pull(path) %>% map(.x = ., .f = function(.x) {
+        pull(path) %>% 
+        map(.x = ., .f = function(.x) {
                 print(.x)
                 read.csv(file = .x) %>% select(!!!var_list) %>% as_tibble()
                 }) %>% 
         bind_rows() %>%
         select(-c(obj_num, obj, obj_short_name, sub_obj_num, sub_obj, sub_obj_short_name,
-                      concept, indicator, data_documentation, data_source, notes, note_flag)) %>%
-        left_join(fmir_framework, ., by = "indicator_name") %>%
+                      concept, indicator, description, data_documentation, data_source, notes, note_flag,
+                  Year.range, Coverage.gaps, When.published)) %>%
+        left_join(fmir_framework, ., by = "indicator_name", multiple = "all") %>%
         filter(year >= 2010, !(country %in% c("U.S.", "Russia")))
 
 
@@ -15550,8 +16585,8 @@ fmir <- dir_ls("data/fmir") %>% tibble(path = as.character(.)) %>%
 # inspect
 fmir
 fmir %>% glimpse()
-fmir %>% nrow() # 30745 (43 countries * 65 indicators * 11 years)
-fmir %>% ncol() # 30
+fmir %>% nrow() # 35604 (43 countries * 69 indicators * 12 years)
+fmir %>% ncol() # 34
 
 
 
@@ -15597,17 +16632,17 @@ fmir_assembly_tests <- function() {
         expect_equal(object = fmir %>% distinct(country) %>% nrow(),
                      expected = 43)
         
-        # test that there is 11 years from 2010 to 2020
+        # test that there is 12 years from 2010 to 2021
         expect_equal(object = fmir %>% distinct(year) %>% pull(year),
-                     expected = seq(from = 2010, to = 2020, by = 1))
+                     expected = seq(from = 2010, to = 2021, by = 1))
         
-        # test that each indicator has 473 records (43 countries * 11 years)
+        # test that each indicator has 516 records (43 countries * 12 years)
         expect_equal(object = fmir %>% count(indicator_name) %>% distinct(n) %>% pull(n),
-                     expected = 473)
+                     expected = 516)
         
-        # test that there are 30745 records (43 countries * 11 years * 65 indicators)
+        # test that there are 30745 records (43 countries * 11 years * 63 indicators)
         expect_equal(object = fmir %>% nrow(),
-                     expected = 30745)
+                     expected = 35604)
 }
 fmir_assembly_tests()
 
@@ -16125,14 +17160,14 @@ sub_obj_1_3_icews_socio_political_hostility_from_russia %>%
 # vis_miss
 fmir %>% select(indicator_name, country, year, values) %>% 
         filter(str_detect(string = indicator_name, 
-                          pattern = regex("sub_obj_[0-9]_[0-9]_icews_socio_political_hostility_from_russia"))) %>%
+                          pattern = regex("sub_obj_[0-9]_[0-9]_icews_socio_political_hostility_with_russia"))) %>%
         unite(col = "indicator_name", indicator_name, year) %>%
         pivot_wider(id_cols = country, names_from = indicator_name, values_from = values) %>% 
         vis_miss()
 
 fmir %>% select(indicator_name, country, year, values) %>% 
         filter(str_detect(string = indicator_name, 
-                          pattern = regex("sub_obj_[0-9]_[0-9]_icews_narratives_pushed_by_russian_state_media"))) %>%
+                          pattern = regex("sub_obj_[0-9]_[0-9]_icews_russian_state_media_focus"))) %>%
         unite(col = "indicator_name", indicator_name, year) %>%
         pivot_wider(id_cols = country, names_from = indicator_name, values_from = values) %>% 
         vis_miss()
@@ -17092,6 +18127,124 @@ compare_midpoint_mean_median %>%
 # ggplot(data = ., mapping = aes(x = indicator_normalized_values)) + stat_ecdf()
 
 
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# historical: review weighted averages ####
+
+# note that weighted sub_obj averages are no longer used, because concept_avg is used instead (which is equivalent)
+# using weights on individual indicators was just a "shortcut" to aggregating up to sub_obj level,
+# but getting concept_avg = mean(inv) in concept, then getting sub_obj_avg = mean(concept_avg) in sub_obj is 
+# much more interpretable in the code and descriptively than using weights
+
+
+# legatum institute uses weights of .5, 1, 1.5, and 2.9; with default of 1
+# https://docs.prosperity.com/7515/8634/9002/Methodology_for_Legatum_Prosperity_Index_2019.pdf
+# "We first weight indicators within an element. Indicators are typically
+# assigned one of four weights: 0.5, 1, 1.5, and 2.90 The default weight
+# for each indicator is 1 and, based on its significance to the element in
+# which it is contained, its weight is adjusted downwards or upwards.
+# An indicator with a weight of 2 is twice as important in affecting the
+# concept its element represents as an indicator with a weight of 1.
+# Weights are determined by three factors:
+#         . The relevance and significance of the indicator with respect to
+# its element, which is informed by the academic literature, policy
+# debate, and expert opinion;
+# . The robustness and reliability of the indicator in question, whether it has any known measurement flaws;
+# . The significance of the indicator in its relationship with both economic and social wellbeing in a global context.
+# While seemingly more objective to weight each of our indicators
+# equally, we choose variable weights for our indicators for a number of
+# reasons. First, because we include a wide variety of different indicators,
+# in line with our multidimensional view of prosperity. Second, because
+# some indicators are more important than others in delivering prosperity. In the Prosperity Index, equal weighting would be tantamount
+# to claiming that in the Terrorism element of the Safety and Security
+# pillar, for example, the property cost of terrorism (weight x1) is as
+# important as the number of deaths caused by terrorism (weight x2).
+# Weights allow us to speak to a range of issues while remaining true to
+# our conceptual framework and research findings.
+# After weighting the indicators, we weight elements within each pillar,
+# led by the same three factors above. At the element level we apply
+# weights as percentages rather than factors. "
+
+# will use legatum's weighting system, and will divide weighted sums by the sum of weights to get weighted average
+# ((.25 * 1) + (.25 * 2) + (.25 * 3) + (.25 * 4)) / 1
+# ((1 * 1) + (1 * 2) + (1 * 3) + (1 * 4)) / 4
+# ((2 * 1) + (2 * 2) + (2 * 3) + (2 * 4)) / 8
+# ((2 * 1) + (1 * 2) + (1 * 3) + (1 * 4)) / 5
+
+# test weighted.mean
+x <- c(1, 2, 3, 4)
+w1 <- c(1, 1, 1, 1)
+w2 <- c(.25, .25, .25, .25)
+w3 <- c(2, 1, 1, 1)
+w4 <- c(.4, .2, .2, .2)
+
+weighted.mean(x = x, w = w1)
+weighted.mean(x = x, w = w2)
+
+weighted.mean(x = x, w = w3)
+weighted.mean(x = x, w = w4)
+
+# test with NAs
+# note that for records with missing values for some variables, the official weighting for each variable will be shifted
+# for instance, if a sub_obj score for a country/year combo is the weighted avg of three variables, all w official weight = .33
+# but one of the variables is missing for a given country/year combo, then for that country/year combo the sub_obj score
+# will actually be weighting the two remaining indicators effectively at .5 each, since the weighted_mean funcation
+# just sums the weight*value products and divides by the number of inputs
+((.8*.33) + (.7*.33)) / (.33 + .33)
+y <- c(.8, .7, NA)
+z <- c(.8, .7, .6)
+w5 <- c(.333, .333, .333)
+weighted.mean(x = y, w = w5, na.rm = TRUE)
+weighted.mean(x = z, w = w5, na.rm = TRUE)
+
+# test with NAs and different weights
+w6 <- c(.25, .25, .5)
+weighted.mean(x = y, w = w6, na.rm = TRUE)
+weighted.mean(x = z, w = w6, na.rm = TRUE)
+
+# confirm that weighted avg at sub_obj level across all normalized_indicators gets same result as 
+# regular avg at concept level, and then regular avg at sub_obj level
+tibble(sub_obj = c(1, 1, 1, 1, 1, 1), concept = c(1, 2, 2, 3, 3, 3), normalized_indicator = c(.5, .6, .5, .4, .6, .8), 
+       weights = c(1, .5, .5, .33, .33, .33)) %>%
+        group_by(sub_obj) %>%
+        mutate(sub_obj_weighted_avg = weighted.mean(x = normalized_indicator, w = weights, na.rm = TRUE))
+tibble(sub_obj = c(1, 1, 1, 1, 1, 1), concept = c(1, 2, 2, 3, 3, 3), normalized_indicator = c(.5, .6, .5, .4, .6, .8), 
+       weights = c(1, .5, .5, .33, .33, .33)) %>% 
+        group_by(concept) %>% 
+        mutate(concept_simple_avg = mean(normalized_indicator)) %>%
+        ungroup() %>%
+        distinct(sub_obj, concept, concept_simple_avg) %>%
+        mutate(sub_obj_simple_avg = mean(concept_simple_avg, na.rm = TRUE))
+
+# test weighted.mean on grouped data
+starwars %>% 
+        filter(homeworld %in% c("Alderaan", "Coruscant", "Kamino")) %>%
+        mutate(weights = case_when(name == "Leia Organa" ~ 2, TRUE ~ 1)) %>%
+        group_by(homeworld) %>% 
+        mutate(avg = weighted.mean(x = height, w = weights, na.rm = TRUE)) %>%
+        ungroup() %>% select(name, homeworld, height, weights, avg) %>% 
+        arrange(homeworld) 
+((2 * 150) + (1 * 191) + (1 * 188)) / 4 # alderaan with leia weight = 2
+((1 * 170) + (1 * 184) + (1 * 167)) / 3 # coruscant with all default weight = 1
+
+
+# inspect sub_obj, concept, and indicator names
+fmir %>% count(sub_obj_num, concept, indicator_name) %>% print(n = nrow(.))
+
+# inspect creation of indicator weights
+fmir %>% group_by(sub_obj) %>% mutate(num_concepts_in_sub_obj = n_distinct(concept)) %>%
+        ungroup() %>% 
+        group_by(sub_obj, concept) %>% mutate(num_indicators_in_concept = n_distinct(indicator_name)) %>%
+        ungroup() %>% 
+        distinct(sub_obj_num, concept, indicator_name, num_concepts_in_sub_obj, num_indicators_in_concept) %>%
+        mutate(concept_weights = 1 / num_concepts_in_sub_obj,
+               indicator_weights = concept_weight / num_indicators_in_concept) %>%
+        print(n = nrow(.))
+
+
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17112,7 +18265,7 @@ fmir <- fmir %>% group_by(indicator_name) %>%
                indicator_sd = sd(values, na.rm = TRUE),
                indicator_median = median(values, na.rm = TRUE),
                indicator_iqr = IQR(values, na.rm = TRUE),
-               indicator_midpoint = (indicator_max - indicator_min) / 2,
+               indicator_midpoint = ((indicator_max - indicator_min) / 2) + indicator_min,
                values_z_std = (values - indicator_mean) / indicator_sd,
                values_rob_std = (values - indicator_median) / (indicator_iqr + .0001),
                indicator_standardized_values = case_when(
@@ -17140,8 +18293,8 @@ fmir <- fmir %>% group_by(indicator_name) %>%
 # inspect
 fmir 
 fmir %>% glimpse()
-fmir %>% nrow() # 30745
-fmir %>% ncol() # 44
+fmir %>% nrow() # 35604
+fmir %>% ncol() # 48
 
 
 # check indicator_standardized_values
@@ -17233,6 +18386,7 @@ fmir %>% mutate(values_z_std_over_1 = case_when(values_z_std > 1.5 ~ 1,
                   pct_over_1 = num_over_1 / n,
                   num_under_neg_1 = sum(values_z_std_under_neg_1),
                   pct_under_neg_1 = num_under_neg_1 / n)
+
 fmir %>% mutate(values_z_std_over_1 = case_when(values_z_std > 1.5 ~ 1,
                                                 TRUE ~ 0),
                 values_z_std_under_neg_1 = case_when(values_z_std < -1.5 ~ 1,
@@ -17245,6 +18399,7 @@ fmir %>% mutate(values_z_std_over_1 = case_when(values_z_std > 1.5 ~ 1,
                   pct_over_1 = num_over_1 / n,
                   num_under_neg_1 = sum(values_z_std_under_neg_1),
                   pct_under_neg_1 = num_under_neg_1 / n)
+
 fmir %>% ggplot(data = ., mapping = aes(x = values_z_std)) + geom_density() +
         geom_segment(mapping = aes(x = -1.5, xend = -1.5, y = 0, yend = .5), color = "red") +
         geom_segment(mapping = aes(x = 1.5, xend = 1.5, y = 0, yend = .5), color = "red") +
@@ -17255,12 +18410,14 @@ fmir %>% filter(abs(values_z_std) > 1) %>% count(indicator_standardized_values)
 fmir %>% mutate(abs_values_z_std_over_1_flag = case_when(abs(values_z_std) > 1 ~ 1,
                                                            TRUE ~ 0)) %>%
         summarize(pct_abs_values_z_std_over_1 = mean(abs_values_z_std_over_1_flag))
+
 fmir %>% mutate(abs_values_z_std_over_1_flag = case_when(abs(values_z_std) > 1 ~ 1,
                                                            TRUE ~ 0)) %>%
         group_by(indicator_name) %>%
         summarize(pct_abs_values_z_std_over_1 = mean(abs_values_z_std_over_1_flag)) %>%
         ungroup() %>%
         arrange(desc(pct_abs_values_z_std_over_1)) %>% print(n = nrow(.))
+
 fmir %>% mutate(abs_values_z_std_over_1_flag = case_when(abs(values_z_std) > 1 ~ 1,
                                                            TRUE ~ 0)) %>%
         group_by(indicator_name) %>%
@@ -17370,7 +18527,7 @@ fmir %>%
 # practically, this will mean that having the worst scores on high-standard deviation indicators like 3.2 natural gas won't
 # have the same downward drag on a country's score as it did when using normalized indicators that reliably scored 0 for worst country
 # so a country like ukraine that has made improvements in energy over time won't have such a dramatic increase in sub_obj score
-# because the high-standard deviation indicator isnt moving from isv = 0 to isv = 1, but instead maybe isv = .3 to isv = 7
+# because the high-standard deviation indicator isnt moving from isv = 0 to isv = 1, but instead maybe isv = .3 to isv = .7
 # (see plot for ukraine over time below)
 # but this loss in within-country accentuated inv variation is the price for better more legitimate comparisons across sub_obj/obj;
 # the benefit of within-country accentuated inv variation is really an illusion at the aggregate level,
@@ -17508,34 +18665,33 @@ test_standardization()
 # inspect missing values
 # confirm that an NA values is always paired with NA indicator_standardized_values, and vice versa
 # so is.na(values) can stand-in for is.na(indicator_standardized_values)
-fmir %>% filter(is.na(indicator_standardized_values)) %>% nrow() # 4553
+fmir %>% filter(is.na(indicator_standardized_values)) %>% nrow() # 5160
 fmir %>% filter(is.na(values) | is.na(indicator_standardized_values)) %>% 
-        count(values, indicator_standardized_values) # 4367
+        count(values, indicator_standardized_values) # 5160
 
-# inspect indicators with/without 2020 values to consider appropriateness of imputing for 2020
-# 12 of 65 indicators are missing all 2020 (18%)
-fmir %>% count(indicator_name) %>% nrow() # 65
+# inspect indicators with/without 2021 values to consider appropriateness of imputing for 2021
+# 11 of 69 indicators are missing all 2021 (16%)
+fmir %>% count(indicator_name) %>% nrow() # 69
 
-fmir %>% filter(year == 2020) %>% 
-        mutate(na_2020_flag = case_when(is.na(indicator_standardized_values) ~ 1,
+fmir %>% filter(year == 2021) %>% 
+        mutate(na_2021_flag = case_when(is.na(indicator_standardized_values) ~ 1,
                                         TRUE ~ 0)) %>%
-        group_by(indicator_name) %>% mutate(sum_na_2020_flag = sumNA(na_2020_flag)) %>% 
-        ungroup() %>% distinct(indicator_name, sum_na_2020_flag) %>%
-        arrange(desc(sum_na_2020_flag)) %>% print(n = nrow(.))
+        group_by(indicator_name) %>% mutate(sum_na_2021_flag = sumNA(na_2021_flag)) %>% 
+        ungroup() %>% distinct(indicator_name, sum_na_2021_flag) %>%
+        arrange(desc(sum_na_2021_flag)) %>% print(n = nrow(.))
 
-fmir %>% filter(year == 2020) %>% 
-        mutate(na_2020_flag = case_when(is.na(indicator_standardized_values) ~ 1,
+fmir %>% filter(year == 2021) %>% 
+        mutate(na_2021_flag = case_when(is.na(indicator_standardized_values) ~ 1,
                                         TRUE ~ 0)) %>%
-        group_by(indicator_name) %>% mutate(sum_na_2020_flag = sumNA(na_2020_flag)) %>% 
-        ungroup() %>% distinct(indicator_name, sum_na_2020_flag) %>%
-        count(sum_na_2020_flag)
+        group_by(indicator_name) %>% mutate(sum_na_2021_flag = sumNA(na_2021_flag)) %>% 
+        ungroup() %>% distinct(indicator_name, sum_na_2021_flag) %>%
+        count(sum_na_2021_flag)
 
 
 #////////////////////
 
 
-# note that EU-15 is basically the only mcp_grouping that has no non-NA country/year values for an indicator across all years
-# the only other instance is the CARs for sub_obj_3_1_aiddata_esi 
+# note that EU-15 is the only mcp_grouping that has no non-NA country/year values for an indicator across all years
 # Balkans/Eurasia/CARS/grads otherwise all have at least one country/year with valid values for each indicator
 # and so they get at least one valid regional_annual_isv_avg, which can then be filled to other years for that indicator
 # note that AidData MRMI, IREX VIBE, and russian debt only have Montenegro for graduates though, so graduates will all get 
@@ -17566,28 +18722,23 @@ fmir %>%
 #/////////////////
 
 
-# inspect indicators missing some-but-not-all values for 2020
+# inspect indicators missing some-but-not-all values for 2021
 
 # 20 countries across various mcp_groups are missing 2020 sub_obj_3_1_iea_net_energy_imports_as_share_of_tes
-fmir %>% filter(year == 2020, indicator_name == "sub_obj_3_1_iea_net_energy_imports_as_share_of_tes",
+fmir %>% filter(year == 2021, indicator_name == "sub_obj_3_1_iea_net_energy_imports_as_share_of_tes",
                 is.na(values)) %>%
         count(mcp_grouping, country) %>% print(n = nrow(.))
 
 # EU-15 are missing always for Freedom House 
-fmir %>% filter(year == 2020, str_detect(string = indicator_name, pattern = regex("sub_obj_[0-9]_[0-9]_fh_")), is.na(values)) %>%
+fmir %>% filter(year == 2021, str_detect(string = indicator_name, pattern = regex("sub_obj_[0-9]_[0-9]_fh_")), is.na(values)) %>%
         count(mcp_grouping, country)
 
-# world bank exports as % of GDP is missing 2020 values (and some sporadic others) for kazakhstan and turkmenistan 
-fmir %>% filter(year == 2020, indicator_name == "sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp", is.na(values)) %>%
-        count(mcp_grouping, country)
-
-# turkmenstan is missing for 2020 DOTS exports to russia 
-fmir %>% filter(year == 2020, indicator_name == "sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports", 
-                is.na(values)) %>%
+# world bank exports as % of GDP is missing 2021 values (and some sporadic others) for tajikistan and turkmenistan
+fmir %>% filter(year == 2021, indicator_name == "sub_obj_4_1_wb_goods_and_services_exports_as_share_of_gdp", is.na(values)) %>%
         count(mcp_grouping, country)
 
 # kosovo is missing always from legatum
-fmir %>% filter(year == 2020, indicator_name == "sub_obj_4_2_legatum_financing_ecosystem", is.na(values)) %>%
+fmir %>% filter(year == 2021, indicator_name == "sub_obj_4_2_legatum_financing_ecosystem", is.na(values)) %>%
         count(mcp_grouping, country)
 
 
@@ -17791,9 +18942,9 @@ fmir <- fmir %>%
 # inspect
 fmir
 fmir %>% glimpse()
-fmir %>% nrow() # 30745(43 countries * 65 indicators * 11 years)
-fmir %>% ncol() # 59
-fmir %>% count(year) # 11
+fmir %>% nrow() # 35604 (43 countries * 69 indicators * 12 years)
+fmir %>% ncol() # 63
+fmir %>% count(year) # 12
 
 # check missing and imputes
 # note that imputed_flag, non_missing_flag, is.na(values), and is.na(isv_before_imp) 
@@ -17804,11 +18955,11 @@ fmir %>% count(non_missing_flag)
 fmir %>% count(is.na(values))
 fmir %>% count(is.na(indicator_standardized_values_before_imp))
 fmir %>% filter(imputed_flag == 1 | non_missing_flag == 0 | is.na(values) |
-                        is.na(indicator_standardized_values_before_imp)) %>% nrow() # 4553
+                        is.na(indicator_standardized_values_before_imp)) %>% nrow() # 4886
 
 fmir %>% filter(is.na(values)) %>% count(indicator_name) %>% arrange(desc(n))
 fmir %>% filter(is.na(indicator_standardized_values)) %>% nrow() # 0
-fmir %>% count(imputation_condition) %>% arrange(desc(n)) # 3872 + 500 + 123 + 58 == 4553
+fmir %>% count(imputation_condition) %>% arrange(desc(n)) # 4116 + 515 + 140 + 115 == 4886
 fmir %>% 
         filter(is.na(values), imputation_condition == "not_imputed") %>%
         # filter(country == "Hungary", indicator_name == "sub_obj_1_2_fhi_csosi_overall") %>%
@@ -17913,9 +19064,9 @@ fmir %>% filter(year == 2020) %>%
         data.frame() %>%
         identity()
 
-# note there are zero records where overall_annual_isv_avg (excluding 2020)
+# note there are zero records where overall_annual_isv_avg 
 fmir %>% filter(is.na(overall_annual_isv_avg)) %>% count(year)
-fmir %>% filter(year != 2020, is.na(overall_annual_isv_avg)) %>%
+fmir %>% filter(is.na(overall_annual_isv_avg)) %>%
         select(country, year, indicator_name, values, country_isv_avg,
                regional_annual_isv_avg, graduates_annual_isv_avg, overall_annual_isv_avg)
 
@@ -17950,7 +19101,7 @@ fmir %>% filter(is.na(eu_annual_isv_avg), country == "U.S.", year != 2020) %>%
 
 # missing_first
 
-# note that only 4 indicators were missing_first (2 x FDI, CPI, and ext_debt_to_russia)
+# note that only 5 indicators were missing_first (2 x FDI, CPI, ext_debt_to_russia, and icews_focus)
 # CPI had mising_first for all 43 countries since it starts in 2012 
 # FDI and ext_debt indicators had sporadic missing_first for various countries (see fmir_framework missing values column)
 fmir %>% filter(imputation_condition == "missing_first") %>% count(indicator_name) %>% arrange(desc(n))
@@ -17960,12 +19111,15 @@ fmir %>% filter(imputation_condition == "missing_first", mcp_grouping %in% c("E&
         count(country, indicator_name)
 
 fmir %>% 
+        # filter(is.na(values)) %>%
         # filter(imputation_condition == "missing_first") %>%
         # filter(country == "Portugal", indicator_name == "sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi") %>%
         # filter(country == "Tajikistan", indicator_name == "sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi") %>%
         # filter(country == "Belgium", indicator_name == "sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi") %>%
-        filter(country == "Azerbaijan", indicator_name == "sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt") %>%
+        # filter(country == "Azerbaijan", indicator_name == "sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt") %>%
         # filter(country == "N. Macedonia", indicator_name == "cross_cutting_obj_ti_cpi") %>%
+        filter(country == "Albania") %>%
+        filter(indicator_name == "sub_obj_2_1_icews_russian_state_media_focus") %>%
         select(country, mcp_grouping, year, indicator_name,
                values, indicator_standardized_values_before_imp, indicator_standardized_values, non_missing_flag, 
                imputation_condition,
@@ -18178,7 +19332,7 @@ test_imputations()
 #///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# add concept_avg
+# add concept_avg ####
 fmir <- fmir %>% group_by(country, year, concept) %>% mutate(concept_avg = mean(indicator_standardized_values, na.rm = TRUE)) %>%
         ungroup()
 
@@ -18189,8 +19343,8 @@ fmir <- fmir %>% group_by(country, year, concept) %>% mutate(concept_avg = mean(
 # inspect
 fmir 
 fmir %>% glimpse()
-fmir %>% nrow() # 30745
-fmir %>% ncol() # 60
+fmir %>% nrow() # 35604
+fmir %>% ncol() # 64
 
 # check country/year
 fmir %>% count(country) %>% nrow() # 43
@@ -18226,8 +19380,8 @@ fmir <- fmir %>% distinct(country, year, sub_obj_num, concept, concept_avg) %>%
 # inspect
 fmir 
 fmir %>% glimpse()
-fmir %>% nrow() # 30745
-fmir %>% ncol() # 61
+fmir %>% nrow() # 35604
+fmir %>% ncol() # 65
 
 # check country/year
 fmir %>% count(country) %>% nrow() # 43
@@ -18266,8 +19420,8 @@ fmir <- fmir %>% distinct(country, year, obj_num, sub_obj_num, sub_obj_avg) %>%
 # inspect
 fmir
 fmir %>% glimpse()
-fmir %>% nrow() # 30745
-fmir %>% ncol() # 62
+fmir %>% nrow() # 35604
+fmir %>% ncol() # 66
 
 # check country/year
 fmir %>% count(country) %>% nrow() # 43
@@ -18303,8 +19457,8 @@ fmir <- fmir %>% distinct(country, year, obj_num, obj_avg) %>%
 # inspect
 fmir
 fmir %>% glimpse()
-fmir %>% nrow() # 30745
-fmir %>% ncol() # 63
+fmir %>% nrow() # 35604
+fmir %>% ncol() # 67
 
 # check country/year
 fmir %>% count(country) %>% nrow() # 43
@@ -18331,14 +19485,16 @@ fmir %>% skim(miri_avg)
 
 
 # read/write fmir ####
-# fmir %>% write_csv(file = "data/fmir/fmir_20220307.csv")
-fmir <- read.csv(file = "data/fmir/fmir_20220307.csv") %>% as_tibble()
+
+# fmir %>% write.xlsx(file = "data/fmir/fmir_20230217.xlsx")
+fmir <- read_excel(path = "data/fmir/fmir_20230217.xlsx")
+
 
 # inspect
 fmir 
 fmir %>% glimpse()
-fmir %>% nrow() # 30745
-fmir %>% ncol() # 63
+fmir %>% nrow() # 35604
+fmir %>% ncol() # 67
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18347,18 +19503,275 @@ fmir %>% ncol() # 63
 
 
 # read/write ri_data ####
-# fmir %>% select(country, mcp_grouping, year, obj, obj_short_name, obj_num,
-#                 sub_obj, sub_obj_short_name, sub_obj_num, concept, indicator_name,
-#                 description, data_documentation, data_source, high_value_is_good_outcome_flag, imputation_condition,
-#                 values, values_z_std, indicator_standardized_values, concept_avg, sub_obj_avg, obj_avg, miri_avg) %>%
-#         rename(ri_avg = miri_avg) %>% write_csv(file = "data/fmir/ri_data_20220307.csv")
-ri_data <- read.csv(file = "data/fmir/ri_data_20220307.csv") %>% as_tibble()
+fmir %>% select(country, mcp_grouping, year, obj, obj_short_name, obj_num,
+                sub_obj, sub_obj_short_name, sub_obj_num, concept, indicator_name,
+                description, data_documentation, data_source, high_value_is_good_outcome_flag,
+                values, indicator_standardized_values, concept_avg, sub_obj_avg, obj_avg, miri_avg) %>%
+        rename(regional_grouping = mcp_grouping, indicator_raw_values = values,
+               high_indicator_raw_value_is_good_outcome_flag = high_value_is_good_outcome_flag) %>%
+        # mutate(sub_obj_short_name = case_when(sub_obj_short_name == "Trusted media and information" ~ 
+        #                                               "Trust in media",
+        #                                         TRUE ~ sub_obj_short_name)) %>%
+        write.xlsx(file = "data/fmir/fmir_data_20230217.xlsx", sheetName = "data")
+fmir_data <- read_excel(path = "data/fmir/fmir_data_20230217.xlsx", sheet = "data")
 
 # inspect
-ri_data
-ri_data %>% glimpse()
-ri_data %>% nrow() # 30745
-ri_data %>% ncol() # 23
+fmir_data
+fmir_data %>% glimpse()
+fmir_data %>% nrow() # 30272
+fmir_data %>% ncol() # 21
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write ri_obj_data ####
+fmir %>% distinct(country, mcp_grouping, year, obj_short_name, obj_num, obj_avg, miri_avg) %>%
+        select(country, mcp_grouping, year, obj_short_name, obj_num, obj_avg, miri_avg) %>%
+        pivot_longer(cols = c(miri_avg, obj_avg), names_to = "obj_type", values_to = "obj_avg") %>%
+        mutate(obj_short_name = case_when(obj_type == "miri_avg" ~ "Resilience Index",
+                                          TRUE ~ obj_short_name)) %>%
+        select(country, mcp_grouping, year, obj_short_name, obj_avg) %>%
+        distinct() %>%
+        pivot_wider(id_cols = c(country, mcp_grouping, year), 
+                    names_from = obj_short_name,
+                    values_from = obj_avg) %>%
+        # write_csv(file = "data/fmir/ri_obj_data_20220307.csv")
+        write.xlsx(file = "data/fmir/ri_obj_data_20220307.xlsx")
+
+ri_obj_data <- read_excel(path = "data/fmir/ri_obj_data_20220307.xlsx") %>% as_tibble()
+
+# inspect
+ri_obj_data
+ri_obj_data %>% glimpse()
+ri_obj_data %>% nrow() # 473 (43 countries * 11 years)
+ri_obj_data %>% ncol() # 9
+
+# check
+expect_equal(object = ri_obj_data %>% 
+                     rowwise() %>%
+                     mutate(ri_avg = mean(c_across(cols = tidyselect::matches(match = "resilience", 
+                                                                              ignore.case = TRUE))),,
+                            ri_avg_rounded = round(ri_avg, digits = 3),
+                            resilience_index_rounded = round(`Resilience Index`, digits = 3),
+                            ri_avg_match_flag = case_when(ri_avg_rounded == resilience_index_rounded ~ 1,
+                                                          TRUE ~ 0)) %>% 
+                     select(-c(`Democratic resilience`, 
+                               `Information resilience`,
+                               `Energy resilience`,
+                               `Economic resilience`,
+                               `Corruption resilience`)) %>%
+                     distinct(ri_avg_match_flag) %>% pull(ri_avg_match_flag),
+             expected = 1)
+             
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write ri_data_long ####
+
+# get fmir_indicator_long
+fmir_indicator_long <- fmir %>% select(country, year, mcp_grouping, indicator_name, 
+                                       # high_value_is_good_outcome_flag, values, imputation_condition, imputed_flag
+                                       indicator_standardized_values) %>%
+        # pivot_longer(cols = c(values, indicator_standardized_values),
+        #              names_to = "var_type", values_to = "var_values") %>%
+        pivot_longer(cols = c(indicator_standardized_values),
+                     names_to = "var_type", values_to = "var_values") %>%
+        rename(var_name = indicator_name) %>%
+        relocate(var_type, .before = var_name) %>%
+        relocate(var_values, .after = var_name) %>%
+        mutate(var_name = str_replace(string = var_name, pattern = regex("^sub_obj_", ignore_case = TRUE), 
+                                      replacement = "indicator_"))
+
+
+#////////////////////
+
+
+# inspect
+fmir_indicator_long 
+fmir_indicator_long %>% glimpse()
+fmir_indicator_long %>% nrow() # 30745 (43 countries * 11 years * 65 indicators * 1 var_types)
+fmir_indicator_long %>% ncol() # 6
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get fmir_concept_long
+fmir_concept_long <- fmir %>%
+        distinct(country, year, mcp_grouping, sub_obj_num, concept, concept_avg) %>%
+        rename(var_name = concept, 
+               var_values = concept_avg) %>%
+        unite(col = "var_name", sub_obj_num, var_name, sep = " ") %>%
+        mutate(var_type = "concept_avg",
+               var_name = str_replace(string = var_name, pattern = regex("^sub_obj_", ignore_case = TRUE), 
+                                      replacement = "concept_")) %>%
+        select(country, year, mcp_grouping, var_type, var_name, var_values)
+        # mutate(high_value_is_good_outcome_flag = 1,
+        #        imputed_flag = 0,
+        #        imputation_condition = "not_imputed")
+        
+
+#////////////////////
+
+
+# inspect
+fmir_concept_long
+fmir_concept_long %>% glimpse()
+fmir_concept_long %>% nrow() # 8987 (43 countries * 11 years * 19 concepts)
+fmir_concept_long %>% ncol() # 6
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get fmir_sub_obj_long
+fmir_sub_obj_long <- fmir %>%
+        distinct(country, year, mcp_grouping, sub_obj_short_name, sub_obj_avg) %>%
+        rename(var_name = sub_obj_short_name, var_values = sub_obj_avg) %>%
+        mutate(var_type = "sub_obj_avg") %>%
+        select(country, year, mcp_grouping, var_type, var_name, var_values)
+        # mutate(high_value_is_good_outcome_flag = 1,
+        #        imputed_flag = 0,
+        #        imputation_condition = "not_imputed")
+
+
+#////////////////////      
+
+
+# inspect
+fmir_sub_obj_long 
+fmir_sub_obj_long %>% glimpse()
+fmir_sub_obj_long %>% nrow() # 5676 (43 countries * 11 years * 12 sub_obj)
+fmir_sub_obj_long %>% ncol() # 6
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get fmir_obj_long
+fmir_obj_long <- fmir %>%
+        distinct(country, year, mcp_grouping, obj_short_name, obj_avg) %>%
+        rename(var_name = obj_short_name, var_values = obj_avg) %>%
+        mutate(var_type = "obj_avg") %>%
+        select(country, year, mcp_grouping, var_type, var_name, var_values)
+        # mutate(high_value_is_good_outcome_flag = 1,
+        #        imputed_flag = 0,
+        #        imputation_condition = "not_imputed")
+
+
+#////////////////////      
+
+
+# inspect
+fmir_obj_long 
+fmir_obj_long %>% glimpse()
+fmir_obj_long %>% nrow() # 2365 (43 countries * 11 years * 5 obj)
+fmir_obj_long %>% ncol() # 9
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get fmir_index_long
+fmir_index_long <- fmir %>%
+        distinct(country, year, mcp_grouping, miri_avg) %>%
+        mutate(miri_short_name = "FMI Resilience Index") %>%
+        rename(var_name = miri_short_name, var_values = miri_avg) %>%
+        mutate(var_type = "miri_avg") %>%
+        select(country, year, mcp_grouping, var_type, var_name, var_values)
+        # mutate(high_value_is_good_outcome_flag = 1,
+        #        imputed_flag = 0,
+        #        imputation_condition = "not_imputed")
+
+
+#////////////////////      
+
+
+# inspect
+fmir_index_long 
+fmir_index_long %>% glimpse()
+fmir_index_long %>% nrow() # 473 (43 countries * 11 years)
+fmir_index_long %>% ncol() # 9
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# combine and save
+fmir_indicator_long %>% 
+        bind_rows(., fmir_concept_long) %>%
+        bind_rows(., fmir_sub_obj_long) %>%
+        bind_rows(., fmir_obj_long) %>%
+        bind_rows(., fmir_index_long) %>%
+        write.xlsx(file = "data/fmir/ri_data_long_20220307.xlsx")
+
+fmir_long <- read_excel(path = "data/fmir/ri_data_long_20220307.xlsx") %>% as_tibble()
+
+# inspect
+fmir_long
+fmir_long %>% glimpse()
+fmir_long %>% nrow() # 48246
+fmir_long %>% ncol() # 9
+
+fmir_long %>% count(var_name) %>% print(n = nrow(.))
+fmir_long %>% count(var_type)
+
+# check
+expect_equal(object = sum(fmir_indicator_long %>% nrow(), 
+                          fmir_concept_long %>% nrow(),
+                          fmir_sub_obj_long %>% nrow(),
+                          fmir_obj_long %>% nrow(),
+                          fmir_index_long %>% nrow()),
+             expected = fmir_long %>% nrow())
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read/write ri_data_wide ####
+
+# get ri_data_wide
+ri_data_wide <- fmir %>% distinct(country, mcp_grouping, year, miri_avg) %>%
+        mutate(miri_short_name = "Resilience Index") %>%
+        pivot_wider(id_cols = c(country, mcp_grouping, year), names_from = miri_short_name, values_from = miri_avg) %>%
+        left_join(., fmir %>% distinct(country, mcp_grouping, year, obj_short_name, obj_avg) %>%
+                          mutate(obj_short_name = str_c("Obj: ", obj_short_name)) %>%
+                          pivot_wider(id_cols = c(country, mcp_grouping, year), names_from = obj_short_name, values_from = obj_avg),
+                  by = c("country", "mcp_grouping", "year")) %>%
+        left_join(., fmir %>% distinct(country, mcp_grouping, year, sub_obj_short_name, sub_obj_avg) %>%
+                          mutate(sub_obj_short_name = str_c("Sub-obj: ", sub_obj_short_name)) %>%
+                          pivot_wider(id_cols = c(country, mcp_grouping, year), names_from = sub_obj_short_name, values_from = sub_obj_avg),
+                  by = c("country", "mcp_grouping", "year")) %>%
+        left_join(., fmir %>% distinct(country, mcp_grouping, year, concept, concept_avg) %>%
+                          mutate(concept = str_c("Concept: ", concept)) %>%
+                          pivot_wider(id_cols = c(country, mcp_grouping, year), names_from = concept, values_from = concept_avg),
+                  by = c("country", "mcp_grouping", "year")) %>%
+        left_join(., fmir %>% select(country, mcp_grouping, year, indicator_name, indicator_standardized_values) %>%
+                          pivot_wider(id_cols = c(country, mcp_grouping, year), 
+                                      names_from = indicator_name, values_from = indicator_standardized_values),
+                  by = c("country", "mcp_grouping", "year")) 
+
+# read/write
+ri_data_wide %>% write.xlsx(file = "data/fmir/ri_data_wide_20220307.xlsx")
+ri_data_wide <- read_excel(path = "data/fmir/ri_data_wide_20220307.xlsx")
+
+
+#///////////////////
+
+
+# inspect
+
+ri_data_wide
+ri_data_wide %>% glimpse()
+ri_data_wide %>% nrow() # 473 (43 countries * 11 years)
+ri_data_wide %>% ncol() # 105
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18367,20 +19780,21 @@ ri_data %>% ncol() # 23
 
 
 # compare current version of fmir to previous version of fmir ####
-previous_fmir <- read_csv("data/fmir/historic/fmir_20210907.csv")
+
+previous_fmir <- read_excel(path = "data/fmir/previous_fmir_20221012.xlsx")
 
 # inspect previous_fmir
 previous_fmir %>% glimpse()
-previous_fmir %>% nrow() # 21285
-previous_fmir %>% ncol() # 61
-previous_fmir %>% count(indicator_name) # 43
-previous_fmir %>% count(country) # 45
+previous_fmir %>% nrow() # 30272
+previous_fmir %>% ncol() # 66
+previous_fmir %>% count(indicator_name) # 64
+previous_fmir %>% count(country) # 43
 
 # inspect fmir
 fmir %>% glimpse()
-fmir %>% nrow() # 27907
-fmir %>% ncol() # 54
-fmir %>% count(indicator_name) # 58
+fmir %>% nrow() # 34572
+fmir %>% ncol() # 71
+fmir %>% count(indicator_name) # 67
 fmir %>% count(country) # 43
 
 
@@ -18390,72 +19804,89 @@ fmir %>% count(country) # 43
 # compare indicator_standardized_values for those indicators in both datasets
 fmir_comparison <- previous_fmir %>% 
         select(country, year, obj_num, sub_obj_num, indicator_name, 
-               values, indicator_standardized_values, sub_obj_weighted_avg, obj_avg) %>%
+               values, indicator_standardized_values, sub_obj_avg, obj_avg, miri_avg) %>%
         rename(previous_values = values,
-               previous_inv = indicator_standardized_values,
-               previous_sub_obj_avg = sub_obj_weighted_avg,
-               previous_obj_avg = obj_avg) %>% 
-        left_join(fmir %>% select(country, year, obj_num, indicator_name, values, indicator_standardized_values,
-                                  sub_obj_avg, obj_avg), ., by = c("country", "year", "obj_num", "indicator_name")) %>%
+               previous_isv = indicator_standardized_values,
+               previous_sub_obj_avg = sub_obj_avg,
+               previous_obj_avg = obj_avg,
+               previous_miri_avg = miri_avg) %>% 
+        left_join(fmir %>% select(country, year, obj_num, sub_obj_num, indicator_name, values, indicator_standardized_values,
+                                  sub_obj_avg, obj_avg, miri_avg), ., by = c("country", "year", "obj_num", "sub_obj_num", "indicator_name")) %>%
         mutate(diff_values = abs(values - previous_values),
-               diff_inv = abs(indicator_standardized_values - previous_inv),
+               diff_isv = abs(indicator_standardized_values - previous_isv),
                diff_sub_obj_avg = abs(sub_obj_avg - previous_sub_obj_avg),
-               diff_obj_avg = abs(obj_avg - previous_obj_avg)) %>%
-        select(country, year, obj_num, indicator_name, 
+               diff_obj_avg = abs(obj_avg - previous_obj_avg),
+               diff_miri_avg = abs(miri_avg - previous_miri_avg)) %>%
+        select(country, year, obj_num, sub_obj_num, indicator_name, 
                values, previous_values, diff_values,
-               indicator_standardized_values, previous_inv, diff_inv,
+               indicator_standardized_values, previous_isv, diff_isv,
                sub_obj_avg, previous_sub_obj_avg, diff_sub_obj_avg,
-               obj_avg, previous_obj_avg, diff_obj_avg)
+               obj_avg, previous_obj_avg, diff_obj_avg,
+               miri_avg, previous_miri_avg, diff_miri_avg)
 
 
 #/////////////////////////////
 
 
-# inspect diffs
+# inspect
+fmir_comparison
+fmir_comparison %>% glimpse()
 
-# note that all 8041 records with NA diff_inv/sub_obj/obj are for newly added indicators, 
-# so they didn't join to anything from previous_fmir
-# so these will be dropped for clarity since there is no inv comparison to be made, 
-# note that dropping these newly added indicators will still leave
-# records containing the sub_obj_avg and obj_avg so they can be compared
-# note that there are additional records with NA diff_values that are caused by 
-fmir_comparison %>% skim(diff_values, diff_inv, diff_sub_obj_avg, diff_obj_avg)
-fmir_comparison %>% filter(is.na(diff_inv) | is.na(diff_sub_obj_avg) | is.na(diff_obj_avg)) %>%
-        count(indicator_name)
-fmir_comparison %>% filter(is.na(diff_inv) | is.na(diff_sub_obj_avg) | is.na(diff_obj_avg)) %>% nrow() # 8041
-fmir_comparison %>% filter(is.na(diff_sub_obj_avg) | is.na(diff_obj_avg)) %>% nrow() # 8041
-fmir_comparison %>% filter(is.na(diff_inv)) %>% nrow() # 8041
+
+#/////////////////////////
+
+
+# compare charts
+
+current_indicator_name <- "sub_obj_1_3_vdem_foreign_gov_dissem_false_info"
+
+
+fmir %>%
+        filter(indicator_name == current_indicator_name) %>%
+        # filter(country == "Georgia") %>%
+        # filter(country == "Moldova") %>%
+        select(country, mcp_grouping, year, values, indicator_standardized_values) %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
+        # filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country)) + geom_line(size = 1)
+
+
+previous_fmir %>%
+        filter(indicator_name == current_indicator_name) %>%
+        # filter(country == "Georgia") %>%
+        # filter(country == "Moldova") %>%
+        select(country, mcp_grouping, year, values, indicator_standardized_values) %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping == "E&E graduates") %>%
+        # filter(mcp_grouping == "CARs") %>%
+        # filter(mcp_grouping == "EU-15") %>%
+        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country)) + geom_line(size = 1)
 
 
 #//////////////////////////////
 
 
-# inspect records with NA diff_values, but non-NA diff_inv to see cases where one dataset had a value and the other didn't
-# exclude those that have NA diff_values only because they have NAs for both values and previous_values 
-# (e.g. kosovo records missing data for both)
-# note that many of these are just indicators getting 2020 updates, so new fmir had non-NA values but previous_fmir had NA values
+# inspect diffs
 
-# note for sub_obj_1_3_icews_socio_political_hostility_from_russia, new fmir decided to drop 2020 values since it was partial year
-# also new fmir decided to treat lack of records as a zero value instead of an NA value (actually .01 to avoid log(0) = Inf), 
-# so in new fmir they have value = -4.61 which is log(.01), but previous_fmir have NA values
+fmir_comparison
+fmir_comparison %>% glimpse()
 
-# note for sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi, its just 4 records for kosovo because new fmir
-# decided to leave as NA, but previous_fmir manually added zeroes where kosovo is sporadically lacking record in raw CDIS;
-# the decision to leave kosovo gaps as NA is very minor, because they got imputed with kosovo's avg, which is effectively zero
-# it was just a case where a manual adjustment could be avoided with negligible impact, so why not
-
-# note for sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports, it's same issue; just one record for kosovo because new fmir
-# decided to leave as NA, but previous_fmir manually added zeroes where kosovo is sporadically lacking record in raw CDIS;
-# the decision to leave kosovo gaps as NA is very minor, because they got imputed with kosovo's avg, which is effectively zero
-# it was just a case where a manual adjustment could be avoided with negligible impact, so why not
-fmir_comparison %>% filter(is.na(diff_values), !is.na(diff_inv),
-                           !(is.na(values) & is.na(previous_values))) %>% 
-        # count(indicator_name, year) %>% arrange(desc(n)) %>%
-        # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_from_russia", year != 2020) %>%
-        # filter(indicator_name == "sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi") %>%
-        filter(indicator_name == "sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports") %>%
-        # print(n = nrow(.))
-        identity()
+# note that all pre-2021 records with NA diff_inv/sub_obj/obj are for newly added indicators, 
+# so they didn't join to anything from previous_fmir
+# so these will be dropped for clarity since there is no inv comparison to be made, 
+# note that dropping these newly added indicators will still leave
+# records containing the sub_obj_avg and obj_avg so they can be compared
+# note that there are additional records with NA diff_values that are caused by 
+fmir_comparison %>% skim(diff_values, diff_isv, diff_sub_obj_avg, diff_obj_avg)
+fmir_comparison %>% 
+        filter(is.na(diff_isv) | is.na(diff_sub_obj_avg) | is.na(diff_obj_avg) | is.na(diff_miri_avg)) %>%
+        filter(year <= 2020) %>%
+        count(indicator_name) %>% 
+        arrange(desc(n)) %>% print(n = nrow(.))
 
 
 #/////////////////////////
@@ -18463,41 +19894,44 @@ fmir_comparison %>% filter(is.na(diff_values), !is.na(diff_inv),
 
 # inspect diff_values
 
-# note that p75 for diff_values is 0, so diff_values are relatively rare
 
-# note there are 11 indicators with non-zero non-NA diff_values
-# note that freedom house, bti, and legatum account for 8 of these 11, and 
-# these diff_values are due to backshifting years correction
+# note that MSI/IREX for the CARs have high diff_isv for recent years because their VIBE no longer is imputed
 
-# note i also manually confirmed that legatum 2020 report year has significantly different values than 2021 report year as
-# far back as 2010 (see georgia values for 2010), that that can explain diff for legatum; they must have updated data/methodology
+# note there is a lot of change for RISE scores - not sure if they updated their indicator, or maybe i updated methodology to rank based globally
+# but the current methodology is correct
 
-# note that for records where diff_values > .10, it's mostly legatum, icews_1_3
+# aiddata_esi is very different, but they updated their methodology
 
-# note for sub_obj_1_3_icews_socio_political_hostility_from_russia, there's lots of records with significant diff, which is
-# due to new fmir deciding to use log(normalized_story_id_count); but the diff_inv for these is low (p75 is .04)
+# eu_fdi is different, but i updated to eu_27 from eu_15
 
-# note for sub_obj_1_1_wgi_rule_of_law, the diff is due to world bank making small updates to data/method
-# the diff_values aren't huge; and diff_inv is relatively small (p75 is .05)
+# serbia csto_membership is updated to .5
 
-# note for cross_cutting_obj_wgi_control_of_corruption, the diff is due to world bank making small updates to data/method
-# the diff_values aren't huge; and diff_inv is relatively small (p75 is .056)
-fmir_comparison %>% skim(diff_values, diff_inv, diff_sub_obj_avg, diff_obj_avg)
+
+fmir_comparison %>% skim(diff_values, diff_isv, diff_sub_obj_avg, diff_obj_avg, diff_miri_avg)
 fmir_comparison %>% filter(!is.na(diff_values), diff_values != 0) %>% 
-        arrange(desc(diff_values)) %>%
-        # arrange(diff_values) %>%
+        # arrange(desc(diff_isv)) %>%
+        arrange(diff_values) %>%
         select(country, year, indicator_name, 
                values, previous_values, diff_values,
-               indicator_standardized_values, previous_inv, diff_inv,
+               indicator_standardized_values, previous_isv, diff_isv,
                # sub_obj_avg, previous_sub_obj_avg, diff_sub_obj_avg,
                # obj_avg, previous_obj_avg, diff_obj_avg
         ) %>%
+        filter(!(indicator_name %in% c("sub_obj_3_3_rise_energy_efficiency_regulation_rank", 
+                                       "sub_obj_2_2_msi_plurality_of_news",
+                                       "sub_obj_2_3_msi_freedom_of_speech",
+                                       "sub_obj_2_1_msi_professional_journalism",
+                                       "sub_obj_2_2_msi_business_management",
+                                       "sub_obj_1_3_csto_membership",
+                                       "sub_obj_3_1_aiddata_esi",
+                                       "sub_obj_4_1_dots_exports_to_eu_as_share_of_total_exports",
+                                       "sub_obj_4_1_cdis_eu_fdi_as_share_of_total_fdi"))) %>%
         # count(indicator_name)
-        filter(diff_values > .10) %>% count(indicator_name) %>% arrange(desc(n))
+        # filter(diff_values > .10) %>% count(indicator_name) %>% arrange(desc(n))
         # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_from_russia") %>%
         # filter(indicator_name == "sub_obj_1_1_wgi_rule_of_law") %>%
         # filter(indicator_name == "cross_cutting_obj_wgi_control_of_corruption") %>%
-        # print(n = 50)
+        distinct() %>% print(n = 50)
         # skim(diff_values)
         # skim(diff_inv)
         ggplot(data = ., mapping = aes(x = diff_values)) + stat_ecdf()
@@ -18506,35 +19940,25 @@ fmir_comparison %>% filter(!is.na(diff_values), diff_values != 0) %>%
 #/////////////////////////
 
 
-# inspect diff_inv
+# inspect diff_isv
 
-# note there are 11 indicators with non-zero non-NA diff_inv (these are the same 11 as had diff_values)
-# note that freedom house, bti, and legatum account for 8 of these 11, and 
-# these diff_inv are in part due to backshifting years correction
-        
-# note that new fmir decided to not trim top/bottom 5% of values, so new inv shifts toward .5 away from extremes
-# note that because of this methodology change, the inspection below excludes records where diff_values = 0
-# eg there are many vdem indicators with same exact values, but different inv, which is due to new method of not trimming top/bottom
-        
-# note that p50 is .04, p75 for diff_inv is .08, so still relatively minor;        
 
-# note that for records where diff_inv > .10, it's almost all legatum, icews_1_3, and bti
-
-# note i also manually confirmed that legatum 2020 report year has significantly different values than 2021 report year as
-# far back as 2010 (see georgia values for 2010), that that can explain diff for legatum; they must have updated data/methodology
-
-fmir_comparison %>% skim(diff_values, diff_inv, diff_sub_obj_avg, diff_obj_avg)
-fmir_comparison %>% filter(!is.na(diff_inv), diff_inv != 0, diff_values != 0) %>% 
-        arrange(desc(diff_inv)) %>%
+fmir_comparison %>% skim(diff_values, diff_isv, diff_sub_obj_avg, diff_obj_avg)
+fmir_comparison %>% 
+        # filter(!is.na(diff_isv), diff_isv != 0, diff_values != 0) %>% 
+        arrange(desc(diff_isv)) %>%
         # arrange(diff_inv) %>%
         select(country, year, indicator_name, 
                values, previous_values,
-               indicator_standardized_values, previous_inv, diff_inv,
+               indicator_standardized_values, previous_isv, diff_isv,
                # sub_obj_avg, previous_sub_obj_avg, diff_sub_obj_avg,
                # obj_avg, previous_obj_avg, diff_obj_avg
         ) %>%
+        filter(country == "Georgia") %>%
         # count(indicator_name)
-        filter(diff_inv > .10) %>% count(indicator_name) %>% arrange(desc(n))
+        # filter(diff_inv > .10) %>% count(indicator_name) %>% arrange(desc(n))
+        filter(indicator_name == "sub_obj_3_3_rise_energy_efficiency_regulation_rank") %>%
+        # filter(indicator_name == "sub_obj_3_3_rise_renewable_energy_regulation_rank") %>%
         # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_from_russia") %>%
         # print(n = 400)
         # ggplot(data = ., mapping = aes(x = diff_inv)) + stat_ecdf()
@@ -18545,36 +19969,22 @@ fmir_comparison %>% filter(!is.na(diff_inv), diff_inv != 0, diff_values != 0) %>
 
 # inspect diff_sub_obj_avg
 
-# note there are 11 indicators with non-zero non-NA diff_inv (these are the same 11 as had diff_values)
-# note that freedom house, bti, and legatum account for 8 of these 11, and 
-# these diff_inv are in part due to backshifting years correction
-
-# note that new fmir decided to not trim top/bottom 5% of values, so new inv shifts toward .5 away from extremes
-# note that because of this methodology change, the inspection below excludes records where diff_values = 0
-# eg there are many vdem indicators with same exact values, but different inv, which is due to new method of not trimming top/bottom
-
-# note that p50 is .04, p75 for diff_inv is .085, so relatively minor;        
-
-# note that for records where diff_inv > .10, it's mostly wgi_corruption, legatum
-
-# note i also manually confirmed that legatum 2020 report year has significantly different values than 2021 report year as
-# far back as 2010 (see georgia values for 2010), that that can explain diff for legatum; they must have updated data/methodology
-
-# note that wgi_corruption has the largest diff_sub_obj_avg because turkmenistan was a huge outlier that had been trimmed
-# so now countries like azerbaijan that previously had like .03 inv now have like .31 inv
-
 fmir_comparison %>% skim(diff_values, diff_inv, diff_sub_obj_avg, diff_obj_avg)
-fmir_comparison %>% filter(!is.na(diff_sub_obj_avg), diff_sub_obj_avg != 0, diff_values != 0) %>% 
+fmir_comparison %>% 
+        # filter(!is.na(diff_sub_obj_avg), diff_sub_obj_avg != 0, diff_values != 0) %>% 
         arrange(desc(diff_sub_obj_avg)) %>%
         # arrange(diff_sub_obj_avg) %>%
         select(country, year, indicator_name, 
+               sub_obj_num,
                values, previous_values,
-               # indicator_standardized_values, previous_inv, 
-               diff_inv,
+               indicator_standardized_values, previous_isv,
+               diff_values, diff_isv,
                sub_obj_avg, previous_sub_obj_avg, diff_sub_obj_avg,
                # obj_avg, previous_obj_avg, diff_obj_avg
         ) %>%
         # count(indicator_name)
+        filter(sub_obj_num == "sub_obj_2_2") %>%
+        filter(country == "Armenia") %>%
         # filter(diff_sub_obj_avg > .10) %>% count(indicator_name) %>% arrange(desc(n))
         # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_from_russia") %>%
         print(n = 400)
@@ -18586,23 +19996,6 @@ fmir_comparison %>% filter(!is.na(diff_sub_obj_avg), diff_sub_obj_avg != 0, diff
 
 # inspect diff_obj_avg
 
-# note there are 11 indicators with non-zero non-NA diff_inv (these are the same 11 as had diff_values)
-# note that freedom house, bti, and legatum account for 8 of these 11, and 
-# these diff_inv are in part due to backshifting years correction
-
-# note that new fmir decided to not trim top/bottom 5% of values, so new inv shifts toward .5 away from extremes
-# note that because of this methodology change, the inspection below excludes records where diff_values = 0
-# eg there are many vdem indicators with same exact values, but different inv, which is due to new method of not trimming top/bottom
-
-# note that p50 is .04, p75 for diff_inv is .08, so relatively minor;        
-
-# note that for records where diff_inv > .10, it's mostly wgi_corruption, legatum
-
-# note i also manually confirmed that legatum 2020 report year has significantly different values than 2021 report year as
-# far back as 2010 (see georgia values for 2010), that that can explain diff for legatum; they must have updated data/methodology
-
-# note that wgi_corruption has the largest diff_sub_obj_avg because turkmenistan was a huge outlier that had been trimmed
-# so now countries like azerbaijan that previously had like .03 inv now have like .31 inv
 
 fmir_comparison %>% skim(diff_values, diff_inv, diff_sub_obj_avg, diff_obj_avg)
 fmir_comparison %>% filter(!is.na(diff_obj_avg), diff_obj_avg != 0, diff_values != 0) %>% 
@@ -18678,10 +20071,10 @@ diff_obj_avg %>% filter(abs_diff_obj_avg > .1) %>% count(country, obj_num) %>% a
 
 # check high-level findings for factsheet ####
 
-# "best performers" at miri_avg in 2020
-# currently: Kosovo, N. Macedonia, Albania, Georgia are best performers
-# previously: kosovo is now # 1 performer, but was # 5 before; the other top countries are same
-fmir %>% filter(year == 2020,
+# "best performers" at miri_avg 
+# currently in 2021: Georgia, Albania, kosovo, macedonia are best performers
+# previously in 2020: Kosovo, N. Macedonia, Albania, Georgia are best performers
+fmir %>% filter(year == 2021,
                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% 
         distinct(country, year, miri_avg) %>% arrange(desc(miri_avg))
 
@@ -18700,7 +20093,7 @@ previous_fmir %>% filter(year == 2020,
 # "worst performers" at miri_avg in 2020
 # currently: belarus, azerbaijan are worst performers
 # previously, moldova was #3, but is now a very close #5
-fmir %>% filter(year == 2020,
+fmir %>% filter(year == 2021,
                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% 
         distinct(country, year, miri_avg) %>% arrange(miri_avg)
 
@@ -18719,13 +20112,16 @@ previous_fmir %>% filter(year == 2020,
 # "greatest vulnerability" in 2020
 # currently: corruption is still by far the greatest vulnerability
 # previously, it was the same
-fmir %>% filter(year == 2020,
+fmir %>% filter(year == 2021,
                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
         distinct(country, year, obj_num, obj_avg) %>% 
         group_by(obj_num) %>% mutate(obj_avg_mean = mean(obj_avg, na.rm = TRUE)) %>%
         ungroup() %>%
         distinct(obj_num, year, obj_avg_mean) %>%
-        arrange(obj_avg_mean)
+        arrange(obj_avg_mean) %>%
+        
+        ggplot(data = ., mapping = aes(x = fct_reorder(.f = obj_num, .x = obj_avg_mean, .desc = FALSE), y = obj_avg_mean)) +
+        geom_col()
 
 previous_fmir %>% filter(year == 2020,
                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
@@ -18749,7 +20145,7 @@ fmir %>%
                                    obj_num == "obj_3" ~ "Obj. 3: Energy",
                                    obj_num == "obj_4" ~ "Obj. 4: Economic",
                                    obj_num == "obj_c" ~ "  Cross-cutting obj.: Corruption")) %>%
-        pivot_wider(id_cols = -c(obj_num, obj_avg), names_from = "obj_num", values_from = "obj_avg") %>%
+        pivot_wider(names_from = "obj_num", values_from = "obj_avg") %>%
         select(-c(country, year)) %>%
         cor() %>%
         # correlate() %>%
@@ -18779,11 +20175,11 @@ previous_fmir %>%
 # "most improved" from 2010 to 2020
 # currently: ukraine is most improved
 # previously: georgia was improved; note georgia's improvement was negatively impacted by lower corruption score in current version
-fmir %>% filter(year == 2010 | year == 2020,
+fmir %>% filter(year == 2010 | year == 2021,
                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
         distinct(country, year, miri_avg) %>%
         pivot_wider(id_cols = country, names_from = year, values_from = miri_avg) %>%
-        mutate(diff = `2020` - `2010`) %>% 
+        mutate(diff = `2021` - `2010`) %>% 
         arrange(desc(diff))
 
 previous_fmir %>% filter(year == 2010 | year == 2020,
@@ -18796,6 +20192,17 @@ previous_fmir %>% filter(year == 2010 | year == 2020,
         mutate(diff = `2020` - `2010`) %>% 
         arrange(desc(diff))
 
+# look at specific obj diff for a country
+fmir %>% filter(year == 2010 | year == 2021,
+                mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        distinct(country, year, obj_num, obj_avg) %>%
+        group_by(country, obj_num) %>%
+        arrange(country, obj_num, year) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>% 
+        ungroup() %>%
+        filter(country == "Armenia") %>%
+        arrange(desc(diff))
+
 
 #////////////////////////
 
@@ -18804,11 +20211,11 @@ previous_fmir %>% filter(year == 2010 | year == 2020,
 # currently: azerbaijan, bih, and serbia are biggest backsliders
 # previously: serbia was biggest backslider; with azerbaijan a close # 2 
 # note serbia currently is still #3 backslider with a diff of -.58 compared to -.52 previously
-fmir %>% filter(year == 2010 | year == 2020,
+fmir %>% filter(year == 2010 | year == 2021,
                 mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
         distinct(country, year, miri_avg) %>%
-        pivot_wider(id_cols = country, names_from = year, values_from = miri_avg) %>%
-        mutate(diff = `2020` - `2010`) %>% 
+        pivot_wider(names_from = year, values_from = miri_avg) %>%
+        mutate(diff = `2021` - `2010`) %>% 
         arrange(diff)
 
 previous_fmir %>% filter(year == 2010 | year == 2020,
@@ -18821,8 +20228,264 @@ previous_fmir %>% filter(year == 2010 | year == 2020,
         mutate(diff = `2020` - `2010`) %>% 
         arrange(diff)
 
+# look at specific obj diff for a country
+fmir %>% filter(year == 2010 | year == 2021,
+                mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        distinct(country, year, obj_num, obj_avg) %>%
+        group_by(country, obj_num) %>%
+        arrange(country, obj_num, year) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>% 
+        ungroup() %>%
+        # filter(country == "Serbia") %>%
+        filter(country == "BiH") %>%
+        arrange(desc(diff))
 
-# //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#////////////////////////
+
+
+# dimension with most change from 2010 to 2020
+fmir %>% filter(year == 2010 | year == 2020,
+                mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        distinct(country, year, obj_num, obj_avg) %>%
+        group_by(country, obj_num) %>%
+        arrange(country, obj_num, year) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2020) %>%
+        group_by(obj_num) %>%
+        mutate(obj_diff_avg = mean(diff)) %>%
+        ungroup() %>%
+        arrange(obj_num) %>%
+        distinct(obj_num, year, obj_diff_avg) %>%
+        arrange(obj_diff_avg) %>%
+        
+        ggplot(data = ., mapping = aes(x = fct_reorder(.f = obj_num, .x = obj_diff_avg, .desc = FALSE), y = obj_diff_avg)) + geom_col()
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# check obj highest/lowest levels and largest increase/decrease by individual country, instead of on average across all presence countries ####
+
+# see how frequently each obj is the highest/lowest for individual countries
+chart_data <- fmir %>% filter(year == 2020, mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        select(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        arrange(country, mcp_grouping, obj_avg) %>%
+        group_by(country, mcp_grouping) %>%
+        add_group_index(group_vars = obj_num, group_name = "obj_avg_rank_low_to_high") %>%
+        ungroup() %>%
+        mutate(highest_obj_avg_flag = case_when(obj_avg_rank_low_to_high == 5 ~ 1,
+                                                TRUE ~ 0),
+               lowest_obj_avg_flag = case_when(obj_avg_rank_low_to_high == 1 ~ 1,
+                                                TRUE ~ 0)) %>%
+        filter(highest_obj_avg_flag == 1 | lowest_obj_avg_flag == 1) %>%
+        count(obj_num, highest_obj_avg_flag, lowest_obj_avg_flag, name = "country_count") %>% 
+        arrange(highest_obj_avg_flag, desc(country_count)) %>%
+        left_join(tibble(obj_num = rep(c("obj_1", "obj_2", "obj_3", "obj_4", "obj_c"), times = 2),
+                         highest_obj_avg_flag = c(rep(0, times = 5), rep(1, times = 5)),
+                         lowest_obj_avg_flag = c(rep(1, times = 5), rep(0, times = 5))),
+                  .,
+                  by = c("obj_num", "highest_obj_avg_flag", "lowest_obj_avg_flag")) %>%
+        mutate(category = case_when(highest_obj_avg_flag == 1 ~ "highest_level",
+                                    lowest_obj_avg_flag == 1 ~ "lowest_level"),
+               country_count = case_when(is.na(country_count) ~ 0,
+                             TRUE ~ as.numeric(country_count)))
+
+# inspect 
+chart_data
+
+# plot
+chart_data %>%
+        ggplot(data = ., mapping = aes(x = category, y = country_count, fill = obj_num)) + 
+        geom_col(width = .6, position = "dodge") + 
+        geom_text(data = chart_data, mapping = aes(label = country_count), position = position_dodge(.6), vjust = -.5)
+
+
+#///////////////////
+
+
+# see how frequently each obj is the largest increase/decrease for individual countries
+chart_data <- fmir %>% filter(year %in% c(2010, 2020), mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        select(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        arrange(country, mcp_grouping, obj_num, year) %>%
+        group_by(country, mcp_grouping, obj_num) %>%
+        mutate(obj_avg_diff = obj_avg - lag(obj_avg, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2020) %>%
+        arrange(country, mcp_grouping, obj_avg_diff) %>%
+        group_by(country, mcp_grouping) %>%
+        add_group_index(group_vars = obj_num, group_name = "obj_avg_diff_rank_low_to_high") %>%
+        ungroup() %>%
+        mutate(obj_avg_increase_flag = case_when(obj_avg_diff > 0 ~ 1,
+                                                 TRUE ~ 0),
+               obj_avg_decrease_flag = case_when(obj_avg_diff < 0 ~ 1,
+                                                 TRUE ~ 0),
+                largest_obj_avg_increase_flag = case_when(obj_avg_diff_rank_low_to_high == 5 & obj_avg_increase_flag == 1 ~ 1,
+                                                TRUE ~ 0),
+               largest_obj_avg_decrease_flag = case_when(obj_avg_diff_rank_low_to_high == 1 & obj_avg_decrease_flag == 1 ~ 1,
+                                               TRUE ~ 0)) %>%
+        filter(largest_obj_avg_increase_flag == 1 | largest_obj_avg_decrease_flag == 1) %>%
+        count(obj_num, largest_obj_avg_increase_flag, largest_obj_avg_decrease_flag, name = "country_count") %>% 
+        arrange(largest_obj_avg_increase_flag, desc(country_count)) %>%
+        left_join(tibble(obj_num = rep(c("obj_1", "obj_2", "obj_3", "obj_4", "obj_c"), times = 2),
+                         largest_obj_avg_increase_flag = c(rep(0, times = 5), rep(1, times = 5)),
+                         largest_obj_avg_decrease_flag = c(rep(1, times = 5), rep(0, times = 5))),
+                  .,
+                  by = c("obj_num", "largest_obj_avg_increase_flag", "largest_obj_avg_decrease_flag")) %>%
+        mutate(category = case_when(largest_obj_avg_increase_flag == 1 ~ "largest_increase",
+                                    largest_obj_avg_decrease_flag == 1 ~ "largest_decrease"),
+               country_count = case_when(is.na(country_count) ~ 0,
+                             TRUE ~ as.numeric(country_count)))
+        
+# inspect
+chart_data 
+
+# plot
+chart_data %>%
+        ggplot(data = ., mapping = aes(x = category, y = country_count, fill = obj_num)) + 
+        geom_col(width = .6, position = "dodge") +
+        geom_text(data = chart_data, mapping = aes(label = country_count), position = position_dodge(.6), vjust = -.5)
+
+
+#/////////////////////////
+
+
+# combine both highest/lowest level and largest/smallest change plots into one plot
+chart_data <- fmir %>% filter(year == 2020, mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        select(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        arrange(country, mcp_grouping, obj_avg) %>%
+        group_by(country, mcp_grouping) %>%
+        add_group_index(group_vars = obj_num, group_name = "obj_avg_rank_low_to_high") %>%
+        ungroup() %>%
+        mutate(highest_obj_avg_flag = case_when(obj_avg_rank_low_to_high == 5 ~ 1,
+                                                TRUE ~ 0),
+               lowest_obj_avg_flag = case_when(obj_avg_rank_low_to_high == 1 ~ 1,
+                                               TRUE ~ 0)) %>%
+        filter(highest_obj_avg_flag == 1 | lowest_obj_avg_flag == 1) %>%
+        count(obj_num, highest_obj_avg_flag, lowest_obj_avg_flag, name = "country_count") %>% 
+        arrange(highest_obj_avg_flag, desc(country_count)) %>%
+        left_join(tibble(obj_num = rep(c("obj_1", "obj_2", "obj_3", "obj_4", "obj_c"), times = 2),
+                         highest_obj_avg_flag = c(rep(0, times = 5), rep(1, times = 5)),
+                         lowest_obj_avg_flag = c(rep(1, times = 5), rep(0, times = 5))),
+                  .,
+                  by = c("obj_num", "highest_obj_avg_flag", "lowest_obj_avg_flag")) %>%
+        mutate(category = case_when(highest_obj_avg_flag == 1 ~ "highest_level",
+                                    lowest_obj_avg_flag == 1 ~ "lowest_level"),
+               country_count = case_when(is.na(country_count) ~ 0,
+                                         TRUE ~ as.numeric(country_count))) %>%
+        select(obj_num, category, country_count) %>%
+        
+        bind_rows(., 
+                  fmir %>% filter(year %in% c(2010, 2020), mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+                          distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+                          select(country, mcp_grouping, year, obj_num, obj_avg) %>%
+                          arrange(country, mcp_grouping, obj_num, year) %>%
+                          group_by(country, mcp_grouping, obj_num) %>%
+                          mutate(obj_avg_diff = obj_avg - lag(obj_avg, n = 1)) %>%
+                          ungroup() %>%
+                          filter(year == 2020) %>%
+                          arrange(country, mcp_grouping, obj_avg_diff) %>%
+                          group_by(country, mcp_grouping) %>%
+                          add_group_index(group_vars = obj_num, group_name = "obj_avg_diff_rank_low_to_high") %>%
+                          ungroup() %>%
+                          mutate(obj_avg_increase_flag = case_when(obj_avg_diff > 0 ~ 1,
+                                                                   TRUE ~ 0),
+                                 obj_avg_decrease_flag = case_when(obj_avg_diff < 0 ~ 1,
+                                                                   TRUE ~ 0),
+                                 largest_obj_avg_increase_flag = case_when(obj_avg_diff_rank_low_to_high == 5 & obj_avg_increase_flag == 1 ~ 1,
+                                                                           TRUE ~ 0),
+                                 largest_obj_avg_decrease_flag = case_when(obj_avg_diff_rank_low_to_high == 1 & obj_avg_decrease_flag == 1 ~ 1,
+                                                                           TRUE ~ 0)) %>%
+                          filter(largest_obj_avg_increase_flag == 1 | largest_obj_avg_decrease_flag == 1) %>%
+                          count(obj_num, largest_obj_avg_increase_flag, largest_obj_avg_decrease_flag, name = "country_count") %>% 
+                          arrange(largest_obj_avg_increase_flag, desc(country_count)) %>%
+                          left_join(tibble(obj_num = rep(c("obj_1", "obj_2", "obj_3", "obj_4", "obj_c"), times = 2),
+                                           largest_obj_avg_increase_flag = c(rep(0, times = 5), rep(1, times = 5)),
+                                           largest_obj_avg_decrease_flag = c(rep(1, times = 5), rep(0, times = 5))),
+                                    .,
+                                    by = c("obj_num", "largest_obj_avg_increase_flag", "largest_obj_avg_decrease_flag")) %>%
+                          mutate(category = case_when(largest_obj_avg_increase_flag == 1 ~ "largest_increase",
+                                                      largest_obj_avg_decrease_flag == 1 ~ "largest_decrease"),
+                                 country_count = case_when(is.na(country_count) ~ 0,
+                                                           TRUE ~ as.numeric(country_count))) %>%
+                          select(obj_num, category, country_count))
+
+# inspect
+chart_data
+
+# plot
+chart_data %>%
+        ggplot(data = ., mapping = aes(x = obj_num, y = country_count, fill = obj_num)) + 
+        geom_col(width = 1, position = "dodge") +
+        facet_wrap(facets = vars(category), nrow = 1, strip.position = "top") +
+        geom_text(data = chart_data, mapping = aes(label = country_count), position = position_dodge(1), vjust = -.5) +
+        scale_y_continuous(breaks = seq(from = 0, to = 7, by = 1), limits = c(0, 7), expand = c(0, 0),
+                           labels = label_number(accuracy = 1)) +
+        # scale_x_continuous(breaks = seq(from = 2010, to = 2020, by = 2)) +
+        labs(x = NULL, y = "Number of E&E presence countries", 
+             caption = NULL, fill = "", color = "", linetype = "") +
+        coord_fixed(ratio = 1 / 1, clip = "off") +
+        theme_bw() +
+        theme(
+                # plot.background = element_rect(fill = "blue"),
+                plot.margin = unit(c(0, 5, 0, 5), "mm"),
+                plot.caption = element_text(hjust = 0, size = 11, face = "plain", family = "Calibri", 
+                                            color = "#595959", margin = margin(t = 4, r = 0, b = 0, l = 0)),
+                # text = element_text(family = "Calibri", size = 46, face = "plain", color = "#000000"),
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD"),
+                # panel.grid.major.y = element_line(color = "#000000"),
+                panel.border = element_rect(color = "#DDDDDD", fill = NA),
+                # panel.grid = element_blank(),
+                panel.spacing = unit(.5, "lines"),
+                strip.text.x = element_text(family = "Calibri", face = "plain", size = 8, color = "#333333",
+                                            margin = margin(t = 0, r = 0, b = 10, l = 0), angle = 45, hjust = .5),
+                # strip.background = element_rect(color = "#ffffff", fill = "#ffffff", size = 1.5, linetype = "solid"),
+                strip.background = element_blank(),
+                # line = element_blank(),
+                # rect = element_blank(),
+                axis.ticks.y = element_blank(),
+                # axis.ticks.x = element_blank(),
+                axis.ticks.x = element_line(color = "#333333"),
+                # axis.ticks.length.y.left = unit(.2, "cm"),
+                axis.ticks.length.x.bottom = unit(.1, "cm"),
+                axis.text.x = element_text(family = "Calibri", face = "plain", size = 8, color = "#333333",
+                                           margin = margin(t = 2, r = 0, b = -10, l = 0), angle = 45, hjust = 1),
+                # axis.text.x = element_blank(),
+                axis.text.y = element_text(family = "Calibri", face = "plain", size = 8, color = "#333333", 
+                                           margin = margin(t = 0, r = 5, b = 0, l = 0)),
+                axis.line.x.bottom = element_line(color = "#333333"),
+                axis.line.y.left = element_blank(),
+                # axis.title.x = element_text(family = "Calibri", face = "plain", size = 9, color = "#333333", 
+                #                             margin = margin(t = 13, r = 0, b = 5, l = 0)),
+                axis.title.y = element_text(family = "Calibri", face = "plain", size = 8, color = "#333333", 
+                                            margin = margin(t = 0, r = 13, b = 0, l = 0)),
+                plot.title = element_text(size = 16, face = "bold", hjust = .5, family = "Calibri", color = "#333333", 
+                                          margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")),
+                legend.position = "bottom",
+                # legend.key.size = unit(2, "mm"), 
+                legend.title = element_text(size = 8, family = "Calibri", face = "plain", color = "#333333"),
+                legend.text = element_text(size = 8, family = "Calibri", margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"), 
+                                           hjust = .5, color = "#333333")
+                # legend.spacing.y = unit(5.5, "cm"),
+                # legend.spacing.x = unit(.3, "cm"),
+                # legend.key = element_rect(size = 5),
+                # legend.key.size = unit(2, 'lines')
+                # legend.key.width = unit(2, "cm")
+        ) + 
+        guides(fill = guide_legend(nrow = 1, byrow = TRUE, label.hjust = 0, color = "#333333"))
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 # output ri_table_2010_v_2020
@@ -18886,6 +20549,306 @@ ri_table_2010_v_2020 %>% glimpse()
 ri_table_2010_v_2020 %>% write.xlsx(file = "output/charts/ri_table_2010_v_2020.xlsx", overwrite = TRUE)
 
 
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# meaningful score changes by aggregation level ####
+
+# final result: 
+# at isv level, .06 change is meaningful; 
+# at sub_obj level, .05 change is meaningful; 
+# at obj level, .04 change is meaningful; 
+# at miri level, .03 change is meaningful
+
+# a meaningful change is the lower threshold for highlighting a change in a briefing or report
+# a change < 150% of a meaningful change is labeled a slight change
+# a change >= 150% of a meaningful change is labeled a moderate change
+# a change >= 200% of a meaningful change is labeled a significant change
+
+# transparency international has a fairly complex statistical test for significant change
+# see methodology: https://www.transparency.org/en/cpi/2021?gclid=Cj0KCQjwsrWZBhC4ARIsAGGUJuqQOpkSGVeTgw2L2i7vlq3oO-aXLPIj5DpceX-Wt80oTjeo5dnEYycaAsDLEALw_wcB
+# older blog on cpi potential method change: https://globalanticorruptionblog.com/2015/11/10/a-quick-partial-fix-for-the-cpi/
+
+
+# discussion of analyst judgment in determining meaningful effect size for power calculations: 
+# https://www.theanalysisfactor.com/sample-size-most-difficult-step/
+# this post seems to best describe the situation with resilience index, in that a traditional t-test looking at whether 
+# either the level of country A is signficantly higher now than it's average in past, indicating a different distribution,
+# or the diff in country A is significantly larger than past diffs across all countries, indicating a different distribution,
+# both don't seem meaningful or appropriate.
+# instead, we'd want to know whether the change in levels is meaningful, regardless if the size of change is normal and not an outlier
+# eg, if looking at individuals with salaries over time, and 10k increase is fairly common, you wouldn't want to say 10k is insignificant
+# "Now the general public may not realize that a rise in .5 degrees Celsius in the temperature of a soil core under experimental conditions 
+# is meaningful. But you, as the soil scientist, should. This is where you use your scientific knowledge.
+# This is why it's the one step with which your statistical consultant can't help you. Sure, she can define what you're looking for, 
+# but you're the expert here, and you need to supply the value.
+# It's on those scales that are abstract and lack inherent meaning and that haven't been used much for which the smallest meaningful 
+# effect size is difficult to define. If your intervention reduces children's anxiety scores by 10 points, compared to a control, 
+# is that a big enough change to actually improve the children's lives? What about 5 points? 2?"
+
+# rule of thumb for small, medium, large effect sizes measured in std_dev. units
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5122517/
+# https://psych.unl.edu/psycrs/971/meta/effect_sizes.pdf
+# "by convention, differences of 0.2, 0.5, and 0.8 standard deviations are considered 'small', 'medium', and 'large' effect sizes respectively"
+# Consider a randomized controlled experiment that compares two learning formats - groups A (treatment) and B (control) - 
+# in terms of exam performance on a scale ranging from 0 to 80. Suppose, the average exam performance is 50 points in group A and 
+# 55 points in group B. In other words, the difference between means is 5 points (55-50). 
+# Suppose, the standard deviation of exam scores is about 10 points in both groups. Expressed in standard deviations, 
+# the group difference is 0.5: mean difference/standard deviation = 5/10. This indicates a 'medium' size difference: 
+# by convention, differences of 0.2, 0.5, and 0.8 standard deviations are considered 'small', 'medium', and 'large' effect sizes respectively
+# # with caveat that: 
+# "- a "small" effect may be highly meaningful for
+# an intervention that requires few resources and
+# imposes little on the participants
+# - small effects may be more meaningful for
+# serious and fairly intractable problem"
+
+# my method is to get the scores for each aggregation level separately, and label a .2 std_dev change is meaningful
+# seems worthwhile to calculate separate meaningful change thresholds for each aggregation level, since higher aggregations
+# have less std_dev and change due to average of averages effect that tends to balance out underlying change
+# yes, i could in theory get st_dev*.2 for each dimension/sub_obj/indicator etc, but that seems like diminishing returns 
+# it's like measuring grades at school, where you look at st_dev for all homeworks, quizes, tests separately
+# but don't necessarily need to get st_dev for each subjust_matter within homeworks separately, etc
+
+# distribution of indicator-level year-to-year differences
+fmir %>% distinct(country, year, indicator_name, indicator_standardized_values) %>%
+        group_by(country, indicator_name) %>%
+        arrange(indicator_name, country, year) %>%
+        mutate(diff = indicator_standardized_values - lag(indicator_standardized_values, n = 1)) %>%
+        ungroup() %>%
+        # print(n = 20)
+        # skim(diff)
+        filter(abs(diff) < .1) %>%
+        ggplot(data = ., mapping = aes(x = diff)) + geom_density()
+
+# distribution of indicator_standardized_values
+# sd = .282; .282 * .2 = .0564
+# so a .06 change in isv level is meaningful
+fmir %>% distinct(country, year, indicator_name, indicator_standardized_values) %>%
+        # print(n = 20)
+        skim(indicator_standardized_values)
+ggplot(data = ., mapping = aes(x = indicator_standardized_values)) + geom_density()
+
+
+#///////////////////////
+
+
+# distribution of sub_obj year-to-year differences
+fmir %>% distinct(country, year, sub_obj_num, sub_obj_avg) %>%
+        group_by(country, sub_obj_num) %>%
+        arrange(sub_obj_num, country, year) %>%
+        mutate(diff = sub_obj_avg - lag(sub_obj_avg, n = 1)) %>%
+        ungroup() %>%
+        # print(n = 20)
+        # skim(diff)
+        # filter(abs(diff) < .1) %>%
+        ggplot(data = ., mapping = aes(x = diff)) + geom_density()
+
+# distribution of sub_obj_avg
+# sd = .223; .223 * .2 = .0446
+# so a .05 change in sub_obj level is meaningful
+fmir %>% distinct(country, year, sub_obj_num, sub_obj_avg) %>%
+        # print(n = 20)
+        # skim(sub_obj_avg)
+        ggplot(data = ., mapping = aes(x = sub_obj_avg)) + geom_density()
+
+
+#///////////////////////
+
+
+# distribution of obj year-to-year differences
+fmir %>% distinct(country, year, obj_num, obj_avg) %>%
+        group_by(country, obj_num) %>%
+        arrange(obj_num, country, year) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>%
+        ungroup() %>%
+        # print(n = 20)
+        # skim(diff)
+        # filter(abs(diff) < .1) %>%
+        ggplot(data = ., mapping = aes(x = diff)) + geom_density()
+
+# distribution of obj_avg
+# sd = .193; .193 * .2 = .0386
+# so a .04 change in obj level is meaningful
+fmir %>% distinct(country, year, obj_num, obj_avg) %>%
+        # print(n = 20)
+        skim(obj_avg)
+ggplot(data = ., mapping = aes(x = obj_avg)) + geom_density()
+
+
+#///////////////////////
+
+
+# distribution of miri_avg year-to-year differences
+fmir %>% distinct(country, year, miri_avg) %>%
+        group_by(country) %>%
+        arrange(country, year) %>%
+        mutate(diff = miri_avg - lag(miri_avg, n = 1)) %>%
+        ungroup() %>%
+        # print(n = 20)
+        # skim(diff)
+        # filter(abs(diff) < .1) %>%
+        ggplot(data = ., mapping = aes(x = diff)) + geom_density()
+
+# distribution of miri_avg
+# sd = .169; .169 * .2 = .0338
+# so a .03 change in miri level is meaningful
+fmir %>% distinct(country, year, miri_avg) %>%
+        # print(n = 20)
+        skim(miri_avg)
+ggplot(data = ., mapping = aes(x = miri_avg)) + geom_density()
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# confidence intervals by aggregation levels ####
+
+# most promising approach is using standard error of measurment (SEM), with cronbach's alpha as reliability term
+# SEM can give conf_int and hypothesis testing on differences
+
+# https://stats.stackexchange.com/questions/50409/how-does-one-interpret-a-single-margin-of-error-value-for-a-survey-consisting-of
+# this question notes that it's common to report magin of error for an entire survey, even though
+# technically you can also report margin of error for each question
+# this is akin to margin of error for all indicator_standardized_values or sub_obj_avg (actually conf. int. because not proportions)
+# it suggests that the survey picks a representative margin of error, based on range of question-level margin of error
+# so similarly could pick representative conf. int for index score level based on distro of conf. int for members of index score level (avg)
+
+# survey monkey equates margin of error with conf. int
+# https://www.surveymonkey.com/mp/margin-of-error-calculator/
+
+# https://www.mathsisfun.com/data/confidence-interval.html
+# https://uw-statistics.github.io/Stat311Tutorial/confidence-intervals.html
+
+# https://www.statisticshowto.com/probability-and-statistics/hypothesis-testing/margin-of-error/
+# https://statisticsbyjim.com/hypothesis-testing/margin-of-error/
+
+# margin of error for difference between two candidates (aka countries)
+# https://www.pewresearch.org/fact-tank/2016/09/08/understanding-the-margin-of-error-in-election-polls/
+# "As a general rule, looking at trends and patterns that emerge from a number of different polls can provide more 
+# confidence than looking at only one or two."
+
+# https://www.statisticshowto.com/prediction-interval/
+# this notes it's very common to use conf. int. in place of prediction interval
+# Confidence intervals are always associated with a confidence level, representing a degree of uncertainty 
+# (data is random, and so results from statistical analysis are never 100% certain).
+# For example, you might say that the mean life of a battery (at a 95% confidence level) is 100 to 110 hours. 
+# This tells you that a battery will fall into the range of 100 to 110 hours 95% of the time.
+
+# comparing estimates with standard_errors
+# https://www2.census.gov/programs-surveys/acs/tech_docs/statistical_testing/2015StatisticalTesting5year.pdf
+# https://www2.census.gov/programs-surveys/acs/tech_docs/accuracy/2018_ACS_Accuracy_Document_Worked_Examples.pdf?
+
+# poll aggregation
+# https://www.aapor.org/Education-Resources/Election-Polling-Resources/Poll-Aggregators.aspx
+
+# standard error of measurement for test grades
+# https://doe.virginia.gov/testing/scoring/standard_error_measurement/index.shtml#:~:text=The%20difference%20between%20a%20student's,the%20standard%20error%20of%20measurement.
+# https://www.statology.org/standard-error-of-measurement/
+# https://www.statisticshowto.com/standard-error-of-measurement/
+# https://www.statisticshowto.com/test-retest-reliability/
+
+# BLS cite non-sampling error (eg general collection/processing error) (a type of error captured by SEM)
+# https://www.bls.gov/opub/hom/topic/error-measurements.htm
+
+# SEM
+# https://www.youtube.com/watch?v=PZDDWd-jUzM
+# wake forest prof: https://www.youtube.com/watch?v=4z8vkab-_lk
+# cronbach's alpha
+# https://www.youtube.com/watch?v=kdjBSJmtepA
+# https://stats.oarc.ucla.edu/spss/faq/what-does-cronbachs-alpha-mean/
+
+# cronbach's alpha vs omega (newer and better though less widely cited for now) on multi-level indices
+# https://www.researchgate.net/post/How_do_I_estimate_reliability_for_multilevel_data_in_R
+
+# r packages for cronbach's alpha
+# https://cran.r-project.org/web/packages/psych/index.html
+# https://cran.r-project.org/web/packages/ltm/index.html
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get cronbaach's alpha for miri, obj, and sub-obj levels ####
+
+# library(psych)
+
+# cronbach's alpha on multi-level indices (also omega - newer and better though less widely cited for now) 
+# https://www.researchgate.net/post/How_do_I_estimate_reliability_for_multilevel_data_in_R
+# https://pubmed.ncbi.nlm.nih.gov/23646988/
+
+# r packages for cronbach's alpha
+# https://cran.r-project.org/web/packages/psych/index.html
+# https://cran.r-project.org/web/packages/ltm/index.html
+
+
+# cronbach's alpha for all indicators taken together
+fmir %>%
+        distinct(country, year, indicator_name, indicator_standardized_values) %>%
+        pivot_wider(id_cols = c(country, year), names_from = "indicator_name", values_from = "indicator_standardized_values") %>%
+        select(matches(match = "^sub_obj_|cross_cutting_obj")) %>%
+        alpha(x = .)
+
+
+#////////////////
+
+
+# cronbach's alpha at miri level
+fmir %>% distinct(country, year, obj_num, obj_avg) %>%
+        pivot_wider(id_cols = c(country, year), names_from = "obj_num", values_from = "obj_avg") %>%
+        select(matches(match = "^obj_")) %>%
+        alpha(x = .)
+
+
+#////////////////
+
+
+# cronbach's alpha at obj level
+current_obj_num <- "obj_1"
+current_obj_num <- "obj_2"
+current_obj_num <- "obj_3"
+current_obj_num <- "obj_4"
+
+fmir %>%
+        filter(obj_num == current_obj_num) %>%
+        distinct(country, year, sub_obj_num, sub_obj_avg) %>%
+        pivot_wider(id_cols = c(country, year), names_from = "sub_obj_num", values_from = "sub_obj_avg") %>%
+        select(matches(match = "^sub_obj_")) %>%
+        alpha(x = .)
+
+
+#///////////////////////
+
+
+# cronbach's alpha at sub_obj_level
+current_sub_obj_num <- "sub_obj_1_1"
+current_sub_obj_num <- "sub_obj_1_2"
+current_sub_obj_num <- "sub_obj_1_3"
+current_sub_obj_num <- "sub_obj_2_1"
+current_sub_obj_num <- "sub_obj_2_2"
+current_sub_obj_num <- "sub_obj_2_3"
+current_sub_obj_num <- "sub_obj_3_1"
+current_sub_obj_num <- "sub_obj_3_2"
+current_sub_obj_num <- "sub_obj_3_3"
+current_sub_obj_num <- "sub_obj_4_1"
+current_sub_obj_num <- "sub_obj_4_2"
+current_sub_obj_num <- "sub_obj_c"
+
+
+fmir %>%
+        filter(sub_obj_num == current_sub_obj_num) %>%
+        distinct(country, year, indicator_name, indicator_standardized_values) %>%
+        pivot_wider(id_cols = c(country, year), names_from = "indicator_name", values_from = "indicator_standardized_values") %>%
+        select(matches(match = "^sub_obj_|cross_cutting_obj")) %>%
+        alpha(x = .)
+
+
 # //////////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18930,7 +20893,7 @@ fmir %>% filter(indicator_bad_frontier_flag == 1) %>%
 #///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# inspect highest/lowest miri_avg/obj_avg/sub_obj_avg/indicator_standardized_values for 2020
+# inspect highest/lowest miri_avg/obj_avg/sub_obj_avg/indicator_standardized_values for 2020 ####
 
 
 #//////////////////////
@@ -18987,15 +20950,201 @@ fmir %>% filter(year == 2020) %>% distinct(country, year, indicator_name, indica
         ungroup() %>% print(n = nrow(.))
 
 
+#////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect imputation_condition ####
+
+# check the imputation_condition stats overall
+fmir %>% 
+        count(imputation_condition) %>% 
+        arrange(desc(n)) %>% 
+        mutate(pct_of_all_obs = n / sum(n)) %>%
+        arrange(desc(pct_of_all_obs)) %>%
+        print(n = nrow(.))
+
+# check the imputation_condition stats by mcp_grouping 
+fmir %>% group_by(mcp_grouping) %>% 
+        count(imputation_condition) %>% 
+        arrange(desc(n)) %>% 
+        mutate(pct_of_group = n / sum(n)) %>%
+        ungroup() %>%
+        mutate(pct_of_all_obs = n / sum(n)) %>%
+        arrange(mcp_grouping, desc(pct_of_group)) %>%
+        group_by(imputation_condition) %>%
+        mutate(pct_of_imputation_condition = n / sum(n)) %>%
+        ungroup() %>%
+        print(n = nrow(.))
+
+# check imputation_condition stats by indicator_name
+fmir %>% group_by(indicator_name) %>%
+        count(imputation_condition) %>%
+        mutate(pct_of_indicator = n / sum(n)) %>%
+        arrange(indicator_name) %>%
+        ungroup() %>%
+        arrange(imputation_condition, desc(pct_of_indicator)) %>%
+        filter(imputation_condition == "missing_all") %>%
+        # filter(imputation_condition == "not_imputed") %>%
+        mutate(avg_pct_of_indicator = mean(pct_of_indicator)) %>%
+        print(n = nrow(.))
+
+# check indicators with high pct missing_all
+fmir %>% 
+        filter(imputation_condition != "missing_all") %>%
+        # filter(indicator_name == "sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt") %>%
+        # filter(indicator_name == "sub_obj_2_1_aiddata_content_producers") %>%
+        # filter(indicator_name == "sub_obj_2_1_msi_professional_journalism") %>%
+        filter(indicator_name == "sub_obj_1_1_fh_judicial_framework_and_indep") %>%
+        count(country, mcp_grouping) %>% 
+        arrange(mcp_grouping)
+
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# inspect distribution of standardized indicators
+# inspect distribution of standardized indicators ####
 # note that imputations can artificially centralize the distribution 
 # (eg 3.1_aiddata_esi has lots of countries getting overall_isv_avg because eu countries dont have values)
 
 
-# inspect distribution by indicator
+fmir %>% distinct(indicator_name) %>% print(n = nrow(.))
+
+# inspect distribution for all indicators
+indicator_dist_stats <- fmir %>% 
+        select(indicator_name, indicator_mean, indicator_sd, values, values_z_std, indicator_standardized_values) %>%
+        group_by(indicator_name) %>%
+        skim(values, values_z_std, indicator_standardized_values) %>% 
+        as_tibble() %>%
+        select(indicator_name, skim_variable, n_missing, complete_rate, starts_with("numeric")) %>%
+        select(-numeric.hist) %>%
+        arrange(indicator_name)
+
+indicator_dist_stats
+
+
+#/////////////////
+
+
+# look at proportion of indicator_standardized_values with 0 or 1 scores
+indicator_dist_stats %>%
+        filter(skim_variable == "indicator_standardized_values") %>%
+        mutate(isv_1_flag = case_when(numeric.p100 == 1 ~ 1,
+                                      TRUE ~ 0),
+               isv_0_flag = case_when(numeric.p0 == 0 ~ 1,
+                                      TRUE ~ 0)) %>%
+        select(indicator_name, starts_with("numeric"), isv_1_flag, isv_0_flag) %>%
+        
+        # filter(isv_1_flag == 1 | isv_0_flag == 1) %>%
+        # filter(!(isv_1_flag == 1 | isv_0_flag == 1)) %>%
+
+        count(isv_1_flag, isv_0_flag) %>%
+        mutate(pct = n / sum(n)) %>%
+        
+        print(n = nrow(.))
+
+# plot isv distributions
+fmir %>% select(indicator_name, obj_num, indicator_standardized_values) %>%
+        filter(obj_num == "obj_1") %>%
+        
+        # ggplot(data = ., mapping = aes(x = indicator_standardized_values, y = indicator_name)) +
+        # geom_density_ridges() +
+        # geom_density_ridges(rel_min_height = 0.01) +
+        
+        # ggplot(data = ., mapping = aes(x = indicator_standardized_values, y = indicator_name, fill = stat(x))) +
+        # geom_density_ridges_gradient(rel_min_height = 0.01) +
+        # scale_fill_viridis_c()
+        
+        ggplot(data = ., mapping = aes(x = indicator_standardized_values, y = indicator_name, fill = factor(stat(quantile)))) +
+        stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE,
+                            quantiles = 5, quantile_lines = FALSE) +
+        
+        scale_x_continuous(limits = c(0, 1)) +
+        scale_fill_manual(values = viridis_pal()(5))
+        
+
+
+#///////////////////
+
+
+# look at indicators with smallest values sd
+indicator_dist_stats %>%
+        filter(skim_variable == "values") %>%
+        arrange(numeric.sd) %>%
+        select(indicator_name) %>%
+        identity()
+
+
+#///////////////////
+        
+        
+# look at indicators with smallest values_z_std range
+indicator_dist_stats %>%
+        filter(skim_variable == "values_z_std") %>%
+        mutate(abs_p0 = abs(numeric.p0),
+               abs_p100 = abs(numeric.p100),
+               z_std_range = numeric.p100 - numeric.p0,
+               max_z_std = case_when(abs_p0 > abs_p100 ~ abs_p0,
+                                     TRUE ~ abs_p100),
+               min_z_std = case_when(abs_p0 < abs_p100 ~ abs_p0,
+                                     TRUE ~ abs_p100)) %>%
+        # arrange(max_z_std) %>%
+        # arrange(min_z_std) %>%
+        arrange(z_std_range) %>%
+        select(indicator_name, numeric.p0, numeric.p100, max_z_std, min_z_std, z_std_range) %>%
+        print(n = 20)
+
+
+#////////////////
+
+
+# plot indicator values distribution ####
+chart_data <- fmir %>% 
+        # filter(indicator_name == "sub_obj_4_2_wb_ext_debt_to_russia_as_share_of_total_ext_debt") %>%
+        # filter(indicator_name == "sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports") %>%
+        # filter(indicator_name == "sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi") %>%
+        # filter(indicator_name == "sub_obj_3_2_iea_fossil_fuel_imports_from_russia_as_share_of_tes") %>%
+        # filter(indicator_name == "sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports") %>%
+        # filter(indicator_name == "sub_obj_4_1_cdis_russian_fdi_as_share_of_total_fdi") %>%
+        # filter(indicator_name == "sub_obj_4_1_dots_exports_to_russia_as_share_of_total_exports") %>%
+        # filter(indicator_name == "sub_obj_1_2_vdem_civil_society") %>%
+        # filter(indicator_name == "sub_obj_1_3_fh_electoral_process") %>%
+        # filter(indicator_name == "sub_obj_1_1_vdem_judicial_constraints_on_exec") %>%
+        # filter(indicator_name == "sub_obj_4_2_imf_financial_development_index") %>%
+        # filter(indicator_name == "sub_obj_1_1_wgi_rule_of_law") %>%
+        # filter(indicator_name == "sub_obj_4_1_atlas_eci") %>%
+        # filter(indicator_name == "cross_cutting_obj_ti_cpi") %>%
+        # filter(indicator_name == "sub_obj_1_3_nato_membership") %>%
+        filter(indicator_name == "sub_obj_1_1_fh_judicial_framework_and_indep") %>%
+        select(indicator_name, indicator_mean, indicator_sd, indicator_midpoint, indicator_median, indicator_iqr, values, values_z_std)
+chart_data
+   
+# density plot     
+chart_data %>% 
+        ggplot(data = ., mapping = aes(x = values)) + geom_density() +
+        geom_segment(x = chart_data %>% slice(1) %>% pull(indicator_mean),
+                     xend = chart_data %>% slice(1) %>% pull(indicator_mean),
+                     y = 0, yend = 20, color = "green") +
+        geom_segment(x = chart_data %>% slice(1) %>% pull(indicator_median),
+                     xend = chart_data %>% slice(1) %>% pull(indicator_median),
+                     y = 0, yend = 20, color = "blue") +
+        geom_segment(x = chart_data %>% slice(1) %>% pull(indicator_midpoint),
+                     xend = chart_data %>% slice(1) %>% pull(indicator_midpoint),
+                     y = 0, yend = 20, color = "red")
+        
+        # scale_x_continuous(labels = label_percent(accuracy = .01)) +
+        # labs(x = "Natural gas imports from Russia as share of natural gas imports") +
+        # coord_fixed(ratio = 1 / 2, clip = "off") 
+
+# plot point distribution
+chart_data %>% ggplot(data = ., mapping = aes(y = values, x = indicator_name)) + geom_violin() + geom_sina()
+chart_data %>% ggplot(data = ., mapping = aes(y = values, x = indicator_name)) +
+        geom_density_ridges()
+
+
+#////////////////////////////
+
+
+# inspect distribution by sub_obj indicators ####
 sub_obj_num_var <- "sub_obj_3_2"
 fmir %>% filter(sub_obj_num == sub_obj_num_var) %>%
         ggplot(data = ., mapping = aes(x = indicator_name, y = indicator_standardized_values)) + 
@@ -19040,7 +21189,181 @@ fmir %>%
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# inspect the difference between using min/max normalization and using standardization 
+# inspect distribution of sub_obj_avg changes by sub_obj ####
+fmir %>% distinct(country, year, sub_obj_num, sub_obj_avg) %>%
+        arrange(country, sub_obj_num, year) %>%
+        # print(n = 100)
+        
+        group_by(country, sub_obj_num) %>%
+        mutate(diff = sub_obj_avg - lag(sub_obj_avg, n = 1),
+               abs_diff = abs(diff)) %>%
+        ungroup() %>%
+        
+        filter(abs_diff < .1) %>%
+        
+        # arrange(desc(abs_diff)) %>%
+        # filter(country == "Albania") %>%
+        # filter(sub_obj_num == "sub_obj_3_3") %>%
+        # print(n = 20)
+        
+        ggplot(data = ., mapping = aes(x = diff, y = sub_obj_num)) + geom_density_ridges()
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect distribution of obj_avg changes by obj ####
+fmir %>% distinct(country, year, obj_num, obj_avg) %>%
+        arrange(country, obj_num, year) %>%
+        # print(n = 100)
+        
+        group_by(country, obj_num) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1),
+               abs_diff = abs(diff)) %>%
+        ungroup() %>%
+        # print(n = 100)
+        
+        # filter(abs_diff < .1) %>%
+        # filter(obj_num == "obj_1") %>%
+        
+        # group_by(obj_num) %>% skim(diff)
+
+        ggplot(data = ., mapping = aes(x = diff, y = obj_num)) + geom_density_ridges()
+
+
+#///////////////////////////////////////////////////////////////////////////
+
+
+# inspect distribution of changes in each dimension from 2010-2020 (or other range) ####
+fmir %>% 
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia", "E&E graduates", "CARs")) %>%
+        # filter(year %in% c(2010, 2020)) %>%
+        filter(year %in% c(2013, 2020)) %>%
+        distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        select(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        arrange(country, obj_num, year) %>%
+        group_by(country, obj_num) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>%
+        ungroup() %>% 
+        
+        filter(year == 2020) %>%
+        # arrange(country, diff) %>%
+        arrange(obj_num, diff) %>%
+        # arrange(diff) %>%
+        # filter(diff >= 0)
+        # filter(diff < 0) %>%
+        # filter(diff <= -.02) %>%
+        # arrange(mcp_grouping) %>%
+        # print(n = nrow(.))
+        
+        # group_by(obj_num) %>% skim(diff)
+
+        ggplot(data = ., mapping = aes(x = diff, y = obj_num)) + geom_density_ridges()
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect what is driving change in miri_avg, looking at obj, sub_obj, and indicator level ####
+# example below is for belgium, including written template
+
+# Corruption objective (61% of overall index score decrease)
+# - Driven by State Dept. designation as major-money laundering country for 2017-2020
+# 
+# Information objective (18% of overall index score decline)
+# - Media capacity sub-objective: driven by declines in Russian state media narratives, domestic political party false info, and foreign government ads
+# - Media freedom sub-objective: driven by declines in harassment of journalists, freedom of speech, and institutional environment
+# 
+# Democratic objective (10% of overall index score decline)
+# - Checks & balances / rule of law sub-objective: driven by declines in Freedom House indicators (imputed) and WGI rule of law indicator
+# - Electoral/political interference sub-objective: driven by declines in political violence, mobilization for autocracy, and foreign government ads
+# 
+# Energy objective (6% of overall index score decline)
+# - Energy regulation sub-objective: driven by decline in energy efficiency regulation rank
+# 
+# Economic objective (5% of overall index score decline)
+# - Economic competitiveness sub-objective: driven by declines in FDI from EU as % of total FDI and exports to EU as % of total exports
+# - Financial health sub-objective: driven by decline in fiscal sustainability
+
+# change in miri_avg
+fmir %>% filter(country == "Belgium") %>%
+        distinct(country, year, miri_avg) %>%
+        filter(year %in% c(2013, 2020)) %>%
+        group_by(country) %>%
+        arrange(country, year) %>%
+        mutate(diff = miri_avg - lag(miri_avg, n = 1)) %>%
+        ungroup()
+
+# change in each obj
+# decrease in all obj; biggest in corruption by far, signifanct decrease in info also, moderate decline in democracy, 
+fmir %>% 
+        filter(country == "Belgium") %>%
+        distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        filter(year %in% c(2013, 2020)) %>%
+        group_by(country, obj_num) %>%
+        arrange(country, obj_num, year) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>%
+        ungroup()
+
+# get share of belgium decline due to each obj
+fmir %>% 
+        filter(country == "Belgium") %>%
+        distinct(country, mcp_grouping, year, obj_num, obj_avg) %>%
+        filter(year %in% c(2013, 2020)) %>%
+        group_by(country, obj_num) %>%
+        arrange(country, obj_num, year) %>%
+        mutate(diff = obj_avg - lag(obj_avg, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2020) %>%
+        mutate(decline = case_when(diff < 0 ~ diff,
+                                   TRUE ~ NA_real_),
+               decline_sum = sum(decline, na.rm = TRUE),
+               share_of_decline = decline / decline_sum)
+
+# most decline in corruption - was designated mmlc 2017-2020
+fmir %>% filter(country == "Belgium") %>%
+        distinct(country, year, obj_num, obj_avg) %>%
+        ggplot(data = ., mapping = aes(x = year, y = obj_avg, color = obj_num)) + geom_line(size = 2)
+
+# for obj_1, most decline in 1.1 and 1.3
+# for obj_2, most decline in 2.1 and 2.3
+# for obj_3, only decline is 3.3
+# for obj_4, declines in both 4.2 and 4.1
+fmir %>% filter(country == "Belgium") %>%
+        # filter(obj_num == "obj_c") %>%
+        # filter(obj_num == "obj_1") %>%
+        # filter(obj_num == "obj_2") %>%
+        # filter(obj_num == "obj_3") %>%
+        filter(obj_num == "obj_4") %>%
+        distinct(country, year, sub_obj_num, sub_obj_avg) %>%
+        ggplot(data = ., mapping = aes(x = year, y = sub_obj_avg, color = sub_obj_num)) + geom_line(size = 2)
+
+#  for sub_obj_1_1, imputed declines in FH indicators; but also decline in WGI rule of law
+# for sub_obj_1_3, decline in political violence, foreign gov ads, mobilization for autocracy
+# https://www.state.gov/reports/country-reports-on-terrorism-2020/belgium/
+# for sub_obj_2_1, decline in icews russian narratives, foreign gov ads, domestic politcal party false info
+# for sub_obj_2_3, significant decline in harrassment of journalists, also slight decline in irex freedom of speech and aiddata inst. environment
+# for sub_obj_4_1, declines in EU FDI %, and exports to EU %
+# for sub_obj_4_2, decline in fiscal sustainability
+fmir %>% 
+        filter(country == "Belgium") %>%
+        # filter(country == "Germany") %>%
+        # filter(sub_obj_num == "sub_obj_c") %>%
+        # filter(sub_obj_num == "sub_obj_1_1") %>%
+        # filter(sub_obj_num == "sub_obj_1_3") %>%
+        # filter(sub_obj_num == "sub_obj_2_1") %>%
+        # filter(sub_obj_num == "sub_obj_2_3") %>%
+        # filter(sub_obj_num == "sub_obj_3_3") %>%
+        # filter(sub_obj_num == "sub_obj_4_1") %>%
+        filter(sub_obj_num == "sub_obj_4_2") %>%
+        distinct(country, year, indicator_name, indicator_standardized_values) %>%
+        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = indicator_name)) + geom_line(size = 2)
+
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect the difference between using min/max normalization and using standardization ####
 
 # result: will use standardized indicator values (robust standardized instead of z-score) instead of normalized (min/max)
 # values_std = 0 will be centered on score = .5, values_std = .5 is score = .6, values_std = 1 is score = .7, etc
@@ -19110,7 +21433,7 @@ fmir %>% filter(indicator_name == "sub_obj_1_3_vdem_political_violence") %>%
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# diagnose underlying drivers of normalized indicators
+# diagnose underlying drivers of normalized indicators ####
 
 fmir %>% glimpse()
 fmir %>% count(sub_obj_num, concept, indicator_name) %>% print(n = nrow(.))
@@ -19149,12 +21472,14 @@ fmir %>% filter(sub_obj_num == "sub_obj_3_2",
 #///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# ad hoc facet of selected indicators by country (not focused on including sub_obj_avg)
+# ad hoc facet of selected indicators by country (not focused on including sub_obj_avg) ####
 fmir %>% count(indicator_name) %>% print(n = nrow(.))
 fmir %>% 
-        filter(indicator_name %in% c("sub_obj_1_3_icews_socio_political_hostility_from_russia",
-                                      "sub_obj_2_1_icews_narratives_pushed_by_russian_state_media",
-                                      "sub_obj_2_1_vdem_foreign_gov_dissem_false_info")) %>%
+        filter(year == 2021) %>%
+        filter(indicator_name %in% c("sub_obj_2_1_icews_russian_state_media_focus")) %>%
+        # filter(indicator_name %in% c("sub_obj_1_3_icews_socio_political_hostility_from_russia",
+        #                               "sub_obj_2_1_icews_narratives_pushed_by_russian_state_media",
+        #                               "sub_obj_2_1_vdem_foreign_gov_dissem_false_info")) %>%
         # filter(indicator_name %in% c("sub_obj_2_1_aiddata_content_producers",
         #                              # "sub_obj_2_1_msi_professional_journalism",
         #                              # "sub_obj_2_2_msi_plurality_of_news",
@@ -19162,10 +21487,10 @@ fmir %>%
         #                              # "sub_obj_2_3_msi_freedom_of_speech",
         #                              "sub_obj_2_2_aiddata_content_consumers",
         #                              "sub_obj_2_3_aiddata_institutional_environment")) %>%
-        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
         # filter(mcp_grouping %in% c("EU-15"), sub_obj_num == sub_obj_num_var) %>%
         # filter(mcp_grouping %in% c("E&E graduates"), sub_obj_num == sub_obj_num_var) %>%
-        select(country, year, concept, indicator_name, indicator_standardized_values) %>%
+        select(country, year, concept, indicator_name, indicator_standardized_values, values) %>%
         # arrange(indicator_standardized_values) %>% print(n = 50)
         arrange(desc(indicator_standardized_values)) %>% print(n = 50)
 
@@ -19178,18 +21503,71 @@ fmir %>%
         #                              # "sub_obj_2_3_msi_freedom_of_speech",
         #                              "sub_obj_2_2_aiddata_content_consumers",
         #                              "sub_obj_2_3_aiddata_institutional_environment")) %>%
-        filter(indicator_name %in% c("sub_obj_1_3_icews_socio_political_hostility_from_russia",
-                                     "sub_obj_2_1_icews_narratives_pushed_by_russian_state_media",
-                                     "sub_obj_2_1_vdem_foreign_gov_dissem_false_info")) %>%
-        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_with_russia") %>%
+        filter(indicator_name %in% c("sub_obj_3_1_aiddata_esi",
+                                     "sub_obj_3_1_iea_net_energy_imports_as_share_of_tes")) %>%
+        # filter(indicator_name == "sub_obj_2_1_icews_russian_state_media_focus") %>%
+        # filter(indicator_name %in% c("sub_obj_2_1_icews_russian_state_media_focus",
+        #                              "sub_obj_1_3_icews_socio_political_hostility_with_russia")) %>%
+        # filter(indicator_name %in% c("sub_obj_1_3_icews_socio_political_hostility_with_russia",
+        #                              "sub_obj_2_1_icews_russian_state_media_focus",
+        #                              "sub_obj_2_1_vdem_foreign_gov_dissem_false_info")) %>%
+        # filter(indicator_name %in% c("sub_obj_2_1_icews_russian_state_media_focus",
+        #                              "sub_obj_2_1_vdem_foreign_gov_dissem_false_info",
+        #                              "sub_obj_2_1_vdem_foreign_gov_advertising")) %>%
+        # filter(indicator_name %in% c("sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically",
+        #                              "sub_obj_2_1_vdem_gov_dissem_false_info_domestically")) %>%
+        # filter(indicator_name %in% c("sub_obj_2_1_msi_professional_journalism",
+        #                              "sub_obj_2_1_aiddata_content_producers",
+        #                              "sub_obj_2_1_vdem_media_critical",
+        #                              "sub_obj_2_1_vdem_media_bias",
+        #                              "sub_obj_2_1_vdem_media_corrupt")) %>%
+        # filter(indicator_name %in% c("sub_obj_2_1_icews_russian_state_media_focus",
+        #                      "sub_obj_2_1_vdem_foreign_gov_dissem_false_info",
+        #                      "sub_obj_2_1_vdem_foreign_gov_advertising",
+        #                      "sub_obj_2_1_vdem_political_parties_dissem_false_info_domestically",
+        #                      "sub_obj_2_1_vdem_gov_dissem_false_info_domestically")) %>%
+        # filter(sub_obj_num == "sub_obj_2_1") %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        # filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        filter(mcp_grouping == "EU-15") %>%
+        # filter(country == "Moldova") %>%
+        # filter(country == "Serbia") %>%
         # filter(mcp_grouping %in% c("EU-15"), sub_obj_num == sub_obj_num_var) %>%
         # filter(mcp_grouping %in% c("E&E graduates"), sub_obj_num == sub_obj_num_var) %>%
-        select(country, year, concept, indicator_name, indicator_standardized_values) %>%
+        select(country, year, concept, indicator_name, indicator_standardized_values, values) %>%
         arrange(indicator_standardized_values) %>%
         ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = indicator_name)) +
-        geom_line(size = 1.5) + 
+        # ggplot(data = ., mapping = aes(x = year, y = values, color = indicator_name)) +
+        geom_line(size = 1) + 
         scale_color_manual(values = color_palette %>% pull(hex)) +
         facet_wrap(facets = vars(country)) +
+        theme_bw() +
+        theme(
+                panel.grid.minor = element_blank(),
+                panel.grid.major.x = element_blank(),
+                panel.grid.major.y = element_line(color = "#DDDDDD", size = .25),
+        )
+
+
+#///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# ad hoc facet of selected concepts by country ####
+
+# plot
+fmir %>% 
+        filter(sub_obj_num == "sub_obj_2_1") %>%
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        # filter(country == "Moldova") %>%
+        filter(country == "Serbia") %>%
+        distinct(country, year, concept, concept_avg) %>%
+        arrange(concept_avg) %>%
+        ggplot(data = ., mapping = aes(x = year, y = concept_avg, color = concept)) +
+        geom_line(size = 1) + 
+        scale_color_manual(values = color_palette %>% pull(hex)) +
+        # facet_wrap(facets = vars(country)) +
         theme_bw() +
         theme(
                 panel.grid.minor = element_blank(),
@@ -19201,8 +21579,8 @@ fmir %>%
 #///////////////////////////////////////////////////////////////////////////////////////////////
         
 
-# sub_obj facet chart with facets by country
-sub_obj_num_var <- "sub_obj_4_2"
+# sub_obj facet chart with facets by country ####
+sub_obj_num_var <- "sub_obj_2_1"
 fmir %>% 
         filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), sub_obj_num == sub_obj_num_var) %>%
         # filter(mcp_grouping %in% c("EU-15"), sub_obj_num == sub_obj_num_var) %>%
@@ -19239,7 +21617,7 @@ fmir %>%
 #///////////////
 
 
-# sub_obj facet chart with facets by indicator
+# sub_obj facet chart with facets by indicator ####
 sub_obj_num_var <- "sub_obj_4_1"
 fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), sub_obj_num == sub_obj_num_var, year <= 2019) %>%
         select(country, year, concept, indicator_name, indicator_standardized_values) %>%
@@ -19269,7 +21647,7 @@ fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), sub_obj_num =
 #/////////////////
 
 
-# obj facet chart with facets by country
+# obj facet chart with facets by country ####
 obj_num_var <- "obj_4"
 fmir %>% 
         filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"), obj_num == obj_num_var, year <= 2019) %>%
@@ -19305,7 +21683,33 @@ fmir %>%
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# inspect correlations w/ ggcorr, which is part of GGally package
+# look at basic line chart by indicator for current and previous_fmir ####
+fmir %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_with_russia") %>%
+        filter(indicator_name == "sub_obj_2_1_icews_russian_state_media_focus") %>%
+        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country)) + geom_line(size = 1) +
+        facet_wrap(facets = vars(country)) +
+        scale_y_continuous(limits = c(0, 1))
+
+
+previous_fmir %>%
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_from_russia") %>%
+        filter(indicator_name == "sub_obj_2_1_icews_narratives_pushed_by_russian_state_media") %>%
+        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country)) + geom_line(size = 1) +
+        facet_wrap(facets = vars(country)) +
+        scale_y_continuous(limits = c(0, 1))
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect correlations ####
+
+# w/ ggcorr, which is part of GGally package
 # https://corrr.tidymodels.org/ 
 # http://www.sthda.com/english/wiki/ggally-r-package-extension-to-ggplot2-for-correlation-matrix-and-survival-plots-r-software-and-data-visualization
 # https://briatte.github.io/ggcorr/
@@ -19348,10 +21752,11 @@ fmir %>%
 #         # select(-term) %>% skim() %>% select(-numeric.sd)
 #         ggcorr(angle = 0, hjust = 1, layout.exp = 50)
 
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# inspect missingness
+# inspect missingness ####
 
 # note instead of using naniar:gg_miss_fct, i unpack its contents to ggplot code for flexibility
 # https://github.com/njtierney/naniar/issues/183
@@ -19419,6 +21824,583 @@ fmir %>%
         # gg_miss_fct(fct = country)
 
 
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# inspect icews_narratives_pushed_by_russia and vdem_foregin_gov_dissem_of_false_info
+fmir %>% filter(indicator_name %in% c("sub_obj_2_1_vdem_foreign_gov_dissem_false_info",
+                                      "sub_obj_2_1_icews_narratives_pushed_by_russian_state_media")) %>%
+        # filter(country == "Serbia") %>%
+        # filter(country == "Georgia") %>%
+        # filter(country == "BiH") %>%
+        # filter(country == "Poland") %>%
+        # filter(country == "Hungary") %>%
+        select(country, mcp_grouping, year, indicator_name, indicator_standardized_values) %>%
+        pivot_wider(id_cols = c(country, mcp_grouping, year), names_from = indicator_name, values_from = indicator_standardized_values) %>%
+        ggplot(data = ., mapping = aes(x = sub_obj_2_1_vdem_foreign_gov_dissem_false_info,
+                                       y = sub_obj_2_1_icews_narratives_pushed_by_russian_state_media,
+                                       color = country)) +
+        geom_point() +
+        stat_smooth(method = "lm", se = FALSE, fullrange = T, color = "#7D7D7D") +
+        facet_wrap(facets = vars(country), scales = "free")
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# find biggest possible diff btw russian/chinese version ####
+# which would be when country-specific concepts are 1 for one country and 0 for the other
+
+# best choice is to only have one version of the index
+# but we could break out bilateral concepts if desired
+
+# 1.3 foreign relations
+# approx .10 range
+mean(c(.5, .5, 1)) # .66 for sub_obj 1.3
+mean(c(.5, .5, .66)) # .55 for obj_1
+
+mean(c(.5, .5, 0)) # .33 for sub_obj 1.3
+mean(c(.5, .5, .33)) # .44 for obj_1
+
+# 2.1 media trust
+# approx .10 range
+mean(c(.5, .5, 1)) # .66 for sub_obj 2.1
+mean(c(.5, .5, .66)) # .55 for obj_2
+
+mean(c(.5, .5, 0)) # .33 for sub_obj 2.1
+mean(c(.5, .5, .33)) # .44 for obj_2
+
+# 4.2 financial health
+# approx .25 range
+mean(c(.5, 1)) # .75 for sub_obj 4.2
+mean(c(.5, .75)) # .63 for obj_4
+
+mean(c(.5, 0)) # .25 for sub_obj 4.2
+mean(c(.5, .25)) # .38 for obj_4
+
+# overall resilience
+mean(c(.55, .55, .5, .63, .5)) # .55 for high country X / low country Y MIR index
+mean(c(.44, .44, .5, .38, .5)) # .45 for high country X / low country Y MIR index
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# get stats for SFF framework narrative ####
+
+# democracy
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year == 2021) %>%
+        # filter(indicator_name == "sub_obj_1_3_vdem_electoral_democracy") %>%
+        filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_with_russia") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        # arrange(country, year) %>%
+        arrange(desc(values)) %>%
+        print(n = nrow(.))
+
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year %in% c(2017, 2021)) %>%
+        # filter(indicator_name == "sub_obj_1_3_vdem_electoral_democracy") %>%
+        filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_with_russia") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        arrange(country, year) %>%
+        group_by(country) %>%
+        mutate(isv_diff = indicator_standardized_values - lag(indicator_standardized_values, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2021) %>%
+        arrange(isv_diff)
+
+fmir %>% 
+        # filter(mcp_grouping == "E&E Balkans") %>%
+        filter(mcp_grouping == "E&E Eurasia") %>%
+        # filter(indicator_name == "sub_obj_1_3_vdem_electoral_democracy") %>%
+        filter(indicator_name == "sub_obj_1_3_icews_socio_political_hostility_with_russia") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        ggplot(data = ., mapping = aes(x = year, y = indicator_standardized_values, color = country)) + geom_line(size = 2)
+
+
+# data from aiddata report on russian influence on civic space
+# https://docs.aiddata.org/reports/civic-space/regional-synthesis/In-the-Kremlins-Shadow-Civic-Space-and-Russian-Influence-in-Europe-and-Eurasia.html
+
+# Figure 24. Kremlin Financing and In-kind Support to Civic Actors, Number of Projects by Type, 2015 to Q3 2021
+# MISSING: summary MISSING: current-rows.
+# Year	CSO Support (674)	Institutional Development (36)
+# 2015	30	5
+# 2016	51	6
+# 2017	118	4
+# 2018	139	11
+# 2019	187	6
+# 2020	123	3
+# 2021	26	1
+
+# Notes: This figure shows the number of projects directed by the Russian government to either civic space actors or government regulators 
+# (or de facto authorities) across the 17 E&E countries (and 7 occupied or autonomous territories) between January 2015 and August 2021. 
+# Sources: Factiva Global News Monitoring and Search Engine operated by Dow Jones. Data manually collected by AidData staff and research assistants.
+
+# 2015-2016 avg:
+mean(c(30, 51)) # 40.5 projects
+
+# 2019-2020 avg (last two full years; 2021 is as of august):
+mean(c(187, 123)) # 155 projects
+
+
+#///////////////////
+
+
+# information
+
+vdem %>% select(country_name, year, v2smgovab) %>%
+        filter(year == 2021) %>% 
+        pivot_longer(cols = v2smgovab, names_to = "indicator_name", values_to = "values") %>%
+        arrange(values) %>%
+        print(n = 50)
+
+vdem %>% select(country_name, year, v2smfordom) %>%
+        filter(year == 2021) %>% 
+        pivot_longer(cols = v2smfordom, names_to = "indicator_name", values_to = "values") %>%
+        arrange(values) %>%
+        mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Burma/Myanmar" ~ "Burma",
+                                        country_name == "Cape Verde" ~ "Cabo Verde",
+                                        country_name == "Czech Republic" ~ "Czechia",
+                                        country_name == "Democratic Republic of the Congo" ~ "Congo (Kinshasa)",
+                                        country_name == "Hong Kong" ~ "Hong Kong SAR, China",
+                                        country_name == "Ivory Coast" ~ "Cote d'Ivoire",
+                                        country_name == "North Korea" ~ "Korea, North",
+                                        country_name == "North Macedonia" ~ "N. Macedonia",
+                                        country_name == "Palestine/West Bank" ~ "West Bank and Gaza",
+                                        country_name == "Papal States" ~ "Holy See",
+                                        country_name == "Republic of the Congo" ~ "Congo (Brazzaville)",
+                                        country_name == "Republic of Vietnam" ~ "Vietnam",
+                                        country_name == "South Korea" ~ "Korea, South",
+                                        country_name == "The Gambia" ~ "Gambia, The",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States of America" ~ "U.S.",
+                                        TRUE ~ country_name)) %>%
+        mutate(mcp_flag = case_when(country_name %in% c(country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% pull(country)) ~ 1,
+                                    TRUE ~ 0),
+               mcp_cumsum = cumsum(mcp_flag)) %>%
+        print(n = 100)
+
+# 46 countries / 179 total countries
+45 / 179 # 25%
+# 8 of 11 presence countries
+8 / 11 # 73
+
+# top 50 / 179 total countries
+50 / 179 # 28%
+# 8 E&E presence countries in top 50
+8 / 11 # 73%
+# so the top 28% of countries includes 73% of E&E presence countries
+
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year == 2021, 
+                indicator_name == "sub_obj_2_1_vdem_foreign_gov_dissem_false_info") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        # arrange(country, year) %>%
+        arrange(desc(values)) %>%
+        print(n = nrow(.))
+
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year %in% c(2017, 2021), 
+                indicator_name == "sub_obj_1_3_vdem_electoral_democracy") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        arrange(country, year) %>%
+        group_by(country) %>%
+        mutate(isv_diff = indicator_standardized_values - lag(indicator_standardized_values, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2021) %>%
+        arrange(isv_diff)
+
+
+#///////////////////
+
+
+# energy 
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year == 2020, 
+                indicator_name == "sub_obj_3_2_iea_natural_gas_imports_from_russia_as_share_of_natural_gas_imports",
+                sub_obj_num == "sub_obj_3_2") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        # arrange(country, year) %>%
+        arrange(desc(values)) %>%
+        print(n = nrow(.))
+
+
+
+#////////////////////
+
+
+# economics
+
+setwd("C:/Users/sdevine/Desktop/usaid/mcp/mcp_data")
+econ_links <- read_csv(file = "data/economic_exposure_to_russia_and_china/economic_exposure_to_russia_and_china_20220814.csv")
+setwd("C:/Users/sdevine/Desktop/usaid/mcp/malign_influence")
+
+econ_links
+econ_links %>% glimpse()
+econ_links %>% nrow()
+econ_links %>% ncol()
+
+
+econ_links %>% 
+        select(country, mcp_grouping, year, counterpart, var, values, values_imputed, imputation_condition, total_econ_exposure_as_share_of_gdp) %>%
+        distinct(country, mcp_grouping, year, counterpart, total_econ_exposure_as_share_of_gdp) %>%
+        filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+               year == 2021) %>%
+        filter(counterpart == "Russia") %>%
+        # filter(counterpart == "China") %>%
+        # arrange(country, counterpart) %>%
+        mutate(total_econ_exposure_as_share_of_gdp_avg = mean(total_econ_exposure_as_share_of_gdp)) %>%
+        arrange(desc(total_econ_exposure_as_share_of_gdp)) %>%
+        print(n = nrow(.)) %>%
+        identity()
+
+
+#///////////////////
+
+
+# corruption
+
+wb_corruption <- read_excel(path = "data/world_bank/wgidataset_20230115.xlsx", 
+           sheet = "ControlofCorruption", skip = 14) %>%
+        rename(country_name = `Country/Territory`) %>%
+        select(-Code) %>% mutate_all(.funs = as.character) %>%
+        pivot_longer(cols = -country_name, names_to = "var", values_to = "values") %>%
+        mutate(var = case_when(str_detect(string = var, pattern = "^Estimate") ~ "estimate",
+                               TRUE ~ var)) %>%
+        filter(var == "estimate") %>% 
+        mutate(year = rep(c(1996, 1998, 2000, seq(from = 2002, to = 2021, by = 1)), times = 214),
+               values = case_when(values == "#N/A" ~ NA_character_, 
+                                  TRUE ~ values),
+               values = as.numeric(values),
+               country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Czech Republic" ~ "Czechia",
+                                        country_name == "Kyrgyz Republic" ~ "Kyrgyzstan",
+                                        country_name == "North Macedonia" ~ "N. Macedonia",
+                                        country_name == "Russian Federation" ~ "Russia",
+                                        country_name == "Slovak Republic" ~ "Slovakia",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States" ~ "U.S.",
+                                        TRUE ~ country_name),
+               high_value_is_good_outcome_flag = 1,
+               indicator_name = "cross_cutting_obj_wgi_control_of_corruption") %>%
+        pivot_wider(names_from = year, values_from = values) %>%
+        mutate(`2001` = ((`2002` - `2000`) / 2) + `2000`) %>%
+        pivot_longer(cols = -c(country_name, var, high_value_is_good_outcome_flag, indicator_name), 
+                     names_to = "year", values_to = "values") %>%
+        mutate(year = as.numeric(year)) %>%
+        filter(year >= 2001)
+
+wb_corruption %>% 
+        filter(year == 2021) %>% 
+        arrange(values) %>%
+        mutate(mcp_flag = case_when(country_name %in% c(country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% pull(country)) ~ 1,
+                                    TRUE ~ 0),
+               mcp_cumsum = cumsum(mcp_flag)) %>% 
+        print(n = 200)
+
+# 103 countries / 214 total countries
+103 / 214 # 48%
+# 9 of 11 presence countries in bottom 50%
+
+
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year == 2021, 
+                indicator_name == "cross_cutting_obj_wgi_control_of_corruption") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        # arrange(country, year) %>%
+        arrange(desc(values)) %>%
+        print(n = nrow(.))
+
+fmir %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia"),
+                year %in% c(2017, 2021), 
+                indicator_name == "cross_cutting_obj_wgi_control_of_corruption") %>%
+        select(country, year, sub_obj_num, indicator_name, values, indicator_standardized_values, high_value_is_good_outcome_flag) %>%
+        arrange(country, year) %>%
+        group_by(country) %>%
+        mutate(isv_diff = indicator_standardized_values - lag(indicator_standardized_values, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2021) %>%
+        arrange(isv_diff)
+
+
+
+#///////////////////
+
+
+# cybersecurity
+
+vdem %>% select(country_name, year, v2smgovcapsec) %>%
+        filter(year == 2021) %>% 
+        pivot_longer(cols = v2smgovcapsec, names_to = "indicator_name", values_to = "values") %>%
+        arrange(values) %>%
+        print(n = 50)
+
+vdem %>% select(country_name, year, v2smgovcapsec) %>%
+        filter(year %in% c(2017, 2021)) %>% 
+        pivot_longer(cols = v2smgovcapsec, names_to = "indicator_name", values_to = "values") %>%
+        
+        arrange(year, desc(values)) %>%
+        group_by(year) %>%
+        mutate(rank = row_number()) %>%
+        ungroup() %>%
+        arrange(country_name, year) %>%
+        group_by(country_name) %>%
+        mutate(rank_drop = rank - lag(rank, n = 1)) %>%
+        ungroup() %>%
+        filter(year == 2021) %>%
+        arrange(desc(rank_drop)) %>%
+        mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Burma/Myanmar" ~ "Burma",
+                                        country_name == "Cape Verde" ~ "Cabo Verde",
+                                        country_name == "Czech Republic" ~ "Czechia",
+                                        country_name == "Democratic Republic of the Congo" ~ "Congo (Kinshasa)",
+                                        country_name == "Hong Kong" ~ "Hong Kong SAR, China",
+                                        country_name == "Ivory Coast" ~ "Cote d'Ivoire",
+                                        country_name == "North Korea" ~ "Korea, North",
+                                        country_name == "North Macedonia" ~ "N. Macedonia",
+                                        country_name == "Palestine/West Bank" ~ "West Bank and Gaza",
+                                        country_name == "Papal States" ~ "Holy See",
+                                        country_name == "Republic of the Congo" ~ "Congo (Brazzaville)",
+                                        country_name == "Republic of Vietnam" ~ "Vietnam",
+                                        country_name == "South Korea" ~ "Korea, South",
+                                        country_name == "The Gambia" ~ "Gambia, The",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States of America" ~ "U.S.",
+                                        TRUE ~ country_name)) %>%
+        mutate(mcp_flag = case_when(country_name %in% c(country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% pull(country)) ~ 1,
+                                    TRUE ~ 0),
+               mcp_cumsum = cumsum(mcp_flag)) %>%
+        print(n = 200)
+        
+65/179
+5/11
+
+# cybersecurity has decreased in 7 of 11 E&E presence countries
+98/179
+7/11
+
+vdem %>% select(country_name, year, v2smgovcapsec) %>%
+        filter(year == 2021) %>% 
+        pivot_longer(cols = v2smgovcapsec, names_to = "indicator_name", values_to = "values") %>%
+        arrange(values) %>%
+        mutate(country_name = case_when(country_name == "Bosnia and Herzegovina" ~ "BiH",
+                                        country_name == "Burma/Myanmar" ~ "Burma",
+                                        country_name == "Cape Verde" ~ "Cabo Verde",
+                                        country_name == "Czech Republic" ~ "Czechia",
+                                        country_name == "Democratic Republic of the Congo" ~ "Congo (Kinshasa)",
+                                        country_name == "Hong Kong" ~ "Hong Kong SAR, China",
+                                        country_name == "Ivory Coast" ~ "Cote d'Ivoire",
+                                        country_name == "North Korea" ~ "Korea, North",
+                                        country_name == "North Macedonia" ~ "N. Macedonia",
+                                        country_name == "Palestine/West Bank" ~ "West Bank and Gaza",
+                                        country_name == "Papal States" ~ "Holy See",
+                                        country_name == "Republic of the Congo" ~ "Congo (Brazzaville)",
+                                        country_name == "Republic of Vietnam" ~ "Vietnam",
+                                        country_name == "South Korea" ~ "Korea, South",
+                                        country_name == "The Gambia" ~ "Gambia, The",
+                                        country_name == "United Kingdom" ~ "U.K.",
+                                        country_name == "United States of America" ~ "U.S.",
+                                        TRUE ~ country_name)) %>%
+        mutate(mcp_flag = case_when(country_name %in% c(country_crosswalk %>% filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>% pull(country)) ~ 1,
+                                    TRUE ~ 0),
+               mcp_cumsum = cumsum(mcp_flag)) %>%
+        print(n = 200)
+
+59 / 179 # 4 presence countries
+97 / 179 # 6 presence countries
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# compare eurace / aiddata resilience to malign influence index (RMI) ####
+
+
+# read rmi_malign
+rmi_malign <- read_csv(file = "data/aiddata/reform_analytics/RMI_MalignComponents.csv")
+
+
+#/////////////////////
+
+
+# inspect
+rmi_malign
+rmi_malign %>% glimpse()
+rmi_malign %>% nrow() # 5136
+rmi_malign %>% ncol() # 28
+
+rmi_malign %>% count(Country_Name) # 214
+rmi_malign %>% count(Year) %>% print(n = nrow(.)) # 1998-2021
+
+
+#/////////////////////////
+
+
+# compare with miri
+
+# check names
+# note that rmi doesn't have eu-15
+fmir %>% distinct(country, iso3, mcp_grouping) %>%
+        anti_join(., rmi_malign %>% 
+                          distinct(Country_Name, Country_ISO) %>%
+                          mutate(Country_ISO = case_when(Country_ISO == "UVK" ~ "XKX",
+                                                         TRUE ~ Country_ISO)), 
+                  by = c("iso3" = "Country_ISO"))
+
+rmi_malign %>% filter(Country_Name == "Kosovo") %>% select(Country_Name, Country_ISO)
+
+fmir %>% distinct(country, iso3, mcp_grouping) %>%
+        left_join(., rmi_malign %>% distinct(Country_Name, Country_ISO) %>%
+                          mutate(Country_ISO = case_when(Country_ISO == "UVK" ~ "XKX",
+                                                         TRUE ~ Country_ISO)), by = c("iso3" = "Country_ISO"))
+
+
+#/////////////////////
+
+
+# get chart_data
+# correlation with ee_region is .95, with ee_presence is .82
+chart_data <- fmir %>% distinct(country, iso3, mcp_grouping, year, miri_avg) %>%
+        left_join(., rmi_malign %>% distinct(Country_ISO, Year, RMI_Malign) %>%
+                          mutate(Country_ISO = case_when(Country_ISO == "UVK" ~ "XKX",
+                                                         TRUE ~ Country_ISO)), 
+                  by = c("iso3" = "Country_ISO", "year" = "Year")) %>%
+        
+        # filter(year == 2021) %>%
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        
+        mutate(correlation = cor(x = miri_avg, y = RMI_Malign, use = "pairwise.complete.obs")) %>%
+
+        identity()
+chart_data
+
+# plot
+chart_data %>%
+        ggplot(data = ., mapping = aes(x = miri_avg, y = RMI_Malign, 
+                                       # color = mcp_grouping, 
+                                       color = country,
+                                       label = country)) +
+        geom_point(size = 2) + 
+        geom_segment(x = chart_data %>% filter(miri_avg == min(miri_avg)) %>% slice(1) %>% pull(miri_avg),
+                     xend = chart_data %>% filter(miri_avg == max(miri_avg)) %>% slice(1) %>% pull(miri_avg),
+                     y = chart_data %>% filter(RMI_Malign == min(RMI_Malign, na.rm = TRUE)) %>% slice(1) %>% pull(RMI_Malign),
+                     yend = chart_data %>% filter(RMI_Malign == max(RMI_Malign, na.rm = TRUE)) %>% slice(1) %>% pull(RMI_Malign)) +
+        geom_text(fontface = "bold", size = 3, family = "Calibri")
+
+        stat_smooth(method = "lm", se = FALSE, fullrange = T, color = "#7D7D7D") +
+        facet_wrap(facets = vars(year))
+
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read rmi_china
+# note the file is blank???
+rmi_china <- read_csv(file = "data/aiddata/reform_analytics/RMI_ChinaComponents.csv")
+
+
+#/////////////////////
+
+
+# inspect
+rmi_china
+rmi_china %>% glimpse()
+rmi_china %>% nrow() # 5136
+rmi_china %>% ncol() # 28
+
+rmi_china %>% count(Country_Name) # 214
+rmi_china %>% count(Year) %>% print(n = nrow(.)) # 1998-2021
+        
+        
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+# read data
+rmi_russia <- read_csv(file = "data/aiddata/reform_analytics/RMI_RussiaComponents.csv")
+
+
+#/////////////////////
+
+
+# inspect
+rmi_russia
+rmi_russia %>% glimpse()
+rmi_russia %>% nrow() # 672
+rmi_russia %>% ncol() # 28
+
+rmi_russia %>% count(Country_Name) # 214
+rmi_russia %>% count(Year) %>% print(n = nrow(.)) # 1998-2021
+
+
+#/////////////////////////
+
+
+# compare with miri
+
+# check names
+# note that rmi doesn't have eu-15
+fmir %>% distinct(country, iso3, mcp_grouping) %>%
+        anti_join(., rmi_russia %>% 
+                          distinct(Country_Name, Country_ISO) %>%
+                          mutate(Country_ISO = case_when(Country_ISO == "UVK" ~ "XKX",
+                                                         TRUE ~ Country_ISO)), 
+                  by = c("iso3" = "Country_ISO"))
+
+rmi_russia %>% filter(Country_Name == "Kosovo") %>% select(Country_Name, Country_ISO)
+
+fmir %>% distinct(country, iso3, mcp_grouping) %>%
+        left_join(., rmi_russia %>% distinct(Country_Name, Country_ISO) %>%
+                          mutate(Country_ISO = case_when(Country_ISO == "UVK" ~ "XKX",
+                                                         TRUE ~ Country_ISO)), by = c("iso3" = "Country_ISO"))
+
+
+#/////////////////////
+
+
+# get chart_data
+# correlation with ee_region is .92, with ee_presence is .78
+chart_data <- fmir %>% distinct(country, iso3, mcp_grouping, year, miri_avg) %>%
+        left_join(., rmi_russia %>% distinct(Country_ISO, Year, RMI_Russia) %>%
+                          mutate(Country_ISO = case_when(Country_ISO == "UVK" ~ "XKX",
+                                                         TRUE ~ Country_ISO)), 
+                  by = c("iso3" = "Country_ISO", "year" = "Year")) %>%
+        
+        # filter(year == 2021) %>%
+        # filter(mcp_grouping %in% c("E&E Balkans", "E&E Eurasia")) %>%
+        
+        mutate(correlation = cor(x = miri_avg, y = RMI_Russia, use = "pairwise.complete.obs")) %>%
+        
+        identity()
+chart_data
+
+# plot
+chart_data %>%
+        ggplot(data = ., mapping = aes(x = miri_avg, y = RMI_Russia, 
+                                       # color = mcp_grouping, 
+                                       color = country,
+                                       label = country)) +
+        geom_point(size = 2) + 
+        # geom_segment(x = chart_data %>% filter(miri_avg == min(miri_avg)) %>% slice(1) %>% pull(miri_avg),
+        #              xend = chart_data %>% filter(miri_avg == max(miri_avg)) %>% slice(1) %>% pull(miri_avg),
+        #              y = chart_data %>% filter(RMI_Russia == min(RMI_Russia, na.rm = TRUE)) %>% slice(1) %>% pull(RMI_Russia),
+        #              yend = chart_data %>% filter(RMI_Russia == max(RMI_Russia, na.rm = TRUE)) %>% slice(1) %>% pull(RMI_Russia)) +
+        # geom_text(fontface = "bold", size = 3, family = "Calibri") 
+
+        stat_smooth(method = "lm", se = FALSE, fullrange = T, color = "#7D7D7D") +
+        facet_wrap(facets = vars(year))
+                
+
+
+
+        
+        
+        
+        
+        
+        
